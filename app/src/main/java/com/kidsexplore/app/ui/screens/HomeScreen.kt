@@ -1,10 +1,8 @@
 package com.kidsexplore.app.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,13 +27,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -58,19 +60,53 @@ fun HomeScreen(
         derivedStateOf { gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0 }
     }
 
-    Column(
+    // The header floats over the grid instead of sharing a Column with it —
+    // that way the grid's own size never depends on the header's animated
+    // visibility, which used to feed back into the scroll position and make
+    // the list bounce as it hid/showed itself.
+    var headerHeightPx by remember { mutableIntStateOf(0) }
+    val headerHeightDp = with(LocalDensity.current) { headerHeightPx.toDp() }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .padding(start = 22.dp, end = 22.dp, top = 26.dp, bottom = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .statusBarsPadding(),
     ) {
+        LazyVerticalGrid(
+            // Adaptive rather than a fixed 2 columns: in landscape (or on a
+            // tablet) this fits more, narrower columns instead of stretching
+            // each card — and its icon — to an oversized square.
+            columns = GridCells.Adaptive(minSize = 160.dp),
+            state = gridState,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(
+                start = 22.dp,
+                end = 22.dp,
+                top = headerHeightDp + 16.dp,
+                bottom = 12.dp,
+            ),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            items(themes, key = { it.id }) { theme ->
+                ThemeCard(theme = theme, onClick = { onOpenTheme(theme.id) })
+            }
+        }
+
         AnimatedVisibility(
             visible = isAtTop,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut(),
+            modifier = Modifier.align(Alignment.TopStart).fillMaxWidth(),
+            enter = fadeIn(),
+            exit = fadeOut(),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(NeutralColors.appBackground)
+                    .onSizeChanged { headerHeightPx = it.height }
+                    .padding(start = 22.dp, end = 22.dp, top = 26.dp, bottom = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -101,22 +137,6 @@ fun HomeScreen(
                     color = NeutralColors.labelDark,
                     lineHeight = 29.sp,
                 )
-            }
-        }
-
-        LazyVerticalGrid(
-            // Adaptive rather than a fixed 2 columns: in landscape (or on a
-            // tablet) this fits more, narrower columns instead of stretching
-            // each card — and its icon — to an oversized square.
-            columns = GridCells.Adaptive(minSize = 160.dp),
-            state = gridState,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            contentPadding = PaddingValues(bottom = 12.dp),
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            items(themes, key = { it.id }) { theme ->
-                ThemeCard(theme = theme, onClick = { onOpenTheme(theme.id) })
             }
         }
     }

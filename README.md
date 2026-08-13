@@ -25,7 +25,7 @@ The app rotates freely between portrait and landscape (no orientation lock). Scr
 ### Home
 
 - Header: "KIDS EXPLORE" label, a settings gear button (top right) that opens the **parental gate**, and the "Pick something to look at!" title.
-- The header hides itself once the grid is scrolled away from the top (collapsing out with a shrink/fade animation) so browsing themes isn't fighting the header for space, and reappears when scrolled back to the top.
+- The header fades out once the grid is scrolled away from the top, and fades back in when scrolled back — it floats over the grid rather than sharing layout space with it, so its own size never affects the grid's, which would otherwise cause the list to bounce as it hid/showed itself.
 - A grid of theme cards — one per enabled theme, with as many columns as fit the available width (2 in portrait, more in landscape or on a wider screen) rather than a fixed count. Each card shows a themed icon on a translucent circle, the theme name, and a color pair (fill + a darker bottom accent stripe) derived from the theme's hue.
 - Only themes enabled in **Settings** appear here; disabling a theme removes it from this grid immediately.
 - Tapping a card opens the **Viewer** for that theme.

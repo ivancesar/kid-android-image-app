@@ -56,7 +56,7 @@ fun ViewerScreen(
             .background(NeutralColors.viewerBackground),
     ) {
         Row(
-            modifier = Modifier.statusBarsPadding().padding(14.dp),
+            modifier = Modifier.statusBarsPadding().padding(10.dp),
         ) {
             HomeButton(onClick = onHome)
         }
@@ -120,16 +120,16 @@ fun ViewerScreen(
 private fun HomeButton(onClick: () -> Unit) {
     Column(
         modifier = Modifier
-            .defaultMinSize(minWidth = 60.dp, minHeight = 52.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .defaultMinSize(minWidth = 44.dp, minHeight = 40.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text("⌂", fontSize = 20.sp)
-        Text("Home", fontWeight = FontWeight.ExtraBold, fontSize = 12.sp, color = NeutralColors.labelDarker)
+        Text("⌂", fontSize = 15.sp)
+        Text("Home", fontWeight = FontWeight.ExtraBold, fontSize = 9.sp, color = NeutralColors.labelDarker)
     }
 }
 
