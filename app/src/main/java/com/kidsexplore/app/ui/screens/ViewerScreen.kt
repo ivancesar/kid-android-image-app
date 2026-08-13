@@ -9,14 +9,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -72,64 +71,72 @@ fun ViewerScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(NeutralColors.viewerBackground),
     ) {
-        Row(
-            modifier = Modifier.statusBarsPadding().padding(10.dp),
-        ) {
-            HomeButton(onClick = onHome)
-        }
-
         if (isPortrait) {
-            Box(
+            Column(modifier = Modifier.fillMaxSize()) {
+                Row(
+                    modifier = Modifier.statusBarsPadding().padding(10.dp),
+                ) {
+                    HomeButton(onClick = onHome)
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(14.dp)
+                        .then(swipeModifier),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    ImageCard(palette = palette, currentLabel = currentLabel)
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 30.dp),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    NavPillButton(label = "◀ Back", accent = palette.cardBorder, onClick = onPrev)
+                    Spacer(modifier = Modifier.width(24.dp))
+                    NavPillButton(label = "▶ Next", accent = palette.cardBorder, onClick = onNext)
+                }
+            }
+        } else {
+            // The image runs down to the status bar (not under it) so the
+            // Home button can float over it instead of reserving a header row.
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(14.dp)
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .padding(start = 20.dp, end = 20.dp)
                     .then(swipeModifier),
-                contentAlignment = Alignment.Center,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                ImageCard(palette = palette, currentLabel = currentLabel)
+                NavPillButton(label = "◀ Back", accent = palette.cardBorder, onClick = onPrev)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(horizontal = 14.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    ImageCard(palette = palette, currentLabel = currentLabel)
+                }
+                NavPillButton(label = "▶ Next", accent = palette.cardBorder, onClick = onNext)
             }
 
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 30.dp),
-                horizontalArrangement = Arrangement.Center,
+                    .align(Alignment.TopStart)
+                    .statusBarsPadding()
+                    .padding(10.dp),
             ) {
-                NavPillButton(label = "◀ Back", accent = palette.cardBorder, onClick = onPrev)
-                Spacer(modifier = Modifier.width(24.dp))
-                NavPillButton(label = "▶ Next", accent = palette.cardBorder, onClick = onNext)
-            }
-        } else {
-            // Back/Next flank the image as small circular overlays instead
-            // of a button row underneath, so the image itself can take up
-            // nearly the whole remaining screen.
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(10.dp)
-                    .then(swipeModifier),
-                contentAlignment = Alignment.Center,
-            ) {
-                ImageCard(palette = palette, currentLabel = currentLabel)
-                SideNavButton(
-                    icon = "◀",
-                    accent = palette.cardBorder,
-                    onClick = onPrev,
-                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 10.dp),
-                )
-                SideNavButton(
-                    icon = "▶",
-                    accent = palette.cardBorder,
-                    onClick = onNext,
-                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 10.dp),
-                )
+                HomeButton(onClick = onHome)
             }
         }
     }
@@ -161,11 +168,10 @@ private fun ImageCard(palette: ThemePalette, currentLabel: String) {
 private fun HomeButton(onClick: () -> Unit) {
     Column(
         modifier = Modifier
-            .defaultMinSize(minWidth = 44.dp, minHeight = 40.dp)
+            .size(44.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 5.dp),
+            .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -188,20 +194,6 @@ private fun NavPillButton(label: String, accent: Color, onClick: () -> Unit) {
     ) {
         Text(icon, fontSize = 28.sp, color = Color.White)
         Text(text, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, color = Color.White)
-    }
-}
-
-@Composable
-private fun SideNavButton(icon: String, accent: Color, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(52.dp)
-            .clip(CircleShape)
-            .background(accent)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(icon, fontSize = 22.sp, color = Color.White)
     }
 }
 
