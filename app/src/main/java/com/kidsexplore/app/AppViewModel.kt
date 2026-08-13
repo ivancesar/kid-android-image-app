@@ -14,8 +14,8 @@ enum class Screen { HOME, VIEWER, GATE, SETTINGS }
 
 data class GateQuestion(val a: Int, val b: Int, val correct: Int, val values: List<Int>)
 
-private const val PREFS_NAME = "kids_explore_prefs"
-private const val PREFS_DISABLED_THEMES_KEY = "disabled_theme_ids"
+internal const val PREFS_NAME = "kids_explore_prefs"
+internal const val PREFS_DISABLED_THEMES_KEY = "disabled_theme_ids"
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
 

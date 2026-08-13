@@ -22,8 +22,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/** Internal rather than private so instrumented tests can host it with their own ViewModel. */
 @Composable
-private fun KidsExploreApp(viewModel: AppViewModel = viewModel()) {
+internal fun KidsExploreApp(viewModel: AppViewModel = viewModel()) {
     when (viewModel.screen) {
         Screen.HOME -> HomeScreen(
             themes = viewModel.visibleThemes,

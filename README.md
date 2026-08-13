@@ -120,6 +120,30 @@ Requires JDK 17+ and the Android SDK (compileSdk/targetSdk 37).
 
 The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Open the project in Android Studio to run it directly on a device or emulator, or install manually with `adb install`.
 
+## Tests
+
+With an emulator or device connected:
+
+```bash
+./gradlew connectedDebugAndroidTest
+```
+
+That runs the whole suite and writes an HTML report to `app/build/reports/androidTests/connected/debug/index.html`.
+
+The tests are instrumented rather than plain JVM tests because they need a real `Context` — the ViewModel reads and writes `SharedPreferences`, and the UI tests render real Compose content.
+
+| File | Covers |
+|---|---|
+| `AppViewModelTest` | Screen transitions, image paging and wrap-around at both ends, gate question generation and answer handling, theme toggling, and that disabled themes survive a ViewModel restart. |
+| `KidsExploreFlowTest` | The end-to-end journey through the real screens: Home → Viewer (paging by button and by swipe) → Home → gate (wrong answer, cancel, correct answer) → Settings (toggle a theme) → Home, asserting the grid updates. |
+| `ViewerLayoutTest` | The Viewer's per-orientation layout. Drives `LocalConfiguration` directly instead of rotating the device (the test host activity doesn't reliably follow rotation), so both the portrait side-button and landscape pill-button branches are exercised deterministically. |
+
+To run a single class:
+
+```bash
+./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.kidsexplore.app.KidsExploreFlowTest
+```
+
 ## Known limitations
 
 - Placeholder text labels stand in for real images (see [On images](#on-images) above).
