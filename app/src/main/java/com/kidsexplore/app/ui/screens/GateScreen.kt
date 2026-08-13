@@ -3,15 +3,15 @@ package com.kidsexplore.app.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,75 +35,89 @@ fun GateScreen(
     onPick: (Int) -> Unit,
     onCancel: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(30.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(22.dp, Alignment.CenterVertically),
+    // Box centers the Column when it fits; the Column's own verticalScroll
+    // takes over once landscape's shorter height can't fit everything.
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = "GROWN-UPS ONLY",
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 15.sp,
-            color = NeutralColors.labelMuted,
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            text = "Solve this to continue",
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
-            color = NeutralColors.labelDark,
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            text = "${question.a} + ${question.b} = ?",
-            style = HeavyTextStyle,
-            fontSize = 40.sp,
-            color = NeutralColors.labelDark,
-            textAlign = TextAlign.Center,
-        )
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .widthIn(max = 280.dp)
-                .wrapContentHeight(),
+                .verticalScroll(rememberScrollState())
+                .padding(30.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(22.dp),
         ) {
-            items(question.values) { value ->
+            Text(
+                text = "GROWN-UPS ONLY",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 15.sp,
+                color = NeutralColors.labelMuted,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = "Solve this to continue",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = NeutralColors.labelDark,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = "${question.a} + ${question.b} = ?",
+                style = HeavyTextStyle,
+                fontSize = 40.sp,
+                color = NeutralColors.labelDark,
+                textAlign = TextAlign.Center,
+            )
+            // Always exactly 4 answers in a 2x2 grid — a plain Row/Column
+            // avoids nesting a lazy layout inside a scrollable Column, which
+            // Compose disallows (infinite height constraint).
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 280.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                question.values.chunked(2).forEach { rowValues ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        rowValues.forEach { value ->
+                            Text(
+                                text = value.toString(),
+                                style = HeavyTextStyle,
+                                fontSize = 26.sp,
+                                color = Color.White,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(NeutralColors.gateOptionBg)
+                                    .clickable { onPick(value) }
+                                    .padding(vertical = 18.dp),
+                            )
+                        }
+                    }
+                }
+            }
+            if (wrong) {
                 Text(
-                    text = value.toString(),
-                    style = HeavyTextStyle,
-                    fontSize = 26.sp,
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(NeutralColors.gateOptionBg)
-                        .clickable { onPick(value) }
-                        .padding(vertical = 18.dp),
+                    text = "Not quite, try again!",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = NeutralColors.errorText,
                 )
             }
-        }
-        if (wrong) {
             Text(
-                text = "Not quite, try again!",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                color = NeutralColors.errorText,
+                text = "Cancel",
+                fontSize = 13.sp,
+                color = NeutralColors.cancelText,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier
+                    .clickable(onClick = onCancel)
+                    .padding(6.dp),
             )
         }
-        Text(
-            text = "Cancel",
-            fontSize = 13.sp,
-            color = NeutralColors.cancelText,
-            textDecoration = TextDecoration.Underline,
-            modifier = Modifier
-                .clickable(onClick = onCancel)
-                .padding(6.dp),
-        )
     }
 }

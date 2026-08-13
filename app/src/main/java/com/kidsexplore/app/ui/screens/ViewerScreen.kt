@@ -2,6 +2,7 @@ package com.kidsexplore.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +30,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -60,11 +66,26 @@ fun ViewerScreen(
             Spacer(modifier = Modifier.width(60.dp))
         }
 
+        var dragTotal by remember(theme.id) { mutableFloatStateOf(0f) }
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(14.dp)
+                .pointerInput(theme.id) {
+                    val thresholdPx = 60.dp.toPx()
+                    detectHorizontalDragGestures(
+                        onDragStart = { dragTotal = 0f },
+                        onDragCancel = { dragTotal = 0f },
+                        onDragEnd = {
+                            if (dragTotal <= -thresholdPx) onNext() else if (dragTotal >= thresholdPx) onPrev()
+                            dragTotal = 0f
+                        },
+                    ) { change, dragAmount ->
+                        change.consume()
+                        dragTotal += dragAmount
+                    }
+                },
             contentAlignment = Alignment.Center,
         ) {
             Box(

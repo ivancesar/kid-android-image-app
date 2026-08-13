@@ -18,6 +18,8 @@ Home ──tap theme──▶ Viewer ──Home──▶ Home
 
 There is no back-stack navigation library involved — the current screen is just a field on the app's `ViewModel`, and each screen is a plain Compose function that reads it.
 
+The app rotates freely between portrait and landscape (no orientation lock). Screen state lives in an `AndroidViewModel`, which survives the activity recreation Android does on rotation, so nothing resets when the device turns. Layouts reflow rather than using dedicated landscape-specific arrangements — the Home grid and Settings list scroll, and the Gate screen falls back to scrolling instead of clipping if its content doesn't fit the available height.
+
 ## Screens
 
 ### Home
@@ -34,6 +36,7 @@ There is no back-stack navigation library involved — the current screen is jus
 - Top row: a "Home" pill button (top left) that returns to Home, and the current theme's name (centered).
 - A large rounded placeholder card filling the middle of the screen, with a diagonal two-tone stripe pattern in the theme's colors. It shows the current item's label in monospace text, centered.
 - Bottom row: "◀ Back" and "▶ Next" pill buttons that cycle through the theme's 8 items, wrapping around at both ends.
+- The placeholder card also responds to a horizontal swipe — swipe left for next, right for back — as an alternative to the buttons, with the same wrap-around behavior.
 
 ### Parental Gate ("Grown-ups only")
 
