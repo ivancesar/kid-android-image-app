@@ -18,9 +18,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The Viewer lays its navigation out differently per orientation: compact
- * circular buttons overlaid on the image in portrait, labelled "Back"/"Next"
- * pills below it in landscape.
+ * The Viewer lays its navigation out differently per orientation: labelled
+ * "Back"/"Next" pills below the image in portrait, compact circular buttons
+ * overlaid on the image in landscape.
  *
  * Rather than rotating the device (which the test host activity does not
  * reliably follow), these drive [LocalConfiguration] directly so both
@@ -59,25 +59,25 @@ class ViewerLayoutTest {
     }
 
     @Test
-    fun portraitUsesCompactSideButtonsWithoutTextLabels() {
+    fun portraitUsesLabelledPillButtons() {
         setViewer(Configuration.ORIENTATION_PORTRAIT)
 
-        compose.onNodeWithText("◀").assertIsDisplayed()
-        compose.onNodeWithText("▶").assertIsDisplayed()
-        // the labelled pill buttons belong to the landscape layout only
-        compose.onNodeWithText("Back").assertDoesNotExist()
-        compose.onNodeWithText("Next").assertDoesNotExist()
-        // header and image survive either way
+        compose.onNodeWithText("Back").assertIsDisplayed()
+        compose.onNodeWithText("Next").assertIsDisplayed()
         compose.onNodeWithText("Home").assertIsDisplayed()
         compose.onNodeWithText(cars.labels[0]).assertIsDisplayed()
     }
 
     @Test
-    fun landscapeUsesLabelledPillButtons() {
+    fun landscapeUsesCompactSideButtonsWithoutTextLabels() {
         setViewer(Configuration.ORIENTATION_LANDSCAPE)
 
-        compose.onNodeWithText("Back").assertIsDisplayed()
-        compose.onNodeWithText("Next").assertIsDisplayed()
+        compose.onNodeWithText("◀").assertIsDisplayed()
+        compose.onNodeWithText("▶").assertIsDisplayed()
+        // the labelled pill buttons belong to the portrait layout only
+        compose.onNodeWithText("Back").assertDoesNotExist()
+        compose.onNodeWithText("Next").assertDoesNotExist()
+        // header and image survive either way
         compose.onNodeWithText("Home").assertIsDisplayed()
         compose.onNodeWithText(cars.labels[0]).assertIsDisplayed()
     }
@@ -96,8 +96,8 @@ class ViewerLayoutTest {
         var prev = 0
         setViewer(Configuration.ORIENTATION_PORTRAIT, onNext = { next++ }, onPrev = { prev++ })
 
-        compose.onNodeWithText("▶").performClick()
-        compose.onNodeWithText("◀").performClick()
+        compose.onNodeWithText("Next").performClick()
+        compose.onNodeWithText("Back").performClick()
 
         compose.runOnIdle {
             assertEquals("next tapped once", 1, next)
@@ -111,8 +111,8 @@ class ViewerLayoutTest {
         var prev = 0
         setViewer(Configuration.ORIENTATION_LANDSCAPE, onNext = { next++ }, onPrev = { prev++ })
 
-        compose.onNodeWithText("Next").performClick()
-        compose.onNodeWithText("Back").performClick()
+        compose.onNodeWithText("▶").performClick()
+        compose.onNodeWithText("◀").performClick()
 
         compose.runOnIdle {
             assertEquals("next tapped once", 1, next)
