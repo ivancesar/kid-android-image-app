@@ -83,7 +83,10 @@ fun HomeScreen(
         )
 
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
+            // Adaptive rather than a fixed 2 columns: in landscape (or on a
+            // tablet) this fits more, narrower columns instead of stretching
+            // each card — and its icon — to an oversized square.
+            columns = GridCells.Adaptive(minSize = 160.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
             contentPadding = PaddingValues(bottom = 12.dp),
@@ -118,12 +121,20 @@ private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(
                     modifier = Modifier
-                        .size(64.dp)
+                        // Sized relative to the card's own width (not a fixed
+                        // dp) so it stays proportional however wide the card
+                        // ends up — e.g. the much wider landscape 2-column grid.
+                        .fillMaxWidth(0.36f)
+                        .aspectRatio(1f)
                         .clip(CircleShape)
                         .background(Color.White.copy(alpha = 0.35f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    ThemeIconGlyph(icon = theme.icon, accent = palette.cardBorder)
+                    ThemeIconGlyph(
+                        icon = theme.icon,
+                        accent = palette.cardBorder,
+                        modifier = Modifier.fillMaxSize(0.75f),
+                    )
                 }
                 Text(
                     text = theme.name,

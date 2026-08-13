@@ -1,7 +1,6 @@
 package com.kidsexplore.app.ui.icons
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -11,18 +10,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.unit.dp
 import com.kidsexplore.app.model.ThemeIcon
 
 /**
  * Renders one of the theme icons, ported shape-for-shape from the source
  * design's inline SVGs (each drawn in a 64x64 viewBox). [accent] is the
  * theme's cardBorder color; the base shapes are always white, matching the
- * source.
+ * source. Sizing is entirely up to the caller's [modifier] so the glyph
+ * scales with whatever container it's placed in.
  */
 @Composable
 fun ThemeIconGlyph(icon: ThemeIcon, accent: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier.size(48.dp)) {
+    Canvas(modifier = modifier) {
         val s = size.width / 64f
         val white = Color.White
 
