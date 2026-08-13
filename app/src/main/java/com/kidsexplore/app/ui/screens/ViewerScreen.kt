@@ -84,6 +84,28 @@ fun ViewerScreen(
         }
 
         if (isPortrait) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(14.dp)
+                    .then(swipeModifier),
+                contentAlignment = Alignment.Center,
+            ) {
+                ImageCard(palette = palette, currentLabel = currentLabel)
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 30.dp),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                NavPillButton(label = "◀ Back", accent = palette.cardBorder, onClick = onPrev)
+                Spacer(modifier = Modifier.width(24.dp))
+                NavPillButton(label = "▶ Next", accent = palette.cardBorder, onClick = onNext)
+            }
+        } else {
             // Back/Next flank the image as small circular overlays instead
             // of a button row underneath, so the image itself can take up
             // nearly the whole remaining screen.
@@ -108,28 +130,6 @@ fun ViewerScreen(
                     onClick = onNext,
                     modifier = Modifier.align(Alignment.CenterEnd).padding(end = 10.dp),
                 )
-            }
-        } else {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(14.dp)
-                    .then(swipeModifier),
-                contentAlignment = Alignment.Center,
-            ) {
-                ImageCard(palette = palette, currentLabel = currentLabel)
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 30.dp),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                NavPillButton(label = "◀ Back", accent = palette.cardBorder, onClick = onPrev)
-                Spacer(modifier = Modifier.width(24.dp))
-                NavPillButton(label = "▶ Next", accent = palette.cardBorder, onClick = onNext)
             }
         }
     }
