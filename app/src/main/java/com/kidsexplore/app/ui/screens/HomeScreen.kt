@@ -1,5 +1,10 @@
 package com.kidsexplore.app.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,10 +22,14 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +53,11 @@ fun HomeScreen(
     onOpenTheme: (String) -> Unit,
     onOpenGate: () -> Unit,
 ) {
+    val gridState = rememberLazyGridState()
+    val isAtTop by remember {
+        derivedStateOf { gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0 }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -51,42 +65,51 @@ fun HomeScreen(
             .padding(start = 22.dp, end = 22.dp, top = 26.dp, bottom = 10.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+        AnimatedVisibility(
+            visible = isAtTop,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut(),
         ) {
-            Text(
-                text = "KIDS EXPLORE",
-                style = BoldLabelStyle,
-                fontSize = 15.sp,
-                color = NeutralColors.labelMuted,
-            )
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(NeutralColors.gearButtonBg)
-                    .clickable(onClick = onOpenGate),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("⚙", fontSize = 16.sp, color = NeutralColors.labelMuted)
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "KIDS EXPLORE",
+                        style = BoldLabelStyle,
+                        fontSize = 15.sp,
+                        color = NeutralColors.labelMuted,
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(NeutralColors.gearButtonBg)
+                            .clickable(onClick = onOpenGate),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("⚙", fontSize = 16.sp, color = NeutralColors.labelMuted)
+                    }
+                }
+
+                Text(
+                    text = "Pick something to look at!",
+                    style = HeavyTextStyle,
+                    fontSize = 25.sp,
+                    color = NeutralColors.labelDark,
+                    lineHeight = 29.sp,
+                )
             }
         }
-
-        Text(
-            text = "Pick something to look at!",
-            style = HeavyTextStyle,
-            fontSize = 25.sp,
-            color = NeutralColors.labelDark,
-            lineHeight = 29.sp,
-        )
 
         LazyVerticalGrid(
             // Adaptive rather than a fixed 2 columns: in landscape (or on a
             // tablet) this fits more, narrower columns instead of stretching
             // each card — and its icon — to an oversized square.
             columns = GridCells.Adaptive(minSize = 160.dp),
+            state = gridState,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
             contentPadding = PaddingValues(bottom = 12.dp),

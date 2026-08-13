@@ -56,14 +56,9 @@ fun ViewerScreen(
             .background(NeutralColors.viewerBackground),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.statusBarsPadding().padding(14.dp),
         ) {
             HomeButton(onClick = onHome)
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Text(theme.name, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, color = Color.White)
-            }
-            Spacer(modifier = Modifier.width(60.dp))
         }
 
         var dragTotal by remember(theme.id) { mutableFloatStateOf(0f) }

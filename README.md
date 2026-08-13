@@ -24,16 +24,16 @@ The app rotates freely between portrait and landscape (no orientation lock). Scr
 
 ### Home
 
-- Header: "KIDS EXPLORE" label and a settings gear button (top right) that opens the **parental gate**.
-- Title: "Pick something to look at!"
-- A 2-column grid of theme cards — one per enabled theme. Each card shows a themed icon on a translucent circle, the theme name, and a color pair (fill + a darker bottom accent stripe) derived from the theme's hue.
+- Header: "KIDS EXPLORE" label, a settings gear button (top right) that opens the **parental gate**, and the "Pick something to look at!" title.
+- The header hides itself once the grid is scrolled away from the top (collapsing out with a shrink/fade animation) so browsing themes isn't fighting the header for space, and reappears when scrolled back to the top.
+- A grid of theme cards — one per enabled theme, with as many columns as fit the available width (2 in portrait, more in landscape or on a wider screen) rather than a fixed count. Each card shows a themed icon on a translucent circle, the theme name, and a color pair (fill + a darker bottom accent stripe) derived from the theme's hue.
 - Only themes enabled in **Settings** appear here; disabling a theme removes it from this grid immediately.
 - Tapping a card opens the **Viewer** for that theme.
 
 ### Viewer
 
 - Dark full-bleed background.
-- Top row: a "Home" pill button (top left) that returns to Home, and the current theme's name (centered).
+- Top left: a small "Home" pill button that returns to Home — that's the entire header here, no theme name shown, to keep the focus on the image.
 - A large rounded placeholder card filling the middle of the screen, with a diagonal two-tone stripe pattern in the theme's colors. It shows the current item's label in monospace text, centered.
 - Bottom row: "◀ Back" and "▶ Next" pill buttons that cycle through the theme's 8 items, wrapping around at both ends.
 - The placeholder card also responds to a horizontal swipe — swipe left for next, right for back — as an alternative to the buttons, with the same wrap-around behavior.
