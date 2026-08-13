@@ -1,5 +1,6 @@
 package com.kidsexplore.app.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kidsexplore.app.model.ThemeDef
 import com.kidsexplore.app.ui.theme.NeutralColors
+import com.kidsexplore.app.ui.theme.ThemePalette
 import com.kidsexplore.app.ui.theme.palette
 import kotlin.math.hypot
 
@@ -50,6 +54,24 @@ fun ViewerScreen(
     onPrev: () -> Unit,
 ) {
     val palette = theme.palette()
+    val isPortrait = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
+
+    var dragTotal by remember(theme.id) { mutableFloatStateOf(0f) }
+    val swipeModifier = Modifier.pointerInput(theme.id) {
+        val thresholdPx = 60.dp.toPx()
+        detectHorizontalDragGestures(
+            onDragStart = { dragTotal = 0f },
+            onDragCancel = { dragTotal = 0f },
+            onDragEnd = {
+                if (dragTotal <= -thresholdPx) onNext() else if (dragTotal >= thresholdPx) onPrev()
+                dragTotal = 0f
+            },
+        ) { change, dragAmount ->
+            change.consume()
+            dragTotal += dragAmount
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,58 +83,77 @@ fun ViewerScreen(
             HomeButton(onClick = onHome)
         }
 
-        var dragTotal by remember(theme.id) { mutableFloatStateOf(0f) }
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(14.dp)
-                .pointerInput(theme.id) {
-                    val thresholdPx = 60.dp.toPx()
-                    detectHorizontalDragGestures(
-                        onDragStart = { dragTotal = 0f },
-                        onDragCancel = { dragTotal = 0f },
-                        onDragEnd = {
-                            if (dragTotal <= -thresholdPx) onNext() else if (dragTotal >= thresholdPx) onPrev()
-                            dragTotal = 0f
-                        },
-                    ) { change, dragAmount ->
-                        change.consume()
-                        dragTotal += dragAmount
-                    }
-                },
-            contentAlignment = Alignment.Center,
-        ) {
+        if (isPortrait) {
+            // Back/Next flank the image as small circular overlays instead
+            // of a button row underneath, so the image itself can take up
+            // nearly the whole remaining screen.
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(palette.cardBg)
-                    .diagonalStripes(palette.stripe)
-                    .padding(20.dp),
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(10.dp)
+                    .then(swipeModifier),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = currentLabel,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 16.sp,
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 24.sp,
+                ImageCard(palette = palette, currentLabel = currentLabel)
+                SideNavButton(
+                    icon = "◀",
+                    accent = palette.cardBorder,
+                    onClick = onPrev,
+                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 10.dp),
+                )
+                SideNavButton(
+                    icon = "▶",
+                    accent = palette.cardBorder,
+                    onClick = onNext,
+                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 10.dp),
                 )
             }
-        }
+        } else {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(14.dp)
+                    .then(swipeModifier),
+                contentAlignment = Alignment.Center,
+            ) {
+                ImageCard(palette = palette, currentLabel = currentLabel)
+            }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 30.dp),
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            NavPillButton(label = "◀ Back", accent = palette.cardBorder, onClick = onPrev)
-            Spacer(modifier = Modifier.width(24.dp))
-            NavPillButton(label = "▶ Next", accent = palette.cardBorder, onClick = onNext)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 30.dp),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                NavPillButton(label = "◀ Back", accent = palette.cardBorder, onClick = onPrev)
+                Spacer(modifier = Modifier.width(24.dp))
+                NavPillButton(label = "▶ Next", accent = palette.cardBorder, onClick = onNext)
+            }
         }
+    }
+}
+
+@Composable
+private fun ImageCard(palette: ThemePalette, currentLabel: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(24.dp))
+            .background(palette.cardBg)
+            .diagonalStripes(palette.stripe)
+            .padding(20.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = currentLabel,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 16.sp,
+            color = Color.White,
+            textAlign = TextAlign.Center,
+            lineHeight = 24.sp,
+        )
     }
 }
 
@@ -147,6 +188,20 @@ private fun NavPillButton(label: String, accent: Color, onClick: () -> Unit) {
     ) {
         Text(icon, fontSize = 28.sp, color = Color.White)
         Text(text, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, color = Color.White)
+    }
+}
+
+@Composable
+private fun SideNavButton(icon: String, accent: Color, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(52.dp)
+            .clip(CircleShape)
+            .background(accent)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(icon, fontSize = 22.sp, color = Color.White)
     }
 }
 

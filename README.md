@@ -34,9 +34,11 @@ The app rotates freely between portrait and landscape (no orientation lock). Scr
 
 - Dark full-bleed background.
 - Top left: a small "Home" pill button that returns to Home — that's the entire header here, no theme name shown, to keep the focus on the image.
-- A large rounded placeholder card filling the middle of the screen, with a diagonal two-tone stripe pattern in the theme's colors. It shows the current item's label in monospace text, centered.
-- Bottom row: "◀ Back" and "▶ Next" pill buttons that cycle through the theme's 8 items, wrapping around at both ends.
-- The placeholder card also responds to a horizontal swipe — swipe left for next, right for back — as an alternative to the buttons, with the same wrap-around behavior.
+- A large rounded placeholder card, with a diagonal two-tone stripe pattern in the theme's colors, showing the current item's label in monospace text, centered.
+- **Portrait**: the card fills nearly the whole remaining screen, with small circular "◀"/"▶" buttons overlaid on its left/right edges (vertically centered) instead of a button row underneath, so there's more room for the image itself.
+- **Landscape**: "◀ Back" and "▶ Next" pill buttons sit in a row below the card instead, since the shorter landscape height doesn't have room to spare and a bottom row reads better there.
+- Either way, Back/Next cycle through the theme's 8 items, wrapping around at both ends.
+- The card also responds to a horizontal swipe — swipe left for next, right for back — as an alternative to the buttons, in both orientations.
 
 ### Parental Gate ("Grown-ups only")
 
