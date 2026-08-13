@@ -33,10 +33,11 @@ The app rotates freely between portrait and landscape (no orientation lock). Scr
 ### Viewer
 
 - Dark full-bleed background.
-- Top left: a small "Home" pill button that returns to Home — that's the entire header here, no theme name shown, to keep the focus on the image.
+- A small square "Home" button returns to Home — that's the entire header here, no theme name shown, to keep the focus on the image.
 - A large rounded placeholder card, with a diagonal two-tone stripe pattern in the theme's colors, showing the current item's label in monospace text, centered.
-- **Portrait**: the card fills nearly the whole remaining screen, with small circular "◀"/"▶" buttons overlaid on its left/right edges (vertically centered) instead of a button row underneath, so there's more room for the image itself.
-- **Landscape**: "◀ Back" and "▶ Next" pill buttons sit in a row below the card instead, since the shorter landscape height doesn't have room to spare and a bottom row reads better there.
+- The same labelled "◀ Back" / "▶ Next" pill buttons are used in both orientations, so the controls look and behave identically regardless of how the device is held:
+  - **Portrait**: the card fills the remaining space above a button row, with Back/Next side by side underneath it.
+  - **Landscape**: Back/Next flank the card in a single row — the card sits between them rather than under them — and the row fills the full screen height (down to, but not under, the status bar), so the image gets as much vertical room as the display allows. The Home button floats over the top-left corner of the image instead of sitting in its own header row, since there's no header row to spare the height for in landscape.
 - Either way, Back/Next cycle through the theme's 8 items, wrapping around at both ends.
 - The card also responds to a horizontal swipe — swipe left for next, right for back — as an alternative to the buttons, in both orientations.
 
@@ -136,7 +137,7 @@ The tests are instrumented rather than plain JVM tests because they need a real 
 |---|---|
 | `AppViewModelTest` | Screen transitions, image paging and wrap-around at both ends, gate question generation and answer handling, theme toggling, and that disabled themes survive a ViewModel restart. |
 | `KidsExploreFlowTest` | The end-to-end journey through the real screens: Home → Viewer (paging by button and by swipe) → Home → gate (wrong answer, cancel, correct answer) → Settings (toggle a theme) → Home, asserting the grid updates. |
-| `ViewerLayoutTest` | The Viewer's per-orientation layout. Drives `LocalConfiguration` directly instead of rotating the device (the test host activity doesn't reliably follow rotation), so both the portrait side-button and landscape pill-button branches are exercised deterministically. |
+| `ViewerLayoutTest` | The Viewer's per-orientation layout. Drives `LocalConfiguration` directly instead of rotating the device (the test host activity doesn't reliably follow rotation), so both the portrait and landscape pill-button branches are exercised deterministically. |
 
 To run a single class:
 
