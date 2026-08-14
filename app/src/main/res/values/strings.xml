@@ -28,4 +28,109 @@
     <string name="settings_title">Parent Settings</string>
     <string name="settings_subtitle">Choose which themes your child can see.</string>
     <string name="settings_done">Done</string>
+
+    <!--
+      Theme names and the item labels behind them. These are the app's primary
+      content — the words a child actually sees — so they live here with
+      everything else translatable rather than as literals in ThemeDef.kt.
+
+      Each array's length must match its theme's `labelCount` in ThemeDef.kt;
+      ThemeResourcesTest asserts that for every theme, because the ViewModel
+      wraps its index against labelCount without being able to see resources.
+    -->
+    <string name="theme_cars">Cars</string>
+    <string-array name="labels_cars">
+        <item>Red sports car, side view</item>
+        <item>Yellow taxi, front view</item>
+        <item>Blue pickup truck</item>
+        <item>Green race car with number</item>
+        <item>Police car with lights on</item>
+        <item>Yellow school bus</item>
+        <item>Motorcycle, side view</item>
+        <item>Orange convertible car</item>
+    </string-array>
+
+    <string name="theme_construction">Construction</string>
+    <string-array name="labels_construction">
+        <item>Yellow bulldozer pushing dirt</item>
+        <item>Crane lifting a steel beam</item>
+        <item>Excavator digging a hole</item>
+        <item>Cement mixer truck</item>
+        <item>Dump truck full of dirt</item>
+        <item>Road roller flattening asphalt</item>
+        <item>Yellow forklift with pallet</item>
+        <item>Backhoe loader digging</item>
+    </string-array>
+
+    <string name="theme_animals">Animals</string>
+    <string-array name="labels_animals">
+        <item>Lion resting in tall grass</item>
+        <item>Elephant walking in savanna</item>
+        <item>Giraffe eating tree leaves</item>
+        <item>Panda sitting with bamboo</item>
+        <item>Owl perched on a branch</item>
+        <item>Rabbit hopping in a field</item>
+        <item>Puppy playing with a ball</item>
+        <item>Kitten napping in sun</item>
+    </string-array>
+
+    <string name="theme_dinosaurs">Dinosaurs</string>
+    <string-array name="labels_dinosaurs">
+        <item>T-Rex roaring, side view</item>
+        <item>Triceratops grazing on plants</item>
+        <item>Stegosaurus walking, side view</item>
+        <item>Pterodactyl flying over cliffs</item>
+        <item>Brontosaurus beside a lake</item>
+        <item>Velociraptor running fast</item>
+        <item>Ankylosaurus with tail spikes</item>
+        <item>Baby dinosaur hatching from egg</item>
+    </string-array>
+
+    <string name="theme_space">Space</string>
+    <string-array name="labels_space">
+        <item>Rocket launching into sky</item>
+        <item>Astronaut floating in space</item>
+        <item>Planet Saturn with its rings</item>
+        <item>Full moon close-up</item>
+        <item>Space shuttle on launch pad</item>
+        <item>Cartoon alien spaceship</item>
+        <item>Stars and a bright galaxy</item>
+        <item>Sun with orange flares</item>
+    </string-array>
+
+    <string name="theme_trains">Trains</string>
+    <string-array name="labels_trains">
+        <item>Red steam train, side view</item>
+        <item>Bullet train speeding by</item>
+        <item>Freight train with cargo cars</item>
+        <item>Toy train on a track</item>
+        <item>Train crossing a bridge</item>
+        <item>Subway train at a station</item>
+        <item>Yellow train engine, front view</item>
+        <item>Train going through tunnel</item>
+    </string-array>
+
+    <string name="theme_ocean">Ocean</string>
+    <string-array name="labels_ocean">
+        <item>Clownfish swimming by coral</item>
+        <item>Sea turtle gliding underwater</item>
+        <item>Octopus with curled arms</item>
+        <item>Starfish on the sand</item>
+        <item>Whale breaching the surface</item>
+        <item>Seahorse near seaweed</item>
+        <item>Crab on the beach</item>
+        <item>School of tropical fish</item>
+    </string-array>
+
+    <string name="theme_farm">Farm</string>
+    <string-array name="labels_farm">
+        <item>Pig in a muddy pen</item>
+        <item>Cow grazing in a field</item>
+        <item>Chicken by the barn</item>
+        <item>Sheep with wooly coat</item>
+        <item>Horse in a green pasture</item>
+        <item>Duck swimming in a pond</item>
+        <item>Red barn with silo</item>
+        <item>Tractor in a wheat field</item>
+    </string-array>
 </resources>

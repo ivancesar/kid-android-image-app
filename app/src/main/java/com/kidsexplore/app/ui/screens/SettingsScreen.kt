@@ -103,7 +103,7 @@ fun SettingsScreen(
                         }
                     }
                     Text(
-                        text = theme.name,
+                        text = stringResource(theme.nameRes),
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 16.sp,
                         color = NeutralColors.labelDark,

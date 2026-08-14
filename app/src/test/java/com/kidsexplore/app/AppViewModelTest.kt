@@ -6,6 +6,7 @@ import com.kidsexplore.app.model.THEME_DEFS
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.abs
@@ -22,17 +23,7 @@ import kotlin.random.Random
  */
 class AppViewModelTest {
 
-    private class FakeThemeStore(initial: Set<String> = emptySet()) : ThemeStore {
-        var saved: Set<String> = initial
-            private set
-
-        override fun loadDisabled(): Set<String> = saved
-        override fun saveDisabled(disabled: Set<String>) {
-            saved = disabled
-        }
-    }
-
-    private var now = 1_000L
+    private var now = 1_000_000L
     private val store = FakeThemeStore()
 
     private fun newViewModel(
@@ -43,7 +34,7 @@ class AppViewModelTest {
         store = store,
         savedState = savedState,
         random = Random(seed),
-        elapsedRealtime = { now },
+        wallClock = { now },
     )
 
     private val AppViewModel.gateState: UiState.Gate
@@ -63,7 +54,6 @@ class AppViewModelTest {
         assertEquals(UiState.Home, vm.uiState)
         assertEquals(THEME_DEFS.size, vm.visibleThemes.size)
         assertNull(vm.activeTheme)
-        assertNull(vm.currentLabel)
     }
 
     @Test
@@ -72,7 +62,6 @@ class AppViewModelTest {
         vm.openTheme("cars")
 
         assertEquals(UiState.Viewer("cars", 0), vm.uiState)
-        assertEquals(THEME_DEFS.first { it.id == "cars" }.labels[0], vm.currentLabel)
     }
 
     /** A Viewer with no resolvable theme is exactly the blank screen the sealed state exists to prevent. */
@@ -88,25 +77,25 @@ class AppViewModelTest {
     fun nextWalksEveryImageAndWrapsToTheStart() {
         val vm = newViewModel()
         vm.openTheme("cars")
-        val labels = THEME_DEFS.first { it.id == "cars" }.labels
+        val count = THEME_DEFS.first { it.id == "cars" }.labelCount
 
-        labels.forEachIndexed { i, expected ->
-            assertEquals("image at index $i", expected, vm.currentLabel)
+        repeat(count) { i ->
+            assertEquals("image at index $i", i, (vm.uiState as UiState.Viewer).imageIndex)
             vm.next()
         }
-        assertEquals(labels[0], vm.currentLabel)
+        assertEquals(0, (vm.uiState as UiState.Viewer).imageIndex)
     }
 
     @Test
     fun prevFromTheFirstImageWrapsToTheLast() {
         val vm = newViewModel()
         vm.openTheme("dinosaurs")
-        val labels = THEME_DEFS.first { it.id == "dinosaurs" }.labels
+        val count = THEME_DEFS.first { it.id == "dinosaurs" }.labelCount
 
         vm.prev()
-        assertEquals(labels.last(), vm.currentLabel)
+        assertEquals(count - 1, (vm.uiState as UiState.Viewer).imageIndex)
         vm.next()
-        assertEquals(labels.first(), vm.currentLabel)
+        assertEquals(0, (vm.uiState as UiState.Viewer).imageIndex)
     }
 
     @Test
@@ -187,7 +176,7 @@ class AppViewModelTest {
 
         repeat(MAX_GATE_FAILURES) { vm.answerWrong() }
 
-        assertTrue("a lockout is in force", vm.gateState.lockedUntilElapsedMs > now)
+        assertTrue("a lockout is in force", vm.gateState.lockedUntilWallMs > now)
         vm.pickGateAnswer(vm.gateState.question.correct)
         assertTrue("the lockout outranks a correct answer", vm.uiState is UiState.Gate)
     }
@@ -214,7 +203,7 @@ class AppViewModelTest {
         vm.goHome()
         vm.openGate()
 
-        assertTrue("still locked", vm.gateState.lockedUntilElapsedMs > now)
+        assertTrue("still locked", vm.gateState.lockedUntilWallMs > now)
         vm.pickGateAnswer(vm.gateState.question.correct)
         assertTrue(vm.uiState is UiState.Gate)
     }
@@ -232,7 +221,7 @@ class AppViewModelTest {
         vm.openGate()
         vm.answerWrong()
 
-        assertEquals("not locked", 0L, vm.gateState.lockedUntilElapsedMs)
+        assertEquals("not locked", 0L, vm.gateState.lockedUntilWallMs)
     }
 
     // --------------------------------------------------------- theme toggles
@@ -244,19 +233,44 @@ class AppViewModelTest {
 
         assertTrue(vm.visibleThemes.none { it.id == "ocean" })
         assertEquals(THEME_DEFS.size - 1, vm.visibleThemes.size)
-        assertEquals(setOf("ocean"), store.saved)
+        assertEquals(setOf("ocean"), store.savedDisabled)
 
         vm.toggleThemeEnabled("ocean")
         assertTrue(vm.visibleThemes.any { it.id == "ocean" })
-        assertEquals(emptySet<String>(), store.saved)
+        assertEquals(emptySet<String>(), store.savedDisabled)
     }
 
     @Test
     fun disabledThemesAreReadBackOnRestart() {
-        val restarted = newViewModel(store = FakeThemeStore(setOf("farm")))
+        val restarted = newViewModel(store = FakeThemeStore(initialDisabled = setOf("farm")))
 
         assertTrue(restarted.visibleThemes.none { it.id == "farm" })
         assertTrue(restarted.isThemeEnabled("cars"))
+    }
+
+    /**
+     * `List<ThemeDef>` is unstable to the Compose compiler, so strong skipping
+     * compares HomeScreen's `themes` parameter by reference. A getter that
+     * re-filtered on every read returned a new list each time and made the
+     * screen unskippable; this pins the caching that fixed it.
+     */
+    @Test
+    fun visibleThemesKeepsTheSameInstanceUntilTheSelectionChanges() {
+        val vm = newViewModel()
+
+        assertSame("re-reading must not reallocate", vm.visibleThemes, vm.visibleThemes)
+
+        // Unrelated state changing must not invalidate it either — every
+        // navigation recomposes the caller that passes this down.
+        val beforeNavigation = vm.visibleThemes
+        vm.openTheme("cars")
+        vm.next()
+        vm.goHome()
+        assertSame("navigation must not reallocate", beforeNavigation, vm.visibleThemes)
+
+        vm.toggleThemeEnabled("cars")
+        assertNotEquals("a real change must be picked up", beforeNavigation, vm.visibleThemes)
+        assertTrue(vm.visibleThemes.none { it.id == "cars" })
     }
 
     @Test
@@ -320,8 +334,8 @@ class AppViewModelTest {
 
         val vm = newViewModel(savedState = handle)
 
-        val labels = THEME_DEFS.first { it.id == "cars" }.labels
-        assertEquals(UiState.Viewer("cars", labels.lastIndex), vm.uiState)
+        val count = THEME_DEFS.first { it.id == "cars" }.labelCount
+        assertEquals(UiState.Viewer("cars", count - 1), vm.uiState)
     }
 
     @Test

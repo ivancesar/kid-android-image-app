@@ -13,8 +13,9 @@ import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.lifecycle.SavedStateHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.kidsexplore.app.data.ThemeStore
+import androidx.test.platform.app.InstrumentationRegistry
 import com.kidsexplore.app.model.THEME_DEFS
+import com.kidsexplore.app.model.ThemeDef
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -29,8 +30,8 @@ import org.junit.runner.RunWith
  *
  * These are UI tests. The state machine itself is covered off-device by
  * `AppViewModelTest` in the unit-test source set, so the ViewModel here is
- * backed by an in-memory [ThemeStore] and a fresh [SavedStateHandle] rather
- * than by real SharedPreferences.
+ * backed by an in-memory [FakeThemeStore] and a fresh [SavedStateHandle];
+ * `SharedPreferencesThemeStoreTest` covers the real store separately.
  */
 @RunWith(AndroidJUnit4::class)
 class KidsExploreFlowTest {
@@ -40,15 +41,15 @@ class KidsExploreFlowTest {
 
     private lateinit var viewModel: AppViewModel
 
-    private val carLabels = THEME_DEFS.first { it.id == "cars" }.labels
+    private val resources = InstrumentationRegistry.getInstrumentation().targetContext.resources
 
-    private class FakeThemeStore : ThemeStore {
-        private var disabled: Set<String> = emptySet()
-        override fun loadDisabled(): Set<String> = disabled
-        override fun saveDisabled(disabled: Set<String>) {
-            this.disabled = disabled
-        }
-    }
+    /** Names and labels live in strings.xml now, so the tests resolve them the same way the UI does. */
+    private fun ThemeDef.displayName(): String = resources.getString(nameRes)
+
+    private fun ThemeDef.labels(): List<String> = resources.getStringArray(labelsRes).toList()
+
+    private val cars = THEME_DEFS.first { it.id == "cars" }
+    private val carLabels by lazy { cars.labels() }
 
     @Before
     fun setUp() {
@@ -92,8 +93,8 @@ class KidsExploreFlowTest {
     fun homeListsEveryTheme() {
         compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
         THEME_DEFS.forEach { theme ->
-            scrollTo(theme.name)
-            compose.onNodeWithText(theme.name).assertIsDisplayed()
+            scrollTo(theme.displayName())
+            compose.onNodeWithText(theme.displayName()).assertIsDisplayed()
         }
     }
 
@@ -164,7 +165,12 @@ class KidsExploreFlowTest {
         openGate()
         repeat(MAX_GATE_FAILURES) { answerWrongOnce() }
 
-        compose.onNodeWithText("Too many tries", substring = true).assertIsDisplayed()
+        // Matched by description, not text: the countdown reticks every
+        // second, so its semantics are cleared and replaced with a single
+        // frozen sentence — otherwise a live region would make TalkBack
+        // read a fresh countdown thirty times over.
+        compose.onNodeWithContentDescription("Too many tries", substring = true)
+            .assertIsDisplayed()
 
         // The right answer is now refused too, until the lockout expires.
         compose.onNodeWithText(gate().question.correct.toString()).performClick()
@@ -181,9 +187,29 @@ class KidsExploreFlowTest {
         compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
         openGate()
 
-        compose.onNodeWithText("Too many tries", substring = true).assertIsDisplayed()
+        // Matched by description, not text: the countdown reticks every
+        // second, so its semantics are cleared and replaced with a single
+        // frozen sentence — otherwise a live region would make TalkBack
+        // read a fresh countdown thirty times over.
+        compose.onNodeWithContentDescription("Too many tries", substring = true)
+            .assertIsDisplayed()
         compose.onNodeWithText(gate().question.correct.toString()).performClick()
         assertTrue(state() is UiState.Gate)
+    }
+
+    /**
+     * The gear used to sit inside the header, which fades out as soon as the
+     * grid leaves the top — so the app's only route into parent settings
+     * disappeared the moment a parent scrolled. It is pinned now.
+     */
+    @Test
+    fun theSettingsGearStaysReachableAfterScrollingTheGrid() {
+        scrollTo(THEME_DEFS.last().displayName())
+        compose.onNodeWithText("Pick something to look at!").assertDoesNotExist()
+
+        compose.onNodeWithContentDescription("Parent settings").assertIsDisplayed().performClick()
+
+        compose.onNodeWithText("Solve this to continue").assertIsDisplayed()
     }
 
     @Test
@@ -233,7 +259,7 @@ class KidsExploreFlowTest {
     fun fullJourneyHomeToViewerToSettingsAndBack() {
         // browse a theme
         compose.onNodeWithText("Dinosaurs").performClick()
-        val dinoLabels = THEME_DEFS.first { it.id == "dinosaurs" }.labels
+        val dinoLabels = THEME_DEFS.first { it.id == "dinosaurs" }.labels()
         compose.onNodeWithText(dinoLabels[0]).assertIsDisplayed()
         compose.onNodeWithText("Next").performClick()
         compose.onNodeWithText(dinoLabels[1]).assertIsDisplayed()

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -35,6 +36,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,7 +78,10 @@ fun HomeScreen(
     // that way the grid's own size never depends on the header's animated
     // visibility, which used to feed back into the scroll position and make
     // the list bounce as it hid/showed itself.
-    var headerHeightPx by remember { mutableIntStateOf(0) }
+    //
+    // Saveable so a rotation doesn't drop it back to 0 and reflow the grid
+    // against a 16dp top inset for a frame before the header remeasures.
+    var headerHeightPx by rememberSaveable { mutableIntStateOf(0) }
     val headerHeightDp = with(LocalDensity.current) { headerHeightPx.toDp() }
 
     Box(
@@ -157,8 +162,10 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    // Reserves the height the gear used to contribute, now
+                    // that the gear is pinned outside this Column — otherwise
+                    // the header shrinks and the grid's top padding with it.
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -167,32 +174,6 @@ fun HomeScreen(
                         fontSize = 15.sp,
                         color = NeutralColors.labelMuted,
                     )
-                    // The visible dial stays 36dp — small on purpose, it is
-                    // the parent's control — inside a 48dp touch target.
-                    val settingsLabel = stringResource(R.string.home_settings_button)
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .clickable(onClick = onOpenGate, role = Role.Button)
-                            .semantics { contentDescription = settingsLabel },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(NeutralColors.gearButtonBg),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = "⚙",
-                                fontSize = 16.sp,
-                                color = NeutralColors.labelMuted,
-                                modifier = Modifier.clearAndSetSemantics {},
-                            )
-                        }
-                    }
                 }
 
                 Text(
@@ -201,6 +182,39 @@ fun HomeScreen(
                     fontSize = 25.sp,
                     color = NeutralColors.labelDark,
                     lineHeight = 29.sp,
+                )
+            }
+        }
+
+        // Pinned rather than living in the fading header: this is the only
+        // route to parent settings anywhere in the app, and it used to vanish
+        // as soon as the grid scrolled, leaving a parent to hunt back to the
+        // top for it. Drawn last so it stays above the cards it now floats on.
+        val settingsLabel = stringResource(R.string.home_settings_button)
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(end = 22.dp, top = 26.dp)
+                // The visible dial stays 36dp — small on purpose, it is the
+                // parent's control — inside a 48dp touch target.
+                .size(48.dp)
+                .clip(CircleShape)
+                .clickable(onClick = onOpenGate, role = Role.Button)
+                .semantics { contentDescription = settingsLabel },
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(NeutralColors.gearButtonBg),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "⚙",
+                    fontSize = 16.sp,
+                    color = NeutralColors.labelMuted,
+                    modifier = Modifier.clearAndSetSemantics {},
                 )
             }
         }
@@ -243,7 +257,7 @@ private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
                     )
                 }
                 Text(
-                    text = theme.name,
+                    text = stringResource(theme.nameRes),
                     style = HeavyTextStyle.copy(
                         shadow = Shadow(color = Color.Black.copy(alpha = 0.12f), offset = Offset(0f, 2f), blurRadius = 1f),
                     ),

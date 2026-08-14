@@ -57,8 +57,10 @@ dependencies {
     // than to SharedPreferences directly.
     testImplementation(libs.junit)
 
-    // Instrumented tests (./gradlew connectedDebugAndroidTest) — Compose UI
-    // and the real SharedPreferences-backed store, so they need a device.
+    // Instrumented tests (./gradlew connectedDebugAndroidTest) — Compose UI,
+    // the string resources behind ThemeDef, and SharedPreferencesThemeStore
+    // itself, so they need a device. The flow tests fake the store; only
+    // SharedPreferencesThemeStoreTest touches the real one.
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.core.ktx)
     androidTestImplementation(platform(libs.compose.bom))
