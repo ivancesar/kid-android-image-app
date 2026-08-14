@@ -10,13 +10,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -38,13 +44,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kidsexplore.app.R
 import com.kidsexplore.app.model.ThemeDef
 import com.kidsexplore.app.ui.icons.ThemeIconGlyph
+import com.kidsexplore.app.ui.theme.BoldTextStyle
 import com.kidsexplore.app.ui.theme.HeavyTextStyle
 import com.kidsexplore.app.ui.theme.NeutralColors
 import com.kidsexplore.app.ui.theme.palette
@@ -54,6 +65,7 @@ fun HomeScreen(
     themes: List<ThemeDef>,
     onOpenTheme: (String) -> Unit,
     onOpenGate: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val gridState = rememberLazyGridState()
     val isAtTop by remember {
@@ -68,10 +80,18 @@ fun HomeScreen(
     val headerHeightDp = with(LocalDensity.current) { headerHeightPx.toDp() }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
-            .statusBarsPadding(),
+            // Top and sides are consumed here so the header sits clear of the
+            // status bar and any cutout. The bottom is deliberately left for
+            // the grid's contentPadding, so cards scroll under the navigation
+            // bar rather than stopping short of it.
+            .windowInsetsPadding(
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+            ),
     ) {
+        val bottomInset = WindowInsets.safeDrawing.asPaddingValues().calculateBottomPadding()
+
         LazyVerticalGrid(
             // Adaptive rather than a fixed 2 columns: in landscape (or on a
             // tablet) this fits more, narrower columns instead of stretching
@@ -84,12 +104,41 @@ fun HomeScreen(
                 start = 22.dp,
                 end = 22.dp,
                 top = headerHeightDp + 16.dp,
-                bottom = 12.dp,
+                bottom = 12.dp + bottomInset,
             ),
             modifier = Modifier.fillMaxSize(),
         ) {
             items(themes, key = { it.id }) { theme ->
                 ThemeCard(theme = theme, onClick = { onOpenTheme(theme.id) })
+            }
+        }
+
+        // A parent can switch every theme off, which otherwise leaves a header
+        // floating over nothing and no hint at where the content went.
+        if (themes.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = headerHeightDp)
+                    .padding(horizontal = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.home_empty_title),
+                    style = HeavyTextStyle,
+                    fontSize = 20.sp,
+                    color = NeutralColors.labelDark,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.home_empty_body),
+                    fontSize = 14.sp,
+                    color = NeutralColors.subtitleText,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp,
+                )
             }
         }
 
@@ -113,25 +162,41 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "KIDS EXPLORE",
-                        style = BoldLabelStyle,
+                        text = stringResource(R.string.home_brand),
+                        style = BoldTextStyle,
                         fontSize = 15.sp,
                         color = NeutralColors.labelMuted,
                     )
+                    // The visible dial stays 36dp — small on purpose, it is
+                    // the parent's control — inside a 48dp touch target.
+                    val settingsLabel = stringResource(R.string.home_settings_button)
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(48.dp)
                             .clip(CircleShape)
-                            .background(NeutralColors.gearButtonBg)
-                            .clickable(onClick = onOpenGate),
+                            .clickable(onClick = onOpenGate, role = Role.Button)
+                            .semantics { contentDescription = settingsLabel },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("⚙", fontSize = 16.sp, color = NeutralColors.labelMuted)
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(NeutralColors.gearButtonBg),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "⚙",
+                                fontSize = 16.sp,
+                                color = NeutralColors.labelMuted,
+                                modifier = Modifier.clearAndSetSemantics {},
+                            )
+                        }
                     }
                 }
 
                 Text(
-                    text = "Pick something to look at!",
+                    text = stringResource(R.string.home_title),
                     style = HeavyTextStyle,
                     fontSize = 25.sp,
                     color = NeutralColors.labelDark,
@@ -142,8 +207,6 @@ fun HomeScreen(
     }
 }
 
-private val BoldLabelStyle = TextStyle(fontWeight = FontWeight.ExtraBold, letterSpacing = 0.5.sp)
-
 @Composable
 private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
     val palette = theme.palette()
@@ -152,7 +215,7 @@ private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
             .aspectRatio(1f)
             .clip(RoundedCornerShape(26.dp))
             .background(palette.cardBg)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick, role = Role.Button),
     ) {
         Box(
             modifier = Modifier

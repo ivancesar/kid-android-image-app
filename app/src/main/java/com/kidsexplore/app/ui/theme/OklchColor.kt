@@ -11,9 +11,16 @@ import kotlin.math.sin
  * `oklch(72% 0.16 15)`) to a Compose [Color], via the standard OKLab
  * round-trip. Keeps every theme's palette derived from just its hue, the
  * same way the source stylesheet does.
+ *
+ * [l] is lightness as a 0..1 fraction, not a percentage — `oklch(72% ...)` in
+ * the stylesheet is `oklch(0.72f, ...)` here.
+ *
+ * Colors outside the sRGB gamut are clamped per channel in linear light by
+ * [linearToSrgb], which shifts hue rather than preserving it. Every palette in
+ * this app sits comfortably inside the gamut, so nothing currently relies on
+ * the out-of-gamut behavior being principled.
  */
-fun oklch(lPercent: Float, c: Float, hDegrees: Float): Color {
-    val l = lPercent
+fun oklch(l: Float, c: Float, hDegrees: Float): Color {
     val hRad = Math.toRadians(hDegrees.toDouble())
     val a = c * cos(hRad).toFloat()
     val b = c * sin(hRad).toFloat()
@@ -72,7 +79,7 @@ object NeutralColors {
     val errorText = oklch(0.55f, 0.18f, 20f)
     val doneButtonBg = oklch(0.45f, 0.16f, 250f)
     val gateOptionBg = oklch(0.55f, 0.16f, 250f)
-    val gateCorrectBg = oklch(0.60f, 0.17f, 140f)
+    val gateOptionLockedBg = oklch(0.72f, 0.03f, 250f)
     val rowBgEnabled = oklch(0.94f, 0.02f, 90f)
     val rowBgDisabled = oklch(0.97f, 0.005f, 90f)
     val subtitleText = oklch(0.48f, 0.02f, 90f)

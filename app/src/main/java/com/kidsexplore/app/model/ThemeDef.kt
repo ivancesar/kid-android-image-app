@@ -1,9 +1,15 @@
 package com.kidsexplore.app.model
 
+import androidx.compose.runtime.Immutable
+
 enum class ThemeIcon {
     CAR, DOZER, ANIMAL, DINO, PLANET, OCEAN, FARM, TRAIN
 }
 
+// THEME_DEFS is a compile-time constant list, so the labels list inside each
+// def never changes — telling Compose that keeps the screens skippable despite
+// taking List/Set parameters.
+@Immutable
 data class ThemeDef(
     val id: String,
     val name: String,

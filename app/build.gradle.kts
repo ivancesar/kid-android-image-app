@@ -1,6 +1,6 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -27,26 +27,41 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+            // No signingConfig here on purpose — release signing needs a
+            // keystore, which is a deployment decision, not a build one.
         }
     }
 }
 
 dependencies {
-    implementation(platform("androidx.compose:compose-bom:2026.08.00"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.activity:activity-compose:1.13.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
-    implementation("androidx.core:core-ktx:1.19.0")
+    implementation(platform(libs.compose.bom))
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.graphics)
+    implementation(libs.compose.material3)
+    implementation(libs.compose.foundation)
+    implementation(libs.activity.compose)
+    implementation(libs.lifecycle.viewmodel.compose)
+    // Used directly: AppViewModel takes a SavedStateHandle so screen state
+    // survives process death, not just rotation.
+    implementation(libs.lifecycle.viewmodel.savedstate)
+    implementation(libs.core.ktx)
 
-    // Instrumented tests (./gradlew connectedDebugAndroidTest) — they need a
-    // real Context for SharedPreferences, so they run on a device/emulator.
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    androidTestImplementation("androidx.test:core-ktx:1.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2026.08.00"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    // Plain JVM tests (./gradlew testDebugUnitTest) — the whole state machine
+    // runs here, because AppViewModel talks to a ThemeStore interface rather
+    // than to SharedPreferences directly.
+    testImplementation(libs.junit)
+
+    // Instrumented tests (./gradlew connectedDebugAndroidTest) — Compose UI
+    // and the real SharedPreferences-backed store, so they need a device.
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.test.core.ktx)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
 }

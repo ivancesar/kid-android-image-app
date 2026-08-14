@@ -1,3 +1,11 @@
 <resources>
     <color name="ic_launcher_background">#F4A94A</color>
+
+    <!--
+      The sRGB value of NeutralColors.appBackground, i.e. oklch(0.96 0.01 90).
+      Used only as the cold-start windowBackground, so the launch window matches
+      the Surface that Compose paints a moment later instead of flashing white.
+      Keep the two in step if that OKLCH value ever changes.
+    -->
+    <color name="app_background">#F4F2EA</color>
 </resources>

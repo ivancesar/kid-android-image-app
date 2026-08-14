@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import com.kidsexplore.app.model.ThemeIcon
+import kotlin.math.min
 
 /**
  * Renders one of the theme icons, ported shape-for-shape from the source
@@ -22,10 +23,14 @@ import com.kidsexplore.app.model.ThemeIcon
 @Composable
 fun ThemeIconGlyph(icon: ThemeIcon, accent: Color, modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
-        val s = size.width / 64f
+        // Scale to the shorter side and centre the 64x64 viewBox inside the
+        // given space, so a non-square modifier crops nothing.
+        val s = min(size.width, size.height) / 64f
+        val originX = (size.width - 64f * s) / 2f
+        val originY = (size.height - 64f * s) / 2f
         val white = Color.White
 
-        fun offset(x: Float, y: Float) = Offset(x * s, y * s)
+        fun offset(x: Float, y: Float) = Offset(originX + x * s, originY + y * s)
         fun circle(cx: Float, cy: Float, r: Float, color: Color) =
             drawCircle(color = color, radius = r * s, center = offset(cx, cy))
         fun ellipse(cx: Float, cy: Float, rx: Float, ry: Float, color: Color) =
