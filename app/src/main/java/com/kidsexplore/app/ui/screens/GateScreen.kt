@@ -1,6 +1,5 @@
 package com.kidsexplore.app.ui.screens
 
-import android.os.SystemClock
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,7 +29,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -46,7 +50,7 @@ import kotlinx.coroutines.delay
 fun GateScreen(
     question: GateQuestion,
     wrong: Boolean,
-    lockedUntilElapsedMs: Long,
+    lockedUntilWallMs: Long,
     onPick: (Int) -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
@@ -54,13 +58,13 @@ fun GateScreen(
     // Counts the lockout down so the screen re-enables itself without needing
     // the ViewModel to hold a timer. The ViewModel still re-checks the deadline
     // in pickGateAnswer(), so this is presentation, not enforcement.
-    var remainingSeconds by remember(lockedUntilElapsedMs) {
-        mutableIntStateOf(secondsUntil(lockedUntilElapsedMs))
+    var remainingSeconds by remember(lockedUntilWallMs) {
+        mutableIntStateOf(secondsUntil(lockedUntilWallMs))
     }
-    LaunchedEffect(lockedUntilElapsedMs) {
-        while (secondsUntil(lockedUntilElapsedMs) > 0) {
+    LaunchedEffect(lockedUntilWallMs) {
+        while (secondsUntil(lockedUntilWallMs) > 0) {
             delay(200)
-            remainingSeconds = secondsUntil(lockedUntilElapsedMs)
+            remainingSeconds = secondsUntil(lockedUntilWallMs)
         }
     }
     val locked = remainingSeconds > 0
@@ -129,6 +133,10 @@ fun GateScreen(
                                         if (locked) NeutralColors.gateOptionLockedBg
                                         else NeutralColors.gateOptionBg
                                     )
+                                    // enabled = false also marks the node
+                                    // disabled to TalkBack, so the reason the
+                                    // buttons stopped responding is the live
+                                    // countdown below plus "disabled" here.
                                     .clickable(enabled = !locked, role = Role.Button) { onPick(value) }
                                     .padding(vertical = 18.dp),
                             )
@@ -136,24 +144,42 @@ fun GateScreen(
                     }
                 }
             }
+            // Both messages are the screen's only feedback, and both appear
+            // without the focus moving, so TalkBack would otherwise never read
+            // them. Polite: they follow the child's own tap, nothing is urgent
+            // enough to cut off whatever is already being spoken.
             when {
-                locked -> Text(
-                    text = pluralStringResource(
+                locked -> {
+                    val countdown = pluralStringResource(
                         R.plurals.gate_locked,
                         remainingSeconds,
                         remainingSeconds,
-                    ),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    color = NeutralColors.errorText,
-                    textAlign = TextAlign.Center,
-                )
+                    )
+                    // The visible text reticks every second. If that drove the
+                    // live region TalkBack would read a fresh countdown thirty
+                    // times over, so the node is described once from the
+                    // deadline and cleared of the changing text — sighted users
+                    // still get the tick, screen-reader users get one sentence.
+                    val announcement = remember(lockedUntilWallMs) { countdown }
+                    Text(
+                        text = countdown,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = NeutralColors.errorText,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.clearAndSetSemantics {
+                            liveRegion = LiveRegionMode.Polite
+                            contentDescription = announcement
+                        },
+                    )
+                }
 
                 wrong -> Text(
                     text = stringResource(R.string.gate_wrong),
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     color = NeutralColors.errorText,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                 )
             }
             Text(
@@ -171,13 +197,17 @@ fun GateScreen(
 }
 
 /**
- * Whole seconds left until [deadlineElapsedMs], rounded up so the countdown
- * shows "1 second" rather than "0" for the final tick. 0 means not locked —
- * that is also how the ViewModel encodes "no lockout".
+ * Whole seconds left until [deadlineWallMs], rounded up so the countdown shows
+ * "1 second" rather than "0" for the final tick. 0 means not locked — that is
+ * also how the ViewModel encodes "no lockout".
+ *
+ * Wall-clock to match the deadline the ViewModel persists; it already caps that
+ * deadline at one lockout from now, so a backwards clock change cannot make
+ * this count down from something absurd.
  */
-private fun secondsUntil(deadlineElapsedMs: Long): Int {
-    if (deadlineElapsedMs <= 0L) return 0
-    val remaining = deadlineElapsedMs - SystemClock.elapsedRealtime()
+private fun secondsUntil(deadlineWallMs: Long): Int {
+    if (deadlineWallMs <= 0L) return 0
+    val remaining = deadlineWallMs - System.currentTimeMillis()
     if (remaining <= 0L) return 0
     return ((remaining + 999L) / 1000L).toInt()
 }

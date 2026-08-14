@@ -32,6 +32,7 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 
 - Header: "KIDS EXPLORE" label, a settings gear button (top right) that opens the **parental gate**, and the "Pick something to look at!" title.
 - The header fades out once the grid is scrolled away from the top, and fades back in when scrolled back — it floats over the grid rather than sharing layout space with it, so its own size never affects the grid's, which would otherwise cause the list to bounce as it hid/showed itself.
+- The gear is pinned rather than part of the fading header: it is the app's only route into parent settings, and it used to disappear the moment the grid scrolled.
 - A grid of theme cards — one per enabled theme, with as many columns as fit the available width (2 in portrait, more in landscape or on a wider screen) rather than a fixed count. Each card shows a themed icon on a translucent circle, the theme name, and a color pair (fill + a darker bottom accent stripe) derived from the theme's hue.
 - Only themes enabled in **Settings** appear here; disabling a theme removes it from this grid immediately. If a parent switches every theme off, the grid is replaced by a short message pointing back at parent settings.
 - Tapping a card opens the **Viewer** for that theme.
@@ -41,7 +42,7 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - Dark full-bleed background.
 - A small square "Home" button returns to Home — that's the entire header here, no theme name shown, to keep the focus on the image.
 - A large rounded placeholder card, with a diagonal two-tone stripe pattern in the theme's colors, showing the current item's label in monospace text, centered.
-- The same labelled "◀ Back" / "▶ Next" pill buttons are used at every size, so the controls look and behave identically regardless of how the device is held. Which arrangement is used depends on the window's width, not its orientation — the breakpoint is 600dp:
+- The same labelled "◀ Back" / "▶ Next" pill buttons are used at every size, so the controls look and behave identically regardless of how the device is held. The arrows and the swipe direction mirror in an RTL locale, where the sequence advances right-to-left. Which arrangement is used depends on the window's width, not its orientation — the breakpoint is 600dp:
   - **Narrow (under 600dp)**: the card fills the remaining space above a button row, with Back/Next side by side underneath it.
   - **Wide (600dp and up)**: Back/Next flank the card in a single row — the card sits between them rather than under them — and the row fills the full screen height (down to, but not under, the status bar), so the image gets as much vertical room as the display allows. The Home button floats over the top-left corner of the image instead of sitting in its own header row, since there's no header row to spare the height for.
 - Either way, Back/Next cycle through the theme's 8 items, wrapping around at both ends.
@@ -52,7 +53,8 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - A simple math question: two random numbers between 2 and 7, added together (`a + b = ?`).
 - Four answer buttons in a 2×2 grid — the correct sum plus three distinct wrong values, none of them within 1 of the answer. Keeping the distractors adjacent to the sum rewarded a child who could nearly add.
 - Tapping the correct answer opens **Settings**. Tapping a wrong answer shows "Not quite, try again!" **and replaces the question** — otherwise a child reaches Settings by exhausting all four buttons.
-- After 3 wrong answers the gate stops accepting taps for 30 seconds and shows a countdown. The lockout is enforced in the ViewModel, not just by disabling the buttons, and it survives leaving and reopening the gate — a lockout you can clear with Cancel is no lockout. A correct answer clears the failure count.
+- After 3 wrong answers the gate stops accepting taps for 30 seconds and shows a countdown. The lockout is enforced in the ViewModel, not just by disabling the buttons, and both it and the failure count are persisted through `ThemeStore` — so they survive Cancel, and they survive the app being closed and relaunched. That last part matters more than it sounds: saved instance state is discarded when the Activity finishes, and Back from Home finishes it, so holding this in a `SavedStateHandle` meant a child could clear a lockout with two taps and reopen to a fresh set of free guesses. A correct answer clears the failure count.
+- Because the deadline outlives the process it is wall-clock rather than elapsed-realtime, which would be measured from boot. A stored deadline more than one lockout in the future means the device clock moved backwards; it is pulled back on load, so a clock change cannot lock a parent out of their own settings.
 - "Cancel" returns to Home without opening Settings.
 - A fresh question is generated every time the gate is opened.
 
@@ -65,7 +67,7 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 
 ## Themes
 
-Eight fixed themes, each with a name, a hue, an icon, and 8 item labels:
+Eight fixed themes, each with a hue, an icon, and — in `strings.xml` — a name and 8 item labels. `ThemeDef` holds only ids and a `labelCount`, which is what keeps `AppViewModel` free of Android: it pages an index, the UI resolves the text. `ThemeResourcesTest` asserts each `labelCount` matches its array, since nothing else in the build ties the two files together.
 
 | Theme | Hue | Icon |
 |---|---|---|
@@ -94,6 +96,7 @@ The Viewer never shows real photos — there are none bundled with the app. Each
 
 - Kotlin, Jetpack Compose (Material 3), single `ComponentActivity`
 - One `ViewModel` (`AppViewModel`) holds all app state as a sealed `UiState`, plus the set of disabled themes and the gate's failure/lockout counters
+- User-facing text, including every theme name and item label, lives in `strings.xml`
 - Persistence goes through a `ThemeStore` interface; `SharedPreferencesThemeStore` is the only implementation. That seam is what lets the entire state machine be tested off-device
 - No navigation library, no networking, no local database
 - Dependencies are declared in a Gradle version catalog (`gradle/libs.versions.toml`)
@@ -106,9 +109,9 @@ app/src/main/java/com/kidsexplore/app/
 ├── MainActivity.kt              # hosts Compose content, switches on UiState
 ├── AppViewModel.kt              # UiState machine, gate logic, saved state
 ├── data/
-│   └── ThemeStore.kt            # persistence seam + SharedPreferences impl
+│   └── ThemeStore.kt            # persistence seam (themes + gate lock) + SharedPreferences impl
 ├── model/
-│   └── ThemeDef.kt              # theme data + the 8 THEME_DEFS entries
+│   └── ThemeDef.kt              # theme ids/hues/icons + the 8 THEME_DEFS entries
 └── ui/
     ├── theme/
     │   ├── OklchColor.kt        # OKLCH → sRGB conversion, per-theme palettes
@@ -150,9 +153,12 @@ Reports land in `app/build/reports/tests/testDebugUnitTest/index.html` and `app/
 
 | File | Source set | Covers |
 |---|---|---|
-| `AppViewModelTest` | `test` (JVM) | The whole state machine: transitions, paging and wrap-around, unknown theme ids, gate question generation over 500 seeds, the lockout (driven by a hand-advanced clock rather than a 30-second wait), theme toggling, and restore-from-process-death including out-of-range indices. `AppViewModel` takes its store, its `Random` and its clock as parameters, so none of this touches Android. |
+| `AppViewModelTest` | `test` (JVM) | The whole state machine: transitions, paging and wrap-around, unknown theme ids, gate question generation over 500 seeds, the lockout (driven by a hand-advanced clock rather than a 30-second wait), theme toggling, `visibleThemes` caching, and restore-from-process-death including out-of-range indices. `AppViewModel` takes its store, its `Random` and its clock as parameters, so none of this touches Android. |
+| `GateLockPersistenceTest` | `test` (JVM) | The gate's durability, which is the one thing protecting Settings: that the lockout **and** the failure count survive the app being closed and relaunched, that the lockout still expires on its own, that a correct answer clears it, that a backwards device clock cannot strand a parent, and that the question rotates on every wrong answer. A relaunch is modelled the way Android behaves — same store, fresh `SavedStateHandle`. |
 | `KidsExploreFlowTest` | `androidTest` | The end-to-end journey through the real screens: Home → Viewer (paging by button and by swipe) → Home → gate (wrong answer, lockout, cancel, correct answer) → Settings (toggle a theme) → Home, asserting the grid updates. |
-| `ViewerLayoutTest` | `androidTest` | The Viewer's layout at both sides of the 600dp breakpoint, using `DeviceConfigurationOverride(ForcedSize(...))` so a window wider than the test device still renders on screen. Asserts the buttons actually sit beside the image when wide and below it when narrow, rather than only that a branch was taken. |
+| `ViewerLayoutTest` | `androidTest` | The Viewer's layout at both sides of the 600dp breakpoint, using `DeviceConfigurationOverride(ForcedSize(...))` so a window wider than the test device still renders on screen. Asserts the buttons actually sit beside the image when wide and below it when narrow, rather than only that a branch was taken — and that both the button order and the swipe direction mirror under an RTL override. |
+| `SharedPreferencesThemeStoreTest` | `androidTest` | The real store against real preferences: themes and the gate lock round-tripping through a *second* store instance, the two keys not treading on each other, ids for removed themes being pruned on read, and a lockout surviving a relaunch through actual SharedPreferences rather than a fake. |
+| `ThemeResourcesTest` | `androidTest` | Holds `ThemeDef` and `strings.xml` together: every theme's `labelCount` matches the length of its string array, names and labels are non-blank, and ids and names are unique. |
 
 To run a single instrumented class:
 
@@ -160,7 +166,7 @@ To run a single instrumented class:
 ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.kidsexplore.app.KidsExploreFlowTest
 ```
 
-CI (`.github/workflows/ci.yml`) runs lint, the JVM tests and a debug build on every pull request. The instrumented tests are not run there — they need an emulator runner.
+There is no CI; run `./gradlew lint testDebugUnitTest assembleDebug` locally, and the instrumented suite against a device or emulator, before releasing.
 
 ## Known limitations
 
@@ -168,4 +174,5 @@ CI (`.github/workflows/ci.yml`) runs lint, the JVM tests and a debug build on ev
 - Nothing stops a child leaving the app for the launcher. The gate protects **Settings**, not the app's boundary; Android's screen pinning is what would deliver that, and it is not wired up.
 - No confirmation/undo when a parent disables a theme a child was mid-viewing — they're just returned to Home the next time they tap Home.
 - Font is the system sans-serif at heavy weights, approximating the source design's Nunito 800/900; no font file is bundled.
+- Only English strings are shipped. The text is all in `strings.xml` now, so a translation is a matter of adding `values-<locale>/`; the Viewer's controls already mirror for RTL.
 - Light theme only, by design: the palette is a fixed bright one with no dark counterpart, so the colour scheme is pinned rather than following the system setting.

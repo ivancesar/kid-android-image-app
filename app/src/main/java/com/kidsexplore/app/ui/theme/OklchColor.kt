@@ -1,6 +1,7 @@
 package com.kidsexplore.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.model.ThemeDef
 import kotlin.math.cos
 import kotlin.math.pow
@@ -61,11 +62,18 @@ data class ThemePalette(
     val cardBorder: Color,
 )
 
-fun ThemeDef.palette(): ThemePalette = ThemePalette(
+private fun paletteFor(hue: Float) = ThemePalette(
     cardBg = oklch(0.72f, 0.16f, hue),
     stripe = oklch(0.66f, 0.17f, hue),
     cardBorder = oklch(0.50f, 0.19f, hue),
 )
+
+// Every hue is a compile-time constant, so the nine pow() calls a palette costs
+// need happen once rather than on every recomposition of every card and row.
+private val PALETTES: Map<String, ThemePalette> =
+    THEME_DEFS.associate { it.id to paletteFor(it.hue) }
+
+fun ThemeDef.palette(): ThemePalette = PALETTES[id] ?: paletteFor(hue)
 
 /** Neutral (near-hue-90) colors used throughout the source outside the theme cards. */
 object NeutralColors {

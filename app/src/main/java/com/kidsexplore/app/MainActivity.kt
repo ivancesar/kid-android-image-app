@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.res.stringArrayResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.ui.screens.GateScreen
@@ -70,9 +71,14 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
             // coerces a restored index. There is no valid Viewer to fall back
             // from, which is the point of the sealed state.
             val theme = THEME_DEFS.first { it.id == state.themeId }
+            // The ViewModel wraps the index against ThemeDef.labelCount, which
+            // it trusts to match this array; ThemeResourcesTest holds them
+            // together. Coerced anyway — a mismatch should not crash a child's
+            // screen, and the test is what makes the drift loud.
+            val labels = stringArrayResource(theme.labelsRes)
             ViewerScreen(
                 theme = theme,
-                currentLabel = theme.labels[state.imageIndex],
+                currentLabel = labels[state.imageIndex.coerceIn(labels.indices)],
                 onHome = viewModel::goHome,
                 onNext = viewModel::next,
                 onPrev = viewModel::prev,
@@ -82,7 +88,7 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
         is UiState.Gate -> GateScreen(
             question = state.question,
             wrong = state.wrong,
-            lockedUntilElapsedMs = state.lockedUntilElapsedMs,
+            lockedUntilWallMs = state.lockedUntilWallMs,
             onPick = viewModel::pickGateAnswer,
             onCancel = viewModel::goHome,
         )

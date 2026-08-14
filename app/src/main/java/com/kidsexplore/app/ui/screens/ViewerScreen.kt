@@ -33,12 +33,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kidsexplore.app.R
@@ -48,9 +53,13 @@ import com.kidsexplore.app.ui.theme.ThemePalette
 import com.kidsexplore.app.ui.theme.palette
 import kotlin.math.hypot
 
-/** Arrows live here rather than inside a translatable string. */
-private const val BACK_GLYPH = "◀"
-private const val NEXT_GLYPH = "▶"
+/**
+ * Arrows live here rather than inside a translatable string — but they do have
+ * to mirror, so they are chosen from the layout direction rather than fixed.
+ * "Back" always points toward the start edge, "Next" toward the end.
+ */
+private const val LEFT_GLYPH = "◀"
+private const val RIGHT_GLYPH = "▶"
 
 /**
  * Below this the nav buttons sit under the image; at or above it they flank it.
@@ -72,12 +81,22 @@ fun ViewerScreen(
 ) {
     val palette = theme.palette()
 
+    // The manifest declares supportsRtl, so the controls have to honour it:
+    // in an RTL locale the sequence advances right-to-left, which flips both
+    // the arrow glyphs and the direction of a "next" swipe. The Row itself
+    // needs no help — it already lays Back out at the start edge.
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val backGlyph = if (rtl) RIGHT_GLYPH else LEFT_GLYPH
+    val nextGlyph = if (rtl) LEFT_GLYPH else RIGHT_GLYPH
+    /** Sign of a drag that means "next": leftward in LTR, rightward in RTL. */
+    val nextSign = if (rtl) 1f else -1f
+
     // pointerInput is keyed on theme.id alone, so it would otherwise hold the
     // callbacks captured the first time a theme was shown.
     val currentOnNext by rememberUpdatedState(onNext)
     val currentOnPrev by rememberUpdatedState(onPrev)
 
-    val swipeModifier = Modifier.pointerInput(theme.id) {
+    val swipeModifier = Modifier.pointerInput(theme.id, nextSign) {
         val thresholdPx = 60.dp.toPx()
         // A plain local: the gesture callbacks share this scope, and nothing in
         // composition reads it, so snapshot state bought nothing here.
@@ -86,8 +105,9 @@ fun ViewerScreen(
             onDragStart = { dragTotal = 0f },
             onDragCancel = { dragTotal = 0f },
             onDragEnd = {
-                if (dragTotal <= -thresholdPx) currentOnNext()
-                else if (dragTotal >= thresholdPx) currentOnPrev()
+                val towardNext = dragTotal * nextSign
+                if (towardNext >= thresholdPx) currentOnNext()
+                else if (towardNext <= -thresholdPx) currentOnPrev()
                 dragTotal = 0f
             },
         ) { change, dragAmount ->
@@ -134,9 +154,9 @@ fun ViewerScreen(
                         .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 16.dp),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    NavPillButton(BACK_GLYPH, stringResource(R.string.viewer_back), palette.cardBorder, onPrev)
+                    NavPillButton(backGlyph, stringResource(R.string.viewer_back), palette.cardBorder, onPrev)
                     Spacer(modifier = Modifier.width(24.dp))
-                    NavPillButton(NEXT_GLYPH, stringResource(R.string.viewer_next), palette.cardBorder, onNext)
+                    NavPillButton(nextGlyph, stringResource(R.string.viewer_next), palette.cardBorder, onNext)
                 }
             }
         } else {
@@ -150,7 +170,7 @@ fun ViewerScreen(
                     .then(swipeModifier),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                NavPillButton(BACK_GLYPH, stringResource(R.string.viewer_back), palette.cardBorder, onPrev)
+                NavPillButton(backGlyph, stringResource(R.string.viewer_back), palette.cardBorder, onPrev)
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -160,7 +180,7 @@ fun ViewerScreen(
                 ) {
                     ImageCard(palette = palette, currentLabel = currentLabel)
                 }
-                NavPillButton(NEXT_GLYPH, stringResource(R.string.viewer_next), palette.cardBorder, onNext)
+                NavPillButton(nextGlyph, stringResource(R.string.viewer_next), palette.cardBorder, onNext)
             }
 
             Row(
@@ -186,6 +206,9 @@ private fun ImageCard(palette: ThemePalette, currentLabel: String) {
             .padding(20.dp),
         contentAlignment = Alignment.Center,
     ) {
+        // The entire content of the screen. Back/Next/swipe replace it without
+        // moving focus, so without a live region TalkBack says nothing at all
+        // when a child pages through the set.
         Text(
             text = currentLabel,
             fontFamily = FontFamily.Monospace,
@@ -193,6 +216,7 @@ private fun ImageCard(palette: ThemePalette, currentLabel: String) {
             color = Color.White,
             textAlign = TextAlign.Center,
             lineHeight = 24.sp,
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         )
     }
 }
