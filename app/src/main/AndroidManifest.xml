@@ -8,6 +8,12 @@
         android:theme="@style/Theme.KidsExplore"
         android:supportsRtl="true">
 
+        <!--
+            Rotation is deliberately left free: a phone handed to a child gets
+            held every which way, and both Viewer orientations are designed for.
+            No android:configChanges, so the activity is recreated on rotation —
+            which is why all state lives in AppViewModel rather than the activity.
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

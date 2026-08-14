@@ -11,13 +11,21 @@ import kotlin.math.sin
  * `oklch(72% 0.16 15)`) to a Compose [Color], via the standard OKLab
  * round-trip. Keeps every theme's palette derived from just its hue, the
  * same way the source stylesheet does.
+ *
+ * @param lightness 0..1, *not* a percentage — the CSS `72%` above is `0.72f`
+ *   here.
+ * @param c chroma, in OKLCH's own units (roughly 0..0.4 for sRGB colors).
+ * @param hDegrees hue angle in degrees.
  */
-fun oklch(lPercent: Float, c: Float, hDegrees: Float): Color {
-    val l = lPercent
+fun oklch(lightness: Float, c: Float, hDegrees: Float): Color {
+    val l = lightness
     val hRad = Math.toRadians(hDegrees.toDouble())
     val a = c * cos(hRad).toFloat()
     val b = c * sin(hRad).toFloat()
 
+    // Below are the two standard published matrices of the OKLab transform,
+    // used verbatim — none of these constants are tuned for this app.
+    // OKLab -> nonlinear LMS:
     val l_ = l + 0.3963377774f * a + 0.2158037573f * b
     val m_ = l - 0.1055613458f * a - 0.0638541728f * b
     val s_ = l - 0.0894841775f * a - 1.2914855480f * b
@@ -26,6 +34,7 @@ fun oklch(lPercent: Float, c: Float, hDegrees: Float): Color {
     val mCubed = m_ * m_ * m_
     val sCubed = s_ * s_ * s_
 
+    // LMS -> linear sRGB:
     val rLinear = 4.0767416621f * lCubed - 3.3077115913f * mCubed + 0.2309699292f * sCubed
     val gLinear = -1.2684380046f * lCubed + 2.6097574011f * mCubed - 0.3413193965f * sCubed
     val bLinear = -0.0041960863f * lCubed - 0.7034186147f * mCubed + 1.7076147010f * sCubed
@@ -37,6 +46,11 @@ fun oklch(lPercent: Float, c: Float, hDegrees: Float): Color {
     )
 }
 
+/**
+ * Applies the sRGB transfer function. Out-of-gamut channels are simply clamped
+ * rather than gamut-mapped — cruder than what a browser does for `oklch()`, but
+ * every value used here is well inside sRGB, so nothing is actually clipped.
+ */
 private fun linearToSrgb(channel: Float): Float {
     val c = channel.coerceIn(0f, 1f)
     val srgb = if (c <= 0.0031308f) {
@@ -72,7 +86,6 @@ object NeutralColors {
     val errorText = oklch(0.55f, 0.18f, 20f)
     val doneButtonBg = oklch(0.45f, 0.16f, 250f)
     val gateOptionBg = oklch(0.55f, 0.16f, 250f)
-    val gateCorrectBg = oklch(0.60f, 0.17f, 140f)
     val rowBgEnabled = oklch(0.94f, 0.02f, 90f)
     val rowBgDisabled = oklch(0.97f, 0.005f, 90f)
     val subtitleText = oklch(0.48f, 0.02f, 90f)

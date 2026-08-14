@@ -14,8 +14,11 @@ import androidx.compose.ui.text.font.FontWeight
 val KidsFontFamily = FontFamily.SansSerif
 
 val HeavyTextStyle = TextStyle(fontFamily = KidsFontFamily, fontWeight = FontWeight.Black)
-val BoldTextStyle = TextStyle(fontFamily = KidsFontFamily, fontWeight = FontWeight.ExtraBold)
 
+// Nothing is wrapped in a Surface, so these two are near-inert: the backdrop
+// the user actually sees is `android:windowBackground` from themes.xml, and
+// HomeScreen paints NeutralColors.appBackground itself behind its header.
+// They stay for the Material components that consult the scheme by default.
 private val KidsColorScheme = lightColorScheme(
     background = NeutralColors.appBackground,
     surface = NeutralColors.screenBackground,

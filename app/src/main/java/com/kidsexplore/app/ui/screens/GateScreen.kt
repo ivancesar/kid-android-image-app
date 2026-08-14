@@ -28,6 +28,12 @@ import com.kidsexplore.app.GateQuestion
 import com.kidsexplore.app.ui.theme.HeavyTextStyle
 import com.kidsexplore.app.ui.theme.NeutralColors
 
+/**
+ * The parental gate standing between the Home screen's gear button and
+ * Settings. An addition problem is enough to stop a pre-reader without being an
+ * obstacle to an adult — this guards a preference screen, not anything
+ * sensitive, so it is intentionally not a real authentication barrier.
+ */
 @Composable
 fun GateScreen(
     question: GateQuestion,

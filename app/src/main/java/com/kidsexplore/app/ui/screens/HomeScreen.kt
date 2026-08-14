@@ -142,6 +142,7 @@ fun HomeScreen(
     }
 }
 
+/** Local to the "KIDS EXPLORE" wordmark, which is the only text that tracks out. */
 private val BoldLabelStyle = TextStyle(fontWeight = FontWeight.ExtraBold, letterSpacing = 0.5.sp)
 
 @Composable

@@ -29,6 +29,10 @@ import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.ui.theme.NeutralColors
 import com.kidsexplore.app.ui.theme.palette
 
+/**
+ * Parent-facing screen for choosing which themes appear on Home. Reachable only
+ * through [com.kidsexplore.app.ui.screens.GateScreen].
+ */
 @Composable
 fun SettingsScreen(
     enabledThemes: Map<String, Boolean>,
@@ -57,6 +61,8 @@ fun SettingsScreen(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            // Every theme, not just the visible ones — a disabled theme has to
+            // stay listed here or there would be no way to switch it back on.
             items(THEME_DEFS, key = { it.id }) { theme ->
                 val enabled = enabledThemes[theme.id] != false
                 val cardBorder = theme.palette().cardBorder

@@ -22,6 +22,10 @@ import com.kidsexplore.app.model.ThemeIcon
 @Composable
 fun ThemeIconGlyph(icon: ThemeIcon, accent: Color, modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
+        // Scales the source's 64x64 viewBox onto this canvas, so every
+        // coordinate below can stay exactly as it was in the SVG. Derived from
+        // the width alone — callers must size the glyph square (they all do,
+        // via aspectRatio(1f)) or the shapes will overflow vertically.
         val s = size.width / 64f
         val white = Color.White
 

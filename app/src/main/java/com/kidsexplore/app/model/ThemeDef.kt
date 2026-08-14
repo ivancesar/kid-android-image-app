@@ -1,9 +1,23 @@
 package com.kidsexplore.app.model
 
+/** Selects which shape [com.kidsexplore.app.ui.icons.ThemeIconGlyph] draws for a theme. */
 enum class ThemeIcon {
     CAR, DOZER, ANIMAL, DINO, PLANET, OCEAN, FARM, TRAIN
 }
 
+/**
+ * One browsable category.
+ *
+ * @param id stable identifier — also the key persisted to SharedPreferences,
+ *   so renaming one silently re-enables that theme for every existing user.
+ *   Treat these as permanent.
+ * @param hue the theme's only color input: card fill, stripe and accent are all
+ *   derived from it by `ThemeDef.palette()`, so palettes stay consistent
+ *   without hand-picked hex values.
+ * @param labels stands in for real photographs — deliberately, to avoid
+ *   bundling externally-sourced images. The Viewer renders these as text on a
+ *   striped placeholder card.
+ */
 data class ThemeDef(
     val id: String,
     val name: String,
@@ -12,6 +26,12 @@ data class ThemeDef(
     val labels: List<String>,
 )
 
+/**
+ * The complete, fixed catalogue a child can reach. Nothing outside this file
+ * can add to it — no search, no downloads, no user-supplied content — which is
+ * the app's core safety property. Parents can only ever *subtract* from this
+ * list, via Settings.
+ */
 val THEME_DEFS: List<ThemeDef> = listOf(
     ThemeDef(
         id = "cars", name = "Cars", hue = 15f, icon = ThemeIcon.CAR,
