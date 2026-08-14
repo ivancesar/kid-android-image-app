@@ -27,6 +27,13 @@ enum class ThemeIcon {
  */
 @Immutable
 data class ThemeDef(
+    /**
+     * Stable identifier, and also the key persisted by
+     * [com.kidsexplore.app.data.ThemeStore] — renaming one silently re-enables
+     * that theme for every existing user, since their stored id no longer
+     * matches anything. Treat these as permanent; only [nameRes] is meant to
+     * change.
+     */
     val id: String,
     @param:StringRes val nameRes: Int,
     @param:ArrayRes val labelsRes: Int,

@@ -26,6 +26,10 @@ fun oklch(l: Float, c: Float, hDegrees: Float): Color {
     val a = c * cos(hRad).toFloat()
     val b = c * sin(hRad).toFloat()
 
+    // The two matrices below are the published OKLab constants, used verbatim.
+    // None of them are tuned for this app, so don't "adjust" one to nudge a
+    // color — change the hue passed in instead.
+    // OKLab -> nonlinear LMS:
     val l_ = l + 0.3963377774f * a + 0.2158037573f * b
     val m_ = l - 0.1055613458f * a - 0.0638541728f * b
     val s_ = l - 0.0894841775f * a - 1.2914855480f * b
@@ -34,6 +38,7 @@ fun oklch(l: Float, c: Float, hDegrees: Float): Color {
     val mCubed = m_ * m_ * m_
     val sCubed = s_ * s_ * s_
 
+    // LMS -> linear sRGB:
     val rLinear = 4.0767416621f * lCubed - 3.3077115913f * mCubed + 0.2309699292f * sCubed
     val gLinear = -1.2684380046f * lCubed + 2.6097574011f * mCubed - 0.3413193965f * sCubed
     val bLinear = -0.0041960863f * lCubed - 0.7034186147f * mCubed + 1.7076147010f * sCubed
