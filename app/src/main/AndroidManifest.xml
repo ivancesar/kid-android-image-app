@@ -11,6 +11,14 @@
         android:theme="@style/Theme.KidsExplore"
         android:supportsRtl="true">
 
+        <!--
+            Deliberately declares neither screenOrientation nor configChanges: a
+            phone handed to a child gets held every which way, and both Viewer
+            orientations are designed for. Letting the Activity be recreated on
+            rotation is the intended behaviour — AppViewModel's SavedStateHandle
+            is what carries the Viewer position across it. Adding configChanges
+            here to "stop the flicker" would bypass that path entirely.
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true">

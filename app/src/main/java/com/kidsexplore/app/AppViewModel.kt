@@ -137,6 +137,9 @@ class AppViewModel(
     private fun stepImage(delta: Int) {
         val state = uiState as? UiState.Viewer ?: return
         val count = THEME_DEFS.find { it.id == state.themeId }?.labelCount ?: return
+        // Modulo twice: Kotlin's % takes the sign of the dividend, so stepping
+        // back from 0 gives -1 rather than the last index. Adding count before
+        // the second % is what wraps it around.
         val index = ((state.imageIndex + delta) % count + count) % count
         transitionTo(state.copy(imageIndex = index))
     }
