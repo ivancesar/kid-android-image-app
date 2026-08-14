@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The only thing worth backing up is which themes a parent has enabled — a
+  handful of ids in one SharedPreferences file. Nothing else is persisted, and
+  nothing here is sensitive.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="kids_explore_prefs.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="kids_explore_prefs.xml" />
+    </device-transfer>
+</data-extraction-rules>

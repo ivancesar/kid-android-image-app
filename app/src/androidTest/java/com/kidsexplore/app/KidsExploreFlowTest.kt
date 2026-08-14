@@ -1,19 +1,22 @@
 package com.kidsexplore.app
 
-import android.app.Application
-import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
-import androidx.test.core.app.ApplicationProvider
+import androidx.lifecycle.SavedStateHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.kidsexplore.app.data.ThemeStore
 import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
-import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -22,10 +25,12 @@ import org.junit.runner.RunWith
 /**
  * End-to-end UI tests covering the whole journey a user can take through the
  * app: Home → Viewer (paging by button and by swipe) → Home → parental gate
- * (wrong answer, then correct) → Settings (toggle a theme) → Home.
+ * (wrong answer, lockout, then correct) → Settings (toggle a theme) → Home.
  *
- * The app is hosted with a ViewModel the test owns, so each test starts from
- * cleared preferences and a known screen.
+ * These are UI tests. The state machine itself is covered off-device by
+ * `AppViewModelTest` in the unit-test source set, so the ViewModel here is
+ * backed by an in-memory [ThemeStore] and a fresh [SavedStateHandle] rather
+ * than by real SharedPreferences.
  */
 @RunWith(AndroidJUnit4::class)
 class KidsExploreFlowTest {
@@ -37,22 +42,59 @@ class KidsExploreFlowTest {
 
     private val carLabels = THEME_DEFS.first { it.id == "cars" }.labels
 
+    private class FakeThemeStore : ThemeStore {
+        private var disabled: Set<String> = emptySet()
+        override fun loadDisabled(): Set<String> = disabled
+        override fun saveDisabled(disabled: Set<String>) {
+            this.disabled = disabled
+        }
+    }
+
     @Before
     fun setUp() {
-        val app = ApplicationProvider.getApplicationContext<Application>()
-        app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().clear().commit()
-        viewModel = AppViewModel(app)
+        viewModel = AppViewModel(store = FakeThemeStore(), savedState = SavedStateHandle())
         compose.setContent {
             KidsExploreTheme { KidsExploreApp(viewModel) }
         }
     }
 
+    private fun state(): UiState = compose.runOnIdle { viewModel.uiState }
+
+    private fun gate(): UiState.Gate = state() as UiState.Gate
+
+    /**
+     * Both the Home grid and the Settings list are lazy, so an item far enough
+     * down is not composed at all. Scroll it into view before asserting on it
+     * rather than assuming the whole list fits the device under test.
+     */
+    private fun scrollTo(text: String) {
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText(text))
+    }
+
+    private fun openGate() {
+        // The gear is icon-only, so it is addressed by its description —
+        // which is also what TalkBack reads.
+        compose.onNodeWithContentDescription("Parent settings").performClick()
+    }
+
+    private fun answerWrongOnce() {
+        val question = gate().question
+        val wrong = question.values.first { it != question.correct }
+        compose.onNodeWithText(wrong.toString()).performClick()
+    }
+
+    private fun enterSettings() {
+        openGate()
+        compose.onNodeWithText(gate().question.correct.toString()).performClick()
+    }
+
     @Test
     fun homeListsEveryTheme() {
+        compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
         THEME_DEFS.forEach { theme ->
+            scrollTo(theme.name)
             compose.onNodeWithText(theme.name).assertIsDisplayed()
         }
-        compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
     }
 
     @Test
@@ -69,7 +111,7 @@ class KidsExploreFlowTest {
 
         carLabels.forEach { expected ->
             compose.onNodeWithText(expected).assertIsDisplayed()
-            compose.onNodeWithText("▶").performClick()
+            compose.onNodeWithText("Next").performClick()
         }
         // wrapped back to the first image
         compose.onNodeWithText(carLabels[0]).assertIsDisplayed()
@@ -79,7 +121,7 @@ class KidsExploreFlowTest {
     fun backButtonFromTheFirstImageWrapsToTheLast() {
         compose.onNodeWithText("Cars").performClick()
 
-        compose.onNodeWithText("◀").performClick()
+        compose.onNodeWithText("Back").performClick()
         compose.onNodeWithText(carLabels.last()).assertIsDisplayed()
     }
 
@@ -104,20 +146,49 @@ class KidsExploreFlowTest {
 
     @Test
     fun wrongGateAnswerShowsRetryMessageAndBlocksSettings() {
-        compose.onNodeWithText("⚙").performClick()
+        openGate()
         compose.onNodeWithText("Solve this to continue").assertIsDisplayed()
 
-        val gate = viewModel.gate!!
-        val wrong = gate.values.first { it != gate.correct }
-        compose.onNodeWithText(wrong.toString()).performClick()
+        answerWrongOnce()
 
         compose.onNodeWithText("Not quite, try again!").assertIsDisplayed()
-        assertEquals("must not reach Settings", Screen.GATE, viewModel.screen)
+        assertTrue("must not reach Settings", state() is UiState.Gate)
+    }
+
+    /**
+     * The gate's whole purpose. Before this, a wrong answer left the same four
+     * buttons up, so a child reached Settings by exhausting them.
+     */
+    @Test
+    fun repeatedWrongAnswersLockTheGateEvenAgainstTheCorrectOne() {
+        openGate()
+        repeat(MAX_GATE_FAILURES) { answerWrongOnce() }
+
+        compose.onNodeWithText("Too many tries", substring = true).assertIsDisplayed()
+
+        // The right answer is now refused too, until the lockout expires.
+        compose.onNodeWithText(gate().question.correct.toString()).performClick()
+        assertTrue("lockout must outrank a correct answer", state() is UiState.Gate)
+    }
+
+    /** A lockout a child can clear by backing out and reopening is no lockout. */
+    @Test
+    fun theLockoutSurvivesLeavingAndReopeningTheGate() {
+        openGate()
+        repeat(MAX_GATE_FAILURES) { answerWrongOnce() }
+
+        compose.onNodeWithText("Cancel").performClick()
+        compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
+        openGate()
+
+        compose.onNodeWithText("Too many tries", substring = true).assertIsDisplayed()
+        compose.onNodeWithText(gate().question.correct.toString()).performClick()
+        assertTrue(state() is UiState.Gate)
     }
 
     @Test
     fun cancellingTheGateReturnsHome() {
-        compose.onNodeWithText("⚙").performClick()
+        openGate()
         compose.onNodeWithText("Cancel").performClick()
 
         compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
@@ -125,8 +196,7 @@ class KidsExploreFlowTest {
 
     @Test
     fun correctGateAnswerOpensParentSettings() {
-        compose.onNodeWithText("⚙").performClick()
-        compose.onNodeWithText(viewModel.gate!!.correct.toString()).performClick()
+        enterSettings()
 
         compose.onNodeWithText("Parent Settings").assertIsDisplayed()
         compose.onNodeWithText("Choose which themes your child can see.").assertIsDisplayed()
@@ -134,9 +204,9 @@ class KidsExploreFlowTest {
 
     @Test
     fun disablingAThemeInSettingsRemovesItFromHome() {
-        compose.onNodeWithText("⚙").performClick()
-        compose.onNodeWithText(viewModel.gate!!.correct.toString()).performClick()
+        enterSettings()
 
+        scrollTo("Ocean")
         compose.onNodeWithText("Ocean").performClick() // untick it
         compose.onNodeWithText("Done").performClick()
 
@@ -150,11 +220,12 @@ class KidsExploreFlowTest {
         viewModel.toggleThemeEnabled("ocean")
         compose.onNodeWithText("Ocean").assertDoesNotExist()
 
-        compose.onNodeWithText("⚙").performClick()
-        compose.onNodeWithText(viewModel.gate!!.correct.toString()).performClick()
+        enterSettings()
+        scrollTo("Ocean")
         compose.onNodeWithText("Ocean").performClick() // tick it again
         compose.onNodeWithText("Done").performClick()
 
+        scrollTo("Ocean")
         compose.onNodeWithText("Ocean").assertIsDisplayed()
     }
 
@@ -164,7 +235,7 @@ class KidsExploreFlowTest {
         compose.onNodeWithText("Dinosaurs").performClick()
         val dinoLabels = THEME_DEFS.first { it.id == "dinosaurs" }.labels
         compose.onNodeWithText(dinoLabels[0]).assertIsDisplayed()
-        compose.onNodeWithText("▶").performClick()
+        compose.onNodeWithText("Next").performClick()
         compose.onNodeWithText(dinoLabels[1]).assertIsDisplayed()
 
         // back home
@@ -172,8 +243,7 @@ class KidsExploreFlowTest {
         compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
 
         // through the gate into settings
-        compose.onNodeWithText("⚙").performClick()
-        compose.onNodeWithText(viewModel.gate!!.correct.toString()).performClick()
+        enterSettings()
         compose.onNodeWithText("Parent Settings").assertIsDisplayed()
 
         // and back home again

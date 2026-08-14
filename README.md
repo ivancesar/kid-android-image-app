@@ -16,9 +16,15 @@ Home ──tap theme──▶ Viewer ──Home──▶ Home
               └──Cancel──▶ Home
 ```
 
-There is no back-stack navigation library involved — the current screen is just a field on the app's `ViewModel`, and each screen is a plain Compose function that reads it.
+There is no back-stack navigation library involved — the current screen is a single sealed `UiState` on the app's `ViewModel`, and each screen is a plain Compose function that reads it. Modelling it as a sealed type rather than a `Screen` enum plus loose `themeId`/`imageIndex`/`gate` fields means a Viewer cannot exist without a theme and a Gate cannot exist without a question, so there is no combination the UI has to render as a blank screen.
 
-The app rotates freely between portrait and landscape (no orientation lock). Screen state lives in an `AndroidViewModel`, which survives the activity recreation Android does on rotation, so nothing resets when the device turns. Layouts reflow rather than using dedicated landscape-specific arrangements — the Home grid and Settings list scroll, and the Gate screen falls back to scrolling instead of clipping if its content doesn't fit the available height.
+The system Back button returns to Home from any screen; on Home it leaves the app, as usual.
+
+The app rotates freely between portrait and landscape (no orientation lock). Screen state lives in a `ViewModel` and is additionally written to a `SavedStateHandle`, so the current theme and image survive not just rotation but the process being killed in the background. Settings is deliberately *not* restored — coming back into the parent screen without passing the gate again would defeat it.
+
+Layouts reflow rather than using dedicated landscape-specific arrangements — the Home grid and Settings list scroll, and the Gate screen falls back to scrolling instead of clipping if its content doesn't fit the available height. Where a layout does branch, it branches on the width actually available rather than on device orientation, so a tablet held upright and a split-screen window get the layout that fits them.
+
+The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their own content with `WindowInsets.safeDrawing`, and the system-bar icons switch between light and dark to stay legible against whichever screen is showing.
 
 ## Screens
 
@@ -27,7 +33,7 @@ The app rotates freely between portrait and landscape (no orientation lock). Scr
 - Header: "KIDS EXPLORE" label, a settings gear button (top right) that opens the **parental gate**, and the "Pick something to look at!" title.
 - The header fades out once the grid is scrolled away from the top, and fades back in when scrolled back — it floats over the grid rather than sharing layout space with it, so its own size never affects the grid's, which would otherwise cause the list to bounce as it hid/showed itself.
 - A grid of theme cards — one per enabled theme, with as many columns as fit the available width (2 in portrait, more in landscape or on a wider screen) rather than a fixed count. Each card shows a themed icon on a translucent circle, the theme name, and a color pair (fill + a darker bottom accent stripe) derived from the theme's hue.
-- Only themes enabled in **Settings** appear here; disabling a theme removes it from this grid immediately.
+- Only themes enabled in **Settings** appear here; disabling a theme removes it from this grid immediately. If a parent switches every theme off, the grid is replaced by a short message pointing back at parent settings.
 - Tapping a card opens the **Viewer** for that theme.
 
 ### Viewer
@@ -35,17 +41,18 @@ The app rotates freely between portrait and landscape (no orientation lock). Scr
 - Dark full-bleed background.
 - A small square "Home" button returns to Home — that's the entire header here, no theme name shown, to keep the focus on the image.
 - A large rounded placeholder card, with a diagonal two-tone stripe pattern in the theme's colors, showing the current item's label in monospace text, centered.
-- The same labelled "◀ Back" / "▶ Next" pill buttons are used in both orientations, so the controls look and behave identically regardless of how the device is held:
-  - **Portrait**: the card fills the remaining space above a button row, with Back/Next side by side underneath it.
-  - **Landscape**: Back/Next flank the card in a single row — the card sits between them rather than under them — and the row fills the full screen height (down to, but not under, the status bar), so the image gets as much vertical room as the display allows. The Home button floats over the top-left corner of the image instead of sitting in its own header row, since there's no header row to spare the height for in landscape.
+- The same labelled "◀ Back" / "▶ Next" pill buttons are used at every size, so the controls look and behave identically regardless of how the device is held. Which arrangement is used depends on the window's width, not its orientation — the breakpoint is 600dp:
+  - **Narrow (under 600dp)**: the card fills the remaining space above a button row, with Back/Next side by side underneath it.
+  - **Wide (600dp and up)**: Back/Next flank the card in a single row — the card sits between them rather than under them — and the row fills the full screen height (down to, but not under, the status bar), so the image gets as much vertical room as the display allows. The Home button floats over the top-left corner of the image instead of sitting in its own header row, since there's no header row to spare the height for.
 - Either way, Back/Next cycle through the theme's 8 items, wrapping around at both ends.
 - The card also responds to a horizontal swipe — swipe left for next, right for back — as an alternative to the buttons, in both orientations.
 
 ### Parental Gate ("Grown-ups only")
 
 - A simple math question: two random numbers between 2 and 7, added together (`a + b = ?`).
-- Four answer buttons in a 2×2 grid — the correct sum plus three distinct, randomly generated wrong values.
-- Tapping the correct answer opens **Settings**. Tapping a wrong answer shows "Not quite, try again!" and leaves the same question up (it does not regenerate).
+- Four answer buttons in a 2×2 grid — the correct sum plus three distinct wrong values, none of them within 1 of the answer. Keeping the distractors adjacent to the sum rewarded a child who could nearly add.
+- Tapping the correct answer opens **Settings**. Tapping a wrong answer shows "Not quite, try again!" **and replaces the question** — otherwise a child reaches Settings by exhausting all four buttons.
+- After 3 wrong answers the gate stops accepting taps for 30 seconds and shows a countdown. The lockout is enforced in the ViewModel, not just by disabling the buttons, and it survives leaving and reopening the gate — a lockout you can clear with Cancel is no lockout. A correct answer clears the failure count.
 - "Cancel" returns to Home without opening Settings.
 - A fresh question is generated every time the gate is opened.
 
@@ -86,16 +93,20 @@ The Viewer never shows real photos — there are none bundled with the app. Each
 ## Tech stack
 
 - Kotlin, Jetpack Compose (Material 3), single `ComponentActivity`
-- One `AndroidViewModel` (`AppViewModel`) holds all app state: current screen, selected theme, viewer position, enabled themes, and the active gate question
-- No navigation library, no networking, no local database — `SharedPreferences` is the only persistence
+- One `ViewModel` (`AppViewModel`) holds all app state as a sealed `UiState`, plus the set of disabled themes and the gate's failure/lockout counters
+- Persistence goes through a `ThemeStore` interface; `SharedPreferencesThemeStore` is the only implementation. That seam is what lets the entire state machine be tested off-device
+- No navigation library, no networking, no local database
+- Dependencies are declared in a Gradle version catalog (`gradle/libs.versions.toml`)
 - Gradle Kotlin DSL, AGP's built-in Kotlin support (no separate `org.jetbrains.kotlin.android` plugin)
 
 ## Project structure
 
 ```
 app/src/main/java/com/kidsexplore/app/
-├── MainActivity.kt              # hosts Compose content, switches on Screen
-├── AppViewModel.kt              # screen state machine, gate logic, persistence
+├── MainActivity.kt              # hosts Compose content, switches on UiState
+├── AppViewModel.kt              # UiState machine, gate logic, saved state
+├── data/
+│   └── ThemeStore.kt            # persistence seam + SharedPreferences impl
 ├── model/
 │   └── ThemeDef.kt              # theme data + the 8 THEME_DEFS entries
 └── ui/
@@ -123,30 +134,38 @@ The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Open th
 
 ## Tests
 
-With an emulator or device connected:
+The state machine runs as plain JVM tests, no device needed:
+
+```bash
+./gradlew testDebugUnitTest
+```
+
+The Compose UI needs an emulator or device connected:
 
 ```bash
 ./gradlew connectedDebugAndroidTest
 ```
 
-That runs the whole suite and writes an HTML report to `app/build/reports/androidTests/connected/debug/index.html`.
+Reports land in `app/build/reports/tests/testDebugUnitTest/index.html` and `app/build/reports/androidTests/connected/debug/index.html`.
 
-The tests are instrumented rather than plain JVM tests because they need a real `Context` — the ViewModel reads and writes `SharedPreferences`, and the UI tests render real Compose content.
+| File | Source set | Covers |
+|---|---|---|
+| `AppViewModelTest` | `test` (JVM) | The whole state machine: transitions, paging and wrap-around, unknown theme ids, gate question generation over 500 seeds, the lockout (driven by a hand-advanced clock rather than a 30-second wait), theme toggling, and restore-from-process-death including out-of-range indices. `AppViewModel` takes its store, its `Random` and its clock as parameters, so none of this touches Android. |
+| `KidsExploreFlowTest` | `androidTest` | The end-to-end journey through the real screens: Home → Viewer (paging by button and by swipe) → Home → gate (wrong answer, lockout, cancel, correct answer) → Settings (toggle a theme) → Home, asserting the grid updates. |
+| `ViewerLayoutTest` | `androidTest` | The Viewer's layout at both sides of the 600dp breakpoint, using `DeviceConfigurationOverride(ForcedSize(...))` so a window wider than the test device still renders on screen. Asserts the buttons actually sit beside the image when wide and below it when narrow, rather than only that a branch was taken. |
 
-| File | Covers |
-|---|---|
-| `AppViewModelTest` | Screen transitions, image paging and wrap-around at both ends, gate question generation and answer handling, theme toggling, and that disabled themes survive a ViewModel restart. |
-| `KidsExploreFlowTest` | The end-to-end journey through the real screens: Home → Viewer (paging by button and by swipe) → Home → gate (wrong answer, cancel, correct answer) → Settings (toggle a theme) → Home, asserting the grid updates. |
-| `ViewerLayoutTest` | The Viewer's per-orientation layout. Drives `LocalConfiguration` directly instead of rotating the device (the test host activity doesn't reliably follow rotation), so both the portrait and landscape pill-button branches are exercised deterministically. |
-
-To run a single class:
+To run a single instrumented class:
 
 ```bash
 ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.kidsexplore.app.KidsExploreFlowTest
 ```
 
+CI (`.github/workflows/ci.yml`) runs lint, the JVM tests and a debug build on every pull request. The instrumented tests are not run there — they need an emulator runner.
+
 ## Known limitations
 
 - Placeholder text labels stand in for real images (see [On images](#on-images) above).
+- Nothing stops a child leaving the app for the launcher. The gate protects **Settings**, not the app's boundary; Android's screen pinning is what would deliver that, and it is not wired up.
 - No confirmation/undo when a parent disables a theme a child was mid-viewing — they're just returned to Home the next time they tap Home.
 - Font is the system sans-serif at heavy weights, approximating the source design's Nunito 800/900; no font file is bundled.
+- Light theme only, by design: the palette is a fixed bright one with no dark counterpart, so the colour scheme is pinned rather than following the system setting.
