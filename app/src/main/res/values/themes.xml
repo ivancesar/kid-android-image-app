@@ -1,5 +1,11 @@
 <resources>
+    <!--
+      Theme.AppCompat rather than the platform Material theme: AppCompatActivity
+      refuses to start under a non-AppCompat theme, and AppCompatActivity is what
+      applies a per-app language below Android 13. Only windowBackground is set
+      here; everything visual comes from the Compose theme.
+    -->
     <style name="Theme.KidsExplore" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:windowBackground">@color/app_background</item>
     </style>
 </resources>

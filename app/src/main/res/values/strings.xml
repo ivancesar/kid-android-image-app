@@ -1,58 +1,47 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Default (English) strings. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
-
-    <!-- Launcher -->
     <string name="app_name" translatable="false">Kids Explore</string>
 
-    <!-- Home screen -->
+    <!-- Home -->
     <string name="home_brand" translatable="false">KIDS EXPLORE</string>
     <string name="home_title">Pick something to look at!</string>
+    <string name="home_settings_button">Parent settings</string>
+    <string name="home_empty_title">Nothing to show yet</string>
+    <string name="home_empty_body">Every category is switched off. Open parent settings to turn some back on.</string>
 
-    <!-- Viewer screen -->
-    <string name="viewer_home_button">Home</string>
+    <!-- Viewer -->
+    <string name="viewer_home">Home</string>
     <string name="viewer_back">Back</string>
     <string name="viewer_next">Next</string>
 
     <!-- Parental gate -->
     <string name="gate_eyebrow">GROWN-UPS ONLY</string>
-    <string name="gate_title">Solve this to continue</string>
-    <!-- Operators and placeholders only. A language needing a different
-         arrangement can still override it; it is simply not required to. -->
-    <string name="gate_equation" tools:ignore="MissingTranslation">%1$d + %2$d = ?</string>
+    <string name="gate_prompt">Solve this to continue</string>
+    <string name="gate_question" tools:ignore="MissingTranslation">%1$d + %2$d = ?</string>
     <string name="gate_wrong">Not quite, try again!</string>
+    <plurals name="gate_locked">
+        <item quantity="one">Too many tries. Wait %d second.</item>
+        <item quantity="other">Too many tries. Wait %d seconds.</item>
+    </plurals>
     <string name="gate_cancel">Cancel</string>
 
     <!-- Parent settings -->
     <string name="settings_title">Parent Settings</string>
     <string name="settings_subtitle">Choose which categories your child can see.</string>
-    <string name="settings_done">Done</string>
-
-    <!-- Language picker -->
+    <string name="settings_categories">Categories</string>
     <string name="settings_language">Language</string>
     <string name="settings_language_system">Same as phone settings</string>
+    <string name="settings_done">Done</string>
 
-    <!-- Section heading above the category list -->
-    <string name="settings_categories">Categories</string>
+    <!--
+      Theme names and the item labels behind them. These are the app's primary
+      content — the words a child actually sees — so they live here with
+      everything else translatable rather than as literals in ThemeDef.kt.
 
-    <!-- Category names -->
-    <string name="theme_cars_name">Cars</string>
-    <string name="theme_construction_name">Construction</string>
-    <string name="theme_trains_name">Trains</string>
-    <string name="theme_animals_name">Animals</string>
-    <string name="theme_bird_name">Birds</string>
-    <string name="theme_insects_name">Insects</string>
-    <string name="theme_ocean_name">Ocean</string>
-    <string name="theme_farm_name">Farm</string>
-    <string name="theme_dinosaurs_name">Dinosaurs</string>
-    <string name="theme_flowers_name">Flowers</string>
-    <string name="theme_forest_name">Forest</string>
-    <string name="theme_fruit_name">Fruit</string>
-    <string name="theme_vegetable_name">Vegetables</string>
-    <string name="theme_space_name">Space</string>
-
-    <!-- Image labels: 8 per category, in paging order -->
-
+      Each array's length must match its theme's `labelCount` in ThemeDef.kt;
+      ThemeResourcesTest asserts that for every theme, because the ViewModel
+      wraps its index against labelCount without being able to see resources.
+    -->
+    <string name="theme_cars">Cars</string>
     <string-array name="labels_cars">
         <item>Red sports car, side view</item>
         <item>Yellow taxi, front view</item>
@@ -64,6 +53,7 @@
         <item>Orange convertible car</item>
     </string-array>
 
+    <string name="theme_construction">Construction</string>
     <string-array name="labels_construction">
         <item>Yellow bulldozer pushing dirt</item>
         <item>Crane lifting a steel beam</item>
@@ -75,6 +65,43 @@
         <item>Backhoe loader digging</item>
     </string-array>
 
+    <string name="theme_animals">Animals</string>
+    <string-array name="labels_animals">
+        <item>Lion resting in tall grass</item>
+        <item>Elephant walking in savanna</item>
+        <item>Giraffe eating tree leaves</item>
+        <item>Panda sitting with bamboo</item>
+        <item>Owl perched on a branch</item>
+        <item>Rabbit hopping in a field</item>
+        <item>Puppy playing with a ball</item>
+        <item>Kitten napping in sun</item>
+    </string-array>
+
+    <string name="theme_dinosaurs">Dinosaurs</string>
+    <string-array name="labels_dinosaurs">
+        <item>T-Rex roaring, side view</item>
+        <item>Triceratops grazing on plants</item>
+        <item>Stegosaurus walking, side view</item>
+        <item>Pterodactyl flying over cliffs</item>
+        <item>Brontosaurus beside a lake</item>
+        <item>Velociraptor running fast</item>
+        <item>Ankylosaurus with tail spikes</item>
+        <item>Baby dinosaur hatching from egg</item>
+    </string-array>
+
+    <string name="theme_space">Space</string>
+    <string-array name="labels_space">
+        <item>Rocket launching into sky</item>
+        <item>Astronaut floating in space</item>
+        <item>Planet Saturn with its rings</item>
+        <item>Full moon close-up</item>
+        <item>Space shuttle on launch pad</item>
+        <item>Cartoon alien spaceship</item>
+        <item>Stars and a bright galaxy</item>
+        <item>Sun with orange flares</item>
+    </string-array>
+
+    <string name="theme_trains">Trains</string>
     <string-array name="labels_trains">
         <item>Red steam train, side view</item>
         <item>Bullet train speeding by</item>
@@ -86,15 +113,34 @@
         <item>Train going through tunnel</item>
     </string-array>
 
-    <string-array name="labels_animals">
-        <item>Lion resting in tall grass</item>
-        <item>Elephant walking in savanna</item>
-        <item>Giraffe eating tree leaves</item>
-        <item>Panda sitting with bamboo</item>
-        <item>Owl perched on a branch</item>
-        <item>Rabbit hopping in a field</item>
-        <item>Puppy playing with a ball</item>
-        <item>Kitten napping in sun</item>
+    <string name="theme_ocean">Ocean</string>
+    <string-array name="labels_ocean">
+        <item>Clownfish swimming by coral</item>
+        <item>Sea turtle gliding underwater</item>
+        <item>Octopus with curled arms</item>
+        <item>Starfish on the sand</item>
+        <item>Whale breaching the surface</item>
+        <item>Seahorse near seaweed</item>
+        <item>Crab on the beach</item>
+        <item>School of tropical fish</item>
+    </string-array>
+
+    <string name="theme_farm">Farm</string>
+    <string name="theme_bird">Birds</string>
+    <string name="theme_insects">Insects</string>
+    <string name="theme_flowers">Flowers</string>
+    <string name="theme_forest">Forest</string>
+    <string name="theme_fruit">Fruit</string>
+    <string name="theme_vegetable">Vegetables</string>
+    <string-array name="labels_farm">
+        <item>Pig in a muddy pen</item>
+        <item>Cow grazing in a field</item>
+        <item>Chicken by the barn</item>
+        <item>Sheep with wooly coat</item>
+        <item>Horse in a green pasture</item>
+        <item>Duck swimming in a pond</item>
+        <item>Red barn with silo</item>
+        <item>Tractor in a wheat field</item>
     </string-array>
 
     <string-array name="labels_bird">
@@ -117,39 +163,6 @@
         <item>Grasshopper in tall grass</item>
         <item>Caterpillar on a stem</item>
         <item>Firefly glowing at dusk</item>
-    </string-array>
-
-    <string-array name="labels_ocean">
-        <item>Clownfish swimming by coral</item>
-        <item>Sea turtle gliding underwater</item>
-        <item>Octopus with curled arms</item>
-        <item>Starfish on the sand</item>
-        <item>Whale breaching the surface</item>
-        <item>Seahorse near seaweed</item>
-        <item>Crab on the beach</item>
-        <item>School of tropical fish</item>
-    </string-array>
-
-    <string-array name="labels_farm">
-        <item>Pig in a muddy pen</item>
-        <item>Cow grazing in a field</item>
-        <item>Chicken by the barn</item>
-        <item>Sheep with wooly coat</item>
-        <item>Horse in a green pasture</item>
-        <item>Duck swimming in a pond</item>
-        <item>Red barn with silo</item>
-        <item>Tractor in a wheat field</item>
-    </string-array>
-
-    <string-array name="labels_dinosaurs">
-        <item>T-Rex roaring, side view</item>
-        <item>Triceratops grazing on plants</item>
-        <item>Stegosaurus walking, side view</item>
-        <item>Pterodactyl flying over cliffs</item>
-        <item>Brontosaurus beside a lake</item>
-        <item>Velociraptor running fast</item>
-        <item>Ankylosaurus with tail spikes</item>
-        <item>Baby dinosaur hatching from egg</item>
     </string-array>
 
     <string-array name="labels_flowers">
@@ -194,16 +207,5 @@
         <item>Purple eggplant, side view</item>
         <item>Potatoes in a wooden crate</item>
         <item>Bell peppers in three colors</item>
-    </string-array>
-
-    <string-array name="labels_space">
-        <item>Rocket launching into sky</item>
-        <item>Astronaut floating in space</item>
-        <item>Planet Saturn with its rings</item>
-        <item>Full moon close-up</item>
-        <item>Space shuttle on launch pad</item>
-        <item>Cartoon alien spaceship</item>
-        <item>Stars and a bright galaxy</item>
-        <item>Sun with orange flares</item>
     </string-array>
 </resources>

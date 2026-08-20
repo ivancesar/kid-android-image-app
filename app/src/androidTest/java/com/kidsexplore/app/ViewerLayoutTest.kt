@@ -1,15 +1,22 @@
 package com.kidsexplore.app
 
-import android.content.res.Configuration
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.test.DeviceConfigurationOverride
+import androidx.compose.ui.test.ForcedSize
+import androidx.compose.ui.test.LayoutDirection as LayoutDirectionOverride
+import androidx.compose.ui.test.then
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.kidsexplore.app.R
+import androidx.test.platform.app.InstrumentationRegistry
 import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.ui.screens.ViewerScreen
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
@@ -19,13 +26,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The Viewer uses the same labelled "Back"/"Next" pill buttons in both
- * orientations: below the image in portrait, flanking the image (not
- * overlapping it) in landscape.
+ * The Viewer uses the same labelled "Back"/"Next" pill buttons at every size:
+ * below the image when the window is narrow, flanking it when it is wide.
  *
- * Rather than rotating the device (which the test host activity does not
- * reliably follow), these drive [LocalConfiguration] directly so both
- * branches are exercised deterministically.
+ * The layout is chosen from the width actually available, so these give the
+ * screen a real width to measure against rather than overriding
+ * `LocalConfiguration` — which reported an orientation the window did not
+ * actually have, and so proved only that a branch was reachable.
  */
 @RunWith(AndroidJUnit4::class)
 class ViewerLayoutTest {
@@ -33,27 +40,33 @@ class ViewerLayoutTest {
     @get:Rule
     val compose = createComposeRule()
 
+    private val resources = InstrumentationRegistry.getInstrumentation().targetContext.resources
     private val cars = THEME_DEFS.first { it.id == "cars" }
-    private val res by lazy {
-        androidx.test.core.app.ApplicationProvider
-            .getApplicationContext<android.content.Context>().resources
-    }
-    private val carLabels: Array<String> by lazy { res.getStringArray(cars.labelsRes) }
-    private fun str(id: Int) = res.getString(id)
-    private val carsName: String by lazy { res.getString(cars.nameRes) }
+    private val carLabels by lazy { resources.getStringArray(cars.labelsRes).toList() }
+
+    /** Comfortably below the 600dp breakpoint — a phone held upright. */
+    private val narrow = DpSize(400.dp, 800.dp)
+
+    /** Comfortably above it — a phone on its side, or a tablet. */
+    private val wide = DpSize(900.dp, 420.dp)
 
     private fun setViewer(
-        orientation: Int,
+        size: DpSize,
+        direction: LayoutDirection = LayoutDirection.Ltr,
         onNext: () -> Unit = {},
         onPrev: () -> Unit = {},
         onHome: () -> Unit = {},
     ) {
         compose.setContent {
-            val config = Configuration(LocalConfiguration.current).apply {
-                this.orientation = orientation
-            }
-            CompositionLocalProvider(LocalConfiguration provides config) {
-                KidsExploreTheme {
+            KidsExploreTheme {
+                // ForcedSize rather than a sized Box: it rescales density so a
+                // window wider than the test device still lands on screen, and
+                // the buttons stay visible and clickable instead of being laid
+                // out past the edge.
+                DeviceConfigurationOverride(
+                    DeviceConfigurationOverride.ForcedSize(size) then
+                        DeviceConfigurationOverride.LayoutDirectionOverride(direction)
+                ) {
                     ViewerScreen(
                         theme = cars,
                         currentLabel = carLabels[0],
@@ -67,41 +80,67 @@ class ViewerLayoutTest {
     }
 
     @Test
-    fun portraitUsesLabelledPillButtons() {
-        setViewer(Configuration.ORIENTATION_PORTRAIT)
+    fun narrowWindowUsesLabelledPillButtons() {
+        setViewer(narrow)
 
-        compose.onNodeWithText(str(R.string.viewer_back)).assertIsDisplayed()
-        compose.onNodeWithText(str(R.string.viewer_next)).assertIsDisplayed()
-        compose.onNodeWithText(str(R.string.viewer_home_button)).assertIsDisplayed()
+        compose.onNodeWithText("Back").assertIsDisplayed()
+        compose.onNodeWithText("Next").assertIsDisplayed()
+        compose.onNodeWithText("Home").assertIsDisplayed()
         compose.onNodeWithText(carLabels[0]).assertIsDisplayed()
     }
 
     @Test
-    fun landscapeUsesLabelledPillButtonsToo() {
-        setViewer(Configuration.ORIENTATION_LANDSCAPE)
+    fun wideWindowUsesLabelledPillButtonsToo() {
+        setViewer(wide)
 
-        compose.onNodeWithText(str(R.string.viewer_back)).assertIsDisplayed()
-        compose.onNodeWithText(str(R.string.viewer_next)).assertIsDisplayed()
-        compose.onNodeWithText(str(R.string.viewer_home_button)).assertIsDisplayed()
+        compose.onNodeWithText("Back").assertIsDisplayed()
+        compose.onNodeWithText("Next").assertIsDisplayed()
+        compose.onNodeWithText("Home").assertIsDisplayed()
         compose.onNodeWithText(carLabels[0]).assertIsDisplayed()
+    }
+
+    /**
+     * The point of the wide layout: the buttons sit beside the image rather
+     * than under it, and must not overlap it.
+     */
+    @Test
+    fun wideWindowPutsTheButtonsBesideTheImageNotUnderIt() {
+        setViewer(wide)
+
+        val back = compose.onNodeWithText("Back").getUnclippedBoundsInRoot()
+        val next = compose.onNodeWithText("Next").getUnclippedBoundsInRoot()
+        val image = compose.onNodeWithText(carLabels[0]).getUnclippedBoundsInRoot()
+
+        assert(back.right <= image.left) { "Back ($back) overlaps the image ($image)" }
+        assert(next.left >= image.right) { "Next ($next) overlaps the image ($image)" }
+    }
+
+    @Test
+    fun narrowWindowPutsTheButtonsBelowTheImage() {
+        setViewer(narrow)
+
+        val back = compose.onNodeWithText("Back").getUnclippedBoundsInRoot()
+        val image = compose.onNodeWithText(carLabels[0]).getUnclippedBoundsInRoot()
+
+        assert(back.top >= image.bottom) { "Back ($back) is not below the image ($image)" }
     }
 
     @Test
     fun theThemeNameIsNeverShownInTheViewer() {
-        setViewer(Configuration.ORIENTATION_PORTRAIT)
+        setViewer(narrow)
 
         // the header was deliberately reduced to just the Home button
-        compose.onNodeWithText(carsName).assertDoesNotExist()
+        compose.onNodeWithText(resources.getString(cars.nameRes)).assertDoesNotExist()
     }
 
     @Test
-    fun navigationCallbacksFireInPortrait() {
+    fun navigationCallbacksFireInANarrowWindow() {
         var next = 0
         var prev = 0
-        setViewer(Configuration.ORIENTATION_PORTRAIT, onNext = { next++ }, onPrev = { prev++ })
+        setViewer(narrow, onNext = { next++ }, onPrev = { prev++ })
 
-        compose.onNodeWithText(str(R.string.viewer_next)).performClick()
-        compose.onNodeWithText(str(R.string.viewer_back)).performClick()
+        compose.onNodeWithText("Next").performClick()
+        compose.onNodeWithText("Back").performClick()
 
         compose.runOnIdle {
             assertEquals("next tapped once", 1, next)
@@ -110,13 +149,13 @@ class ViewerLayoutTest {
     }
 
     @Test
-    fun navigationCallbacksFireInLandscape() {
+    fun navigationCallbacksFireInAWideWindow() {
         var next = 0
         var prev = 0
-        setViewer(Configuration.ORIENTATION_LANDSCAPE, onNext = { next++ }, onPrev = { prev++ })
+        setViewer(wide, onNext = { next++ }, onPrev = { prev++ })
 
-        compose.onNodeWithText(str(R.string.viewer_next)).performClick()
-        compose.onNodeWithText(str(R.string.viewer_back)).performClick()
+        compose.onNodeWithText("Next").performClick()
+        compose.onNodeWithText("Back").performClick()
 
         compose.runOnIdle {
             assertEquals("next tapped once", 1, next)
@@ -127,10 +166,60 @@ class ViewerLayoutTest {
     @Test
     fun homeButtonFiresItsCallback() {
         var home = 0
-        setViewer(Configuration.ORIENTATION_PORTRAIT, onHome = { home++ })
+        setViewer(narrow, onHome = { home++ })
 
-        compose.onNodeWithText(str(R.string.viewer_home_button)).performClick()
+        compose.onNodeWithText("Home").performClick()
 
         compose.runOnIdle { assertEquals(1, home) }
+    }
+
+    // ------------------------------------------------------------------ RTL
+
+    /**
+     * The manifest declares supportsRtl, so the Viewer has to mean it. In an
+     * RTL locale the sequence advances right-to-left: Back sits at the start
+     * edge (the right), and a rightward swipe is "next", not "back".
+     */
+    @Test
+    fun rtlPutsBackOnTheRightAndNextOnTheLeft() {
+        setViewer(wide, direction = LayoutDirection.Rtl)
+
+        val back = compose.onNodeWithText("Back").getUnclippedBoundsInRoot()
+        val next = compose.onNodeWithText("Next").getUnclippedBoundsInRoot()
+
+        assert(back.left >= next.right) { "Back ($back) should sit right of Next ($next) in RTL" }
+    }
+
+    @Test
+    fun rtlInvertsTheSwipeDirection() {
+        var next = 0
+        var prev = 0
+        setViewer(narrow, direction = LayoutDirection.Rtl, onNext = { next++ }, onPrev = { prev++ })
+
+        compose.onNodeWithText(carLabels[0]).performTouchInput { swipeRight() }
+        compose.runOnIdle {
+            assertEquals("swiping right in RTL advances", 1, next)
+            assertEquals(0, prev)
+        }
+
+        compose.onNodeWithText(carLabels[0]).performTouchInput { swipeLeft() }
+        compose.runOnIdle {
+            assertEquals("swiping left in RTL goes back", 1, prev)
+            assertEquals(1, next)
+        }
+    }
+
+    /** The same gesture in LTR must still mean the opposite. */
+    @Test
+    fun ltrKeepsTheOriginalSwipeDirection() {
+        var next = 0
+        var prev = 0
+        setViewer(narrow, onNext = { next++ }, onPrev = { prev++ })
+
+        compose.onNodeWithText(carLabels[0]).performTouchInput { swipeLeft() }
+        compose.runOnIdle {
+            assertEquals("swiping left in LTR advances", 1, next)
+            assertEquals(0, prev)
+        }
     }
 }

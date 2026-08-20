@@ -3,17 +3,26 @@
 
     <application
         android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:localeConfig="@xml/locales_config"
         android:theme="@style/Theme.KidsExplore"
         android:supportsRtl="true">
 
+        <!--
+            Deliberately declares neither screenOrientation nor configChanges: a
+            phone handed to a child gets held every which way, and both Viewer
+            orientations are designed for. Letting the Activity be recreated on
+            rotation is the intended behaviour — AppViewModel's SavedStateHandle
+            is what carries the Viewer position across it. Adding configChanges
+            here to "stop the flicker" would bypass that path entirely.
+        -->
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:screenOrientation="unspecified"
-            android:theme="@style/Theme.KidsExplore">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

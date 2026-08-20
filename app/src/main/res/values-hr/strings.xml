@@ -1,25 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Croatian. Keys absent here fall back to values/strings.xml on purpose:
-  app_name and home_brand are the product name, gate_equation is nothing but
+  app_name and home_brand are the product name, gate_question is nothing but
   placeholders, and the image labels are stand-in text for artwork the app
   does not ship yet.
+
+  home_settings_button, home_empty_title and home_empty_body arrived on main
+  after the translation pass and were translated here rather than by the
+  translator - worth a native check.
 -->
 <resources>
 
     <!-- Home screen -->
     <string name="home_title">Izaberi nešto za gledati!</string>
+    <string name="home_settings_button">Postavke za roditelje</string>
+    <string name="home_empty_title">Još nema ničega</string>
+    <string name="home_empty_body">Sve kategorije su isključene. Otvorite postavke za roditelje da ih ponovno uključite.</string>
 
     <!-- Viewer screen -->
-    <string name="viewer_home_button">Izbornik</string>
+    <string name="viewer_home">Izbornik</string>
     <string name="viewer_back">Prijašnji</string>
     <string name="viewer_next">Sljedeći</string>
 
     <!-- Parental gate -->
     <string name="gate_eyebrow">SAMO ZA ODRASLE</string>
-    <string name="gate_title">Riješi ovo za nastaviti</string>
+    <string name="gate_prompt">Riješi ovo za nastaviti</string>
     <string name="gate_wrong">Krivo, probaj opet!</string>
     <string name="gate_cancel">Odustani</string>
+    <!--
+      Croatian takes three plural categories where English takes two: 1 sekundu,
+      2-4 sekunde, 5+ sekundi. Written here rather than by the translator - the
+      string arrived on main after the translation pass - so it wants a native
+      check more than anything else in this file.
+    -->
+    <plurals name="gate_locked">
+        <item quantity="one">Previše pokušaja. Pričekajte %d sekundu.</item>
+        <item quantity="few">Previše pokušaja. Pričekajte %d sekunde.</item>
+        <item quantity="other">Previše pokušaja. Pričekajte %d sekundi.</item>
+    </plurals>
 
     <!-- Parent settings -->
     <string name="settings_title">Postavke za roditelje</string>
@@ -32,18 +50,18 @@
     <string name="settings_language_system">Prema postavkama telefona</string>
 
     <!-- Category names -->
-    <string name="theme_cars_name">Auti</string>
-    <string name="theme_construction_name">Gradnja</string>
-    <string name="theme_trains_name">Vlakovi</string>
-    <string name="theme_animals_name">Životinje</string>
-    <string name="theme_bird_name">Ptice</string>
-    <string name="theme_insects_name">Insekti</string>
-    <string name="theme_ocean_name">Ocean</string>
-    <string name="theme_farm_name">Farma</string>
-    <string name="theme_dinosaurs_name">Dinosauri</string>
-    <string name="theme_flowers_name">Cvijeće</string>
-    <string name="theme_forest_name">Šuma</string>
-    <string name="theme_fruit_name">Voće</string>
-    <string name="theme_vegetable_name">Povrće</string>
-    <string name="theme_space_name">Svemir</string>
+    <string name="theme_cars">Auti</string>
+    <string name="theme_construction">Gradnja</string>
+    <string name="theme_trains">Vlakovi</string>
+    <string name="theme_animals">Životinje</string>
+    <string name="theme_bird">Ptice</string>
+    <string name="theme_insects">Insekti</string>
+    <string name="theme_ocean">Ocean</string>
+    <string name="theme_farm">Farma</string>
+    <string name="theme_dinosaurs">Dinosauri</string>
+    <string name="theme_flowers">Cvijeće</string>
+    <string name="theme_forest">Šuma</string>
+    <string name="theme_fruit">Voće</string>
+    <string name="theme_vegetable">Povrće</string>
+    <string name="theme_space">Svemir</string>
 </resources>
