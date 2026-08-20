@@ -52,6 +52,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kidsexplore.app.R
@@ -221,6 +222,16 @@ fun HomeScreen(
     }
 }
 
+// The icons are black-and-white line art drawn for a light ground, so the disc
+// behind them is kept close to white — at the card's own tint the white fills
+// in the artwork would sink into the background and only the outlines would read.
+private const val IconDiscAlpha = 0.85f
+
+// How much of the disc the artwork fills. Past ~0.71 the corners of a square
+// icon cross the disc's edge, but these icons carry no detail right in their
+// corners, so a little over that still reads as contained.
+private const val IconInsetInDisc = 0.78f
+
 @Composable
 private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
     val palette = theme.palette()
@@ -235,25 +246,29 @@ private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(10.dp),
+                .padding(horizontal = 8.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier.fillMaxSize(),
+            ) {
                 Box(
                     modifier = Modifier
-                        // Sized relative to the card's own width (not a fixed
-                        // dp) so it stays proportional however wide the card
-                        // ends up — e.g. the much wider landscape 2-column grid.
-                        .fillMaxWidth(0.36f)
-                        .aspectRatio(1f)
+                        // Claims every bit of height the name leaves behind and
+                        // then matches it in width, so the icon is as large as
+                        // the card can make it however wide the column ends up
+                        // — e.g. the much wider landscape grid.
+                        .weight(1f)
+                        .aspectRatio(1f, matchHeightConstraintsFirst = true)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.35f)),
+                        .background(Color.White.copy(alpha = IconDiscAlpha)),
                     contentAlignment = Alignment.Center,
                 ) {
                     ThemeIconGlyph(
-                        icon = theme.icon,
-                        accent = palette.cardBorder,
-                        modifier = Modifier.fillMaxSize(0.75f),
+                        iconRes = theme.iconRes,
+                        modifier = Modifier.fillMaxSize(IconInsetInDisc),
                     )
                 }
                 Text(
@@ -264,6 +279,10 @@ private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
                     fontSize = 17.sp,
                     color = Color.White,
                     textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    // Clipped mid-glyph reads as a rendering fault; an ellipsis
+                    // reads as a name that didn't fit.
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }

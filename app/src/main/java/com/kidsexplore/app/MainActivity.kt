@@ -2,11 +2,11 @@ package com.kidsexplore.app
 
 import android.graphics.Color
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.res.stringArrayResource
@@ -18,7 +18,9 @@ import com.kidsexplore.app.ui.screens.SettingsScreen
 import com.kidsexplore.app.ui.screens.ViewerScreen
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
 
-class MainActivity : ComponentActivity() {
+// AppCompatActivity rather than ComponentActivity: per-app language below
+// Android 13 needs a live AppCompatDelegate to apply the override.
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Required from targetSdk 35 on, where the system draws behind the
@@ -97,6 +99,11 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
             disabledThemeIds = viewModel.disabledThemeIds,
             onToggle = viewModel::toggleThemeEnabled,
             onDone = viewModel::goHome,
+            // AppCompat owns the stored choice and recreates the activity when
+            // it changes, so this reads back fresh rather than being mirrored
+            // in ViewModel state.
+            currentLanguage = AppLocales.current(),
+            onPickLanguage = AppLocales::apply,
         )
     }
 }

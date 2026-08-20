@@ -225,7 +225,7 @@ class KidsExploreFlowTest {
         enterSettings()
 
         compose.onNodeWithText("Parent Settings").assertIsDisplayed()
-        compose.onNodeWithText("Choose which themes your child can see.").assertIsDisplayed()
+        compose.onNodeWithText(resources.getString(R.string.settings_subtitle)).assertIsDisplayed()
     }
 
     @Test
@@ -258,7 +258,9 @@ class KidsExploreFlowTest {
     @Test
     fun fullJourneyHomeToViewerToSettingsAndBack() {
         // browse a theme
-        compose.onNodeWithText("Dinosaurs").performClick()
+        val dinos = THEME_DEFS.first { it.id == "dinosaurs" }.displayName()
+        scrollTo(dinos)
+        compose.onNodeWithText(dinos).performClick()
         val dinoLabels = THEME_DEFS.first { it.id == "dinosaurs" }.labels()
         compose.onNodeWithText(dinoLabels[0]).assertIsDisplayed()
         compose.onNodeWithText("Next").performClick()
@@ -277,7 +279,8 @@ class KidsExploreFlowTest {
         compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
 
         // reopening a theme starts from its first image again
-        compose.onNodeWithText("Dinosaurs").performClick()
+        scrollTo(dinos)
+        compose.onNodeWithText(dinos).performClick()
         compose.onNodeWithText(dinoLabels[0]).assertIsDisplayed()
     }
 }

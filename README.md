@@ -33,7 +33,7 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - Header: "KIDS EXPLORE" label, a settings gear button (top right) that opens the **parental gate**, and the "Pick something to look at!" title.
 - The header fades out once the grid is scrolled away from the top, and fades back in when scrolled back — it floats over the grid rather than sharing layout space with it, so its own size never affects the grid's, which would otherwise cause the list to bounce as it hid/showed itself.
 - The gear is pinned rather than part of the fading header: it is the app's only route into parent settings, and it used to disappear the moment the grid scrolled.
-- A grid of theme cards — one per enabled theme, with as many columns as fit the available width (2 in portrait, more in landscape or on a wider screen) rather than a fixed count. Each card shows a themed icon on a translucent circle, the theme name, and a color pair (fill + a darker bottom accent stripe) derived from the theme's hue.
+- A grid of theme cards — one per enabled theme, with as many columns as fit the available width (2 in portrait, more in landscape or on a wider screen) rather than a fixed count. Each card shows a themed icon on a near-white circle, the theme name, and a color pair (fill + a darker bottom accent stripe) derived from the theme's hue. The circle takes all the height the name leaves it, so the icon is as large as the card allows and the card colour reads as a frame around it.
 - Only themes enabled in **Settings** appear here; disabling a theme removes it from this grid immediately. If a parent switches every theme off, the grid is replaced by a short message pointing back at parent settings.
 - Tapping a card opens the **Viewer** for that theme.
 
@@ -64,21 +64,33 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - Tapping a row toggles that theme's visibility on the Home screen.
 - Enabled/disabled state is persisted to `SharedPreferences`, so it survives app restarts.
 - "Done" returns to Home, where the grid now reflects the updated theme selection.
+- A language dropdown sits above the theme list — "Same as phone settings" plus each shipped language named in its own language. Selecting one applies immediately.
+- "Language" and "Categories" section headings separate the two, so the language row does not read as the first entry in the category list. "Choose which themes your child can see." sits under the Categories heading as that section's explanation, rather than under the screen title where it described only half the screen.
 
 ## Themes
 
-Eight fixed themes, each with a hue, an icon, and — in `strings.xml` — a name and 8 item labels. `ThemeDef` holds only ids and a `labelCount`, which is what keeps `AppViewModel` free of Android: it pages an index, the UI resolves the text. `ThemeResourcesTest` asserts each `labelCount` matches its array, since nothing else in the build ties the two files together.
+Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a name and 8 item labels. `ThemeDef` holds only ids, resource ids and a `labelCount`, which is what keeps `AppViewModel` free of Android: it pages an index, the UI resolves the text. `ThemeResourcesTest` asserts each `labelCount` matches its array, since nothing else in the build ties the two files together.
 
-| Theme | Hue | Icon |
+| Theme | id | Hue |
 |---|---|---|
-| Cars | 15 | car |
-| Construction | 45 | bulldozer |
-| Animals | 320 | animal face |
-| Dinosaurs | 285 | dinosaur |
-| Space | 250 | ringed planet |
-| Trains | 350 | train |
-| Ocean | 175 | fish |
-| Farm | 75 | farm animal face |
+| Cars | `cars` | 15 |
+| Construction | `construction` | 45 |
+| Trains | `trains` | 350 |
+| Animals | `animals` | 320 |
+| Birds | `bird` | 225 |
+| Insects | `insects` | 200 |
+| Ocean | `ocean` | 175 |
+| Farm | `farm` | 75 |
+| Dinosaurs | `dinosaurs` | 285 |
+| Flowers | `flowers` | 296 |
+| Forest | `forest` | 150 |
+| Fruit | `fruit` | 100 |
+| Vegetables | `vegetable` | 125 |
+| Space | `space` | 250 |
+
+Names shown are the English ones; a theme's display name and its 8 labels are `@StringRes`/`@ArrayRes` ids, so both translate. See **Languages** below.
+
+They are declared in that order in `THEME_DEFS`, loosely grouped (things that go, creatures, growing things, space), and that one list drives both the Home grid and the Settings list.
 
 Every theme's color palette (card fill, stripe, and border/accent) is generated from just its hue using the same OKLCH formula throughout the app, so palettes stay visually consistent without hand-picked hex values:
 
@@ -86,7 +98,51 @@ Every theme's color palette (card fill, stripe, and border/accent) is generated 
 - Stripe: `oklch(66% 0.17 hue)`
 - Border / accent: `oklch(50% 0.19 hue)`
 
-Each theme's icon is drawn with Compose `Canvas`, shape-for-shape, rather than using a generic icon set.
+### Icons
+
+Each theme's icon is a black-and-white vector drawable in `app/src/main/res/drawable/ic_theme_<id>.xml`, drawn untinted on a near-white disc on the theme's card. The artwork is two-tone by design, so it is deliberately never tinted — a drawable-wide tint would collapse the white detail into the black shapes and leave a flat silhouette.
+
+Those drawables are generated, not hand-written. The source SVGs live in `icons-src/<id>.svg` and are converted by `tools/svg2vd.py`:
+
+```bash
+python3 tools/svg2vd.py icons-src app/src/main/res/drawable
+```
+
+The converter inlines the SVGs' CSS classes into path attributes, re-expresses `<circle>`/`<rect>`/`<ellipse>` as cubic Bézier path data, and bakes element transforms into the path — all things VectorDrawable can't express directly.
+
+It deliberately supports only the subset this icon set uses, and raises on anything else rather than guessing: group-level fills or classes, `style="..."` attributes, `fill-rule`/`clip-rule`, opacity, a non-zero `viewBox` origin, and colours carrying alpha. A silently mis-converted icon looks plausible and ships; a refusal costs one line of support code. Pass `--check` to verify the committed drawables without writing anything.
+
+**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, add `theme_<id>_name` and a `labels_<id>` array to every `values*/strings.xml`, and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>`. The theme id, the SVG filename and the resource names are kept identical on purpose. `ThemeDefsTest` (instrumented, needs a device) asserts the resource names match the id; the `checkIconsInSync` Gradle task (wired into `check`, so it runs in `./gradlew build`) re-runs the converter and fails if any committed drawable disagrees with its source.
+
+## Languages
+
+The app ships English and Croatian. Every user-visible string lives in `res/values/strings.xml`; Croatian overrides sit in `res/values-hr/strings.xml`.
+
+Croatian deliberately translates only part of the set. Keys it leaves out fall back to the English file, which is Android's normal behaviour and avoids maintaining a duplicate that has to be re-edited whenever the English changes:
+
+- `app_name` and `home_brand` are the product name.
+- `gate_equation` is nothing but `%1$d`/`%2$d` placeholders.
+- The 112 image labels are stand-in text for artwork the app does not ship yet, so translating them would be translating scaffolding.
+
+Six glyphs the app draws as text — the gear, tick, house, dropdown chevron and the two nav arrows — are kept in code rather than resources. They are symbols, not words. The controls carrying them are announced by name rather than by glyph: the gear and the nav pills declare a `contentDescription`, the Home button is labelled by the word beside its glyph, and theme rows are `toggleable` so their checked state is announced too.
+
+### Switching language
+
+Parent Settings has a language dropdown above the theme list, behind the parental gate. "Same as phone settings" is the first entry in the same list as the languages, each named in its own language (`Hrvatski`, not `Croatian`). A dropdown rather than a row of options so that shipping a fourth or tenth language costs no extra room and changes nothing about how the screen reads. Selecting one applies immediately: AppCompat recreates the activity against the new configuration. The `AppViewModel` survives that, so the current screen and position are kept and the change looks instant.
+
+The choice is stored by `AppCompatDelegate.setApplicationLocales()`, which is why the app runs an `AppCompatActivity` on a `Theme.AppCompat` parent rather than a bare `ComponentActivity`. Going straight to `LocaleManager` would avoid the dependency but is API 33+, and `minSdk` here is 26.
+
+On Android 13+ the framework owns the storage and registers the choice with the system's own per-app language screen. **Below 13 there is no such store, and AppCompat only keeps its own if the app opts in** by declaring `AppLocalesMetadataHolderService` with `autoStoreLocales=true` in the manifest. Without that declaration the language applies for the session and is silently lost on the next cold start — on exactly the API range (26–32) the dependency exists to serve.
+
+`res/xml/locales_config.xml` lists the shipped languages for Android 13+; `AppLocales.SUPPORTED` lists them for the in-app picker. Nothing links the two at compile time, so `LocalesConfigTest` asserts they match.
+
+### Adding a language
+
+1. Copy `res/values/strings.xml` to `res/values-<code>/strings.xml` and translate the values, leaving every `name="..."` alone. Omit any key that should stay as the English default.
+2. Add the code to `res/xml/locales_config.xml` **and** to `AppLocales.SUPPORTED`.
+3. Run the tests. `ThemeDefsTest` checks every shipped language for a non-blank, unique name per theme and for label arrays that still match the default's length — arrays replace rather than merge, so a dropped item would otherwise leave the Viewer paging onto an index that no longer exists. It cannot detect a language that simply isn't translated; fallback makes that indistinguishable from a deliberate omission, which is why `croatianOverridesTheDefaultsRatherThanFallingBackWholesale` pins that separately.
+
+Card names render on one line and ellipsize rather than wrap (`TextOverflow.Ellipsis`), so keep them short; `Construction` is about the practical limit at the current card width.
 
 ### On images
 
@@ -94,10 +150,11 @@ The Viewer never shows real photos — there are none bundled with the app. Each
 
 ## Tech stack
 
-- Kotlin, Jetpack Compose (Material 3), single `ComponentActivity`
+- Kotlin, Jetpack Compose (Material 3), single `AppCompatActivity`
 - One `ViewModel` (`AppViewModel`) holds all app state as a sealed `UiState`, plus the set of disabled themes and the gate's failure/lockout counters
 - User-facing text, including every theme name and item label, lives in `strings.xml`
-- Persistence goes through a `ThemeStore` interface; `SharedPreferencesThemeStore` is the only implementation. That seam is what lets the entire state machine be tested off-device
+- Persistence goes through a `ThemeStore` interface; `SharedPreferencesThemeStore` is the only implementation. That seam is what lets the entire state machine be tested off-device. The language choice is the exception: `AppCompatDelegate` owns that store
+- `androidx.appcompat` is present for one reason: per-app language selection below Android 13, which is also why the activity is an `AppCompatActivity` on a `Theme.AppCompat` parent
 - No navigation library, no networking, no local database
 - Dependencies are declared in a Gradle version catalog (`gradle/libs.versions.toml`)
 - Gradle Kotlin DSL, AGP's built-in Kotlin support (no separate `org.jetbrains.kotlin.android` plugin)
@@ -111,18 +168,25 @@ app/src/main/java/com/kidsexplore/app/
 ├── data/
 │   └── ThemeStore.kt            # persistence seam (themes + gate lock) + SharedPreferences impl
 ├── model/
-│   └── ThemeDef.kt              # theme ids/hues/icons + the 8 THEME_DEFS entries
+│   └── ThemeDef.kt              # theme ids/hues/icons + the 14 THEME_DEFS entries
+├── AppLocales.kt                # language selection, backed by AppCompatDelegate
 └── ui/
     ├── theme/
     │   ├── OklchColor.kt        # OKLCH → sRGB conversion, per-theme palettes
     │   └── Theme.kt             # MaterialTheme wrapper, type styles
     ├── icons/
-    │   └── ThemeIcons.kt        # Canvas-drawn icon per theme
+    │   └── ThemeIcons.kt        # draws a theme's vector-drawable icon
     └── screens/
         ├── HomeScreen.kt
         ├── ViewerScreen.kt
         ├── GateScreen.kt
         └── SettingsScreen.kt
+
+res/values/strings.xml           # all user-visible text (English)
+res/values-hr/strings.xml        # Croatian overrides; missing keys fall back
+res/xml/locales_config.xml       # languages the app ships
+icons-src/                       # source SVGs, one per theme id
+tools/svg2vd.py                  # icons-src/*.svg -> res/drawable/ic_theme_*.xml
 ```
 
 ## Building & running

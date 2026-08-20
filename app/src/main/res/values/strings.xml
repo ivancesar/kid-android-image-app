@@ -1,12 +1,12 @@
-<resources>
-    <string name="app_name">Kids Explore</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name" translatable="false">Kids Explore</string>
 
     <!-- Home -->
-    <string name="home_brand">KIDS EXPLORE</string>
+    <string name="home_brand" translatable="false">KIDS EXPLORE</string>
     <string name="home_title">Pick something to look at!</string>
     <string name="home_settings_button">Parent settings</string>
     <string name="home_empty_title">Nothing to show yet</string>
-    <string name="home_empty_body">Every theme is switched off. Open parent settings to turn some back on.</string>
+    <string name="home_empty_body">Every category is switched off. Open parent settings to turn some back on.</string>
 
     <!-- Viewer -->
     <string name="viewer_home">Home</string>
@@ -16,7 +16,7 @@
     <!-- Parental gate -->
     <string name="gate_eyebrow">GROWN-UPS ONLY</string>
     <string name="gate_prompt">Solve this to continue</string>
-    <string name="gate_question">%1$d + %2$d = ?</string>
+    <string name="gate_question" tools:ignore="MissingTranslation">%1$d + %2$d = ?</string>
     <string name="gate_wrong">Not quite, try again!</string>
     <plurals name="gate_locked">
         <item quantity="one">Too many tries. Wait %d second.</item>
@@ -26,7 +26,10 @@
 
     <!-- Parent settings -->
     <string name="settings_title">Parent Settings</string>
-    <string name="settings_subtitle">Choose which themes your child can see.</string>
+    <string name="settings_subtitle">Choose which categories your child can see.</string>
+    <string name="settings_categories">Categories</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">Same as phone settings</string>
     <string name="settings_done">Done</string>
 
     <!--
@@ -123,6 +126,12 @@
     </string-array>
 
     <string name="theme_farm">Farm</string>
+    <string name="theme_bird">Birds</string>
+    <string name="theme_insects">Insects</string>
+    <string name="theme_flowers">Flowers</string>
+    <string name="theme_forest">Forest</string>
+    <string name="theme_fruit">Fruit</string>
+    <string name="theme_vegetable">Vegetables</string>
     <string-array name="labels_farm">
         <item>Pig in a muddy pen</item>
         <item>Cow grazing in a field</item>
@@ -132,5 +141,71 @@
         <item>Duck swimming in a pond</item>
         <item>Red barn with silo</item>
         <item>Tractor in a wheat field</item>
+    </string-array>
+
+    <string-array name="labels_bird">
+        <item>Robin perched on a branch</item>
+        <item>Blue jay with bright feathers</item>
+        <item>Woodpecker on a tree trunk</item>
+        <item>Flamingo standing in water</item>
+        <item>Penguin waddling on ice</item>
+        <item>Eagle soaring over mountains</item>
+        <item>Hummingbird at a flower</item>
+        <item>Parrot with rainbow feathers</item>
+    </string-array>
+
+    <string-array name="labels_insects">
+        <item>Butterfly on a purple flower</item>
+        <item>Bumblebee gathering pollen</item>
+        <item>Ladybug on a green leaf</item>
+        <item>Dragonfly over a pond</item>
+        <item>Ant carrying a crumb</item>
+        <item>Grasshopper in tall grass</item>
+        <item>Caterpillar on a stem</item>
+        <item>Firefly glowing at dusk</item>
+    </string-array>
+
+    <string-array name="labels_flowers">
+        <item>Sunflower facing the sun</item>
+        <item>Red rose with green leaves</item>
+        <item>Tulips in a spring garden</item>
+        <item>Daisy with white petals</item>
+        <item>Lavender swaying in a field</item>
+        <item>Cherry blossoms on a branch</item>
+        <item>Orchid in a small pot</item>
+        <item>Poppy in a summer meadow</item>
+    </string-array>
+
+    <string-array name="labels_forest">
+        <item>Tall pine trees in a row</item>
+        <item>Mushrooms on a mossy log</item>
+        <item>Sunlight through the leaves</item>
+        <item>Fox trotting between trees</item>
+        <item>Stream running over rocks</item>
+        <item>Acorns under an oak tree</item>
+        <item>Deer standing in a clearing</item>
+        <item>Autumn leaves on the ground</item>
+    </string-array>
+
+    <string-array name="labels_fruit">
+        <item>Red apple on a branch</item>
+        <item>Bunch of yellow bananas</item>
+        <item>Strawberries in a basket</item>
+        <item>Orange cut in half</item>
+        <item>Bunch of purple grapes</item>
+        <item>Watermelon slice on a plate</item>
+        <item>Ripe pear on a table</item>
+        <item>Pineapple with spiky leaves</item>
+    </string-array>
+
+    <string-array name="labels_vegetable">
+        <item>Orange carrot with green top</item>
+        <item>Broccoli floret on a board</item>
+        <item>Red tomato on the vine</item>
+        <item>Corn on the cob</item>
+        <item>Green peas in a pod</item>
+        <item>Purple eggplant, side view</item>
+        <item>Potatoes in a wooden crate</item>
+        <item>Bell peppers in three colors</item>
     </string-array>
 </resources>
