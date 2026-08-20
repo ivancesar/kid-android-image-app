@@ -26,7 +26,7 @@ The app rotates freely between portrait and landscape (no orientation lock). Scr
 
 - Header: "KIDS EXPLORE" label, a settings gear button (top right) that opens the **parental gate**, and the "Pick something to look at!" title.
 - The header fades out once the grid is scrolled away from the top, and fades back in when scrolled back — it floats over the grid rather than sharing layout space with it, so its own size never affects the grid's, which would otherwise cause the list to bounce as it hid/showed itself.
-- A grid of theme cards — one per enabled theme, with as many columns as fit the available width (2 in portrait, more in landscape or on a wider screen) rather than a fixed count. Each card shows a themed icon on a translucent circle, the theme name, and a color pair (fill + a darker bottom accent stripe) derived from the theme's hue.
+- A grid of theme cards — one per enabled theme, with as many columns as fit the available width (2 in portrait, more in landscape or on a wider screen) rather than a fixed count. Each card shows a themed icon on a near-white circle, the theme name, and a color pair (fill + a darker bottom accent stripe) derived from the theme's hue.
 - Only themes enabled in **Settings** appear here; disabling a theme removes it from this grid immediately.
 - Tapping a card opens the **Viewer** for that theme.
 
@@ -58,18 +58,26 @@ The app rotates freely between portrait and landscape (no orientation lock). Scr
 
 ## Themes
 
-Eight fixed themes, each with a name, a hue, an icon, and 8 item labels:
+Fourteen fixed themes, each with a name, a hue, an icon, and 8 item labels:
 
-| Theme | Hue | Icon |
+| Theme | id | Hue |
 |---|---|---|
-| Cars | 15 | car |
-| Construction | 45 | bulldozer |
-| Animals | 320 | animal face |
-| Dinosaurs | 285 | dinosaur |
-| Space | 250 | ringed planet |
-| Trains | 350 | train |
-| Ocean | 175 | fish |
-| Farm | 75 | farm animal face |
+| Cars | `cars` | 15 |
+| Construction | `construction` | 45 |
+| Trains | `trains` | 350 |
+| Animals | `animals` | 320 |
+| Birds | `bird` | 225 |
+| Insects | `insects` | 200 |
+| Ocean | `ocean` | 175 |
+| Farm | `farm` | 75 |
+| Dinosaurs | `dinosaurs` | 285 |
+| Flowers | `flowers` | 302 |
+| Forest | `forest` | 150 |
+| Fruit | `fruit` | 100 |
+| Vegetables | `vegetable` | 125 |
+| Space | `space` | 250 |
+
+They are declared in that order in `THEME_DEFS`, loosely grouped (things that go, creatures, growing things, space), and that one list drives both the Home grid and the Settings list.
 
 Every theme's color palette (card fill, stripe, and border/accent) is generated from just its hue using the same OKLCH formula throughout the app, so palettes stay visually consistent without hand-picked hex values:
 
@@ -77,7 +85,19 @@ Every theme's color palette (card fill, stripe, and border/accent) is generated 
 - Stripe: `oklch(66% 0.17 hue)`
 - Border / accent: `oklch(50% 0.19 hue)`
 
-Each theme's icon is drawn with Compose `Canvas`, shape-for-shape, rather than using a generic icon set.
+### Icons
+
+Each theme's icon is a black-and-white vector drawable in `app/src/main/res/drawable/ic_theme_<id>.xml`, drawn untinted on a near-white disc on the theme's card. The artwork is two-tone by design, so it is deliberately never tinted — a drawable-wide tint would collapse the white detail into the black shapes and leave a flat silhouette.
+
+Those drawables are generated, not hand-written. The source SVGs live in `icons-src/<id>.svg` and are converted by `tools/svg2vd.py`:
+
+```bash
+python3 tools/svg2vd.py icons-src app/src/main/res/drawable
+```
+
+The converter inlines the SVGs' CSS classes into path attributes, re-expresses `<circle>`/`<rect>`/`<ellipse>` as cubic Bézier path data, and bakes element transforms into the path — all things VectorDrawable can't express directly.
+
+**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>`. The theme id, the SVG filename and the drawable name are kept identical on purpose; `ThemeDefsTest` asserts that, so a mismatch fails the build's test run rather than rendering a blank card.
 
 ### On images
 
@@ -97,18 +117,21 @@ app/src/main/java/com/kidsexplore/app/
 ├── MainActivity.kt              # hosts Compose content, switches on Screen
 ├── AppViewModel.kt              # screen state machine, gate logic, persistence
 ├── model/
-│   └── ThemeDef.kt              # theme data + the 8 THEME_DEFS entries
+│   └── ThemeDef.kt              # theme data + the 14 THEME_DEFS entries
 └── ui/
     ├── theme/
     │   ├── OklchColor.kt        # OKLCH → sRGB conversion, per-theme palettes
     │   └── Theme.kt             # MaterialTheme wrapper, type styles
     ├── icons/
-    │   └── ThemeIcons.kt        # Canvas-drawn icon per theme
+    │   └── ThemeIcons.kt        # draws a theme's vector-drawable icon
     └── screens/
         ├── HomeScreen.kt
         ├── ViewerScreen.kt
         ├── GateScreen.kt
         └── SettingsScreen.kt
+
+icons-src/                       # source SVGs, one per theme id
+tools/svg2vd.py                  # icons-src/*.svg -> res/drawable/ic_theme_*.xml
 ```
 
 ## Building & running

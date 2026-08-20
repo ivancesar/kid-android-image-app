@@ -144,6 +144,11 @@ fun HomeScreen(
 
 private val BoldLabelStyle = TextStyle(fontWeight = FontWeight.ExtraBold, letterSpacing = 0.5.sp)
 
+// The icons are black-and-white line art drawn for a light ground, so the disc
+// behind them is kept close to white — at the card's own tint the white fills
+// in the artwork would sink into the background and only the outlines would read.
+private const val IconDiscAlpha = 0.85f
+
 @Composable
 private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
     val palette = theme.palette()
@@ -170,12 +175,11 @@ private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
                         .fillMaxWidth(0.36f)
                         .aspectRatio(1f)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.35f)),
+                        .background(Color.White.copy(alpha = IconDiscAlpha)),
                     contentAlignment = Alignment.Center,
                 ) {
                     ThemeIconGlyph(
-                        icon = theme.icon,
-                        accent = palette.cardBorder,
+                        iconRes = theme.iconRes,
                         modifier = Modifier.fillMaxSize(0.75f),
                     )
                 }

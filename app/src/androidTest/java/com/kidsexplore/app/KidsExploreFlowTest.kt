@@ -3,8 +3,11 @@ package com.kidsexplore.app
 import android.app.Application
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
@@ -37,6 +40,15 @@ class KidsExploreFlowTest {
 
     private val carLabels = THEME_DEFS.first { it.id == "cars" }.labels
 
+    /**
+     * Home's grid and the Settings list both scroll now that there are 14
+     * themes, and a lazy list never composes its off-screen items — so a theme
+     * has to be scrolled into view before it can be clicked or asserted on.
+     */
+    private fun scrollToTheme(name: String) {
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText(name))
+    }
+
     @Before
     fun setUp() {
         val app = ApplicationProvider.getApplicationContext<Application>()
@@ -49,10 +61,14 @@ class KidsExploreFlowTest {
 
     @Test
     fun homeListsEveryTheme() {
+        // Asserted before scrolling: the header deliberately fades out once the
+        // grid leaves the top, and walking all 14 themes scrolls past that point.
+        compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
+
         THEME_DEFS.forEach { theme ->
+            scrollToTheme(theme.name)
             compose.onNodeWithText(theme.name).assertIsDisplayed()
         }
-        compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
     }
 
     @Test
@@ -137,6 +153,7 @@ class KidsExploreFlowTest {
         compose.onNodeWithText("⚙").performClick()
         compose.onNodeWithText(viewModel.gate!!.correct.toString()).performClick()
 
+        scrollToTheme("Ocean")
         compose.onNodeWithText("Ocean").performClick() // untick it
         compose.onNodeWithText("Done").performClick()
 
@@ -152,15 +169,18 @@ class KidsExploreFlowTest {
 
         compose.onNodeWithText("⚙").performClick()
         compose.onNodeWithText(viewModel.gate!!.correct.toString()).performClick()
+        scrollToTheme("Ocean")
         compose.onNodeWithText("Ocean").performClick() // tick it again
         compose.onNodeWithText("Done").performClick()
 
+        scrollToTheme("Ocean")
         compose.onNodeWithText("Ocean").assertIsDisplayed()
     }
 
     @Test
     fun fullJourneyHomeToViewerToSettingsAndBack() {
         // browse a theme
+        scrollToTheme("Dinosaurs")
         compose.onNodeWithText("Dinosaurs").performClick()
         val dinoLabels = THEME_DEFS.first { it.id == "dinosaurs" }.labels
         compose.onNodeWithText(dinoLabels[0]).assertIsDisplayed()
@@ -181,6 +201,7 @@ class KidsExploreFlowTest {
         compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
 
         // reopening a theme starts from its first image again
+        scrollToTheme("Dinosaurs")
         compose.onNodeWithText("Dinosaurs").performClick()
         compose.onNodeWithText(dinoLabels[0]).assertIsDisplayed()
     }
