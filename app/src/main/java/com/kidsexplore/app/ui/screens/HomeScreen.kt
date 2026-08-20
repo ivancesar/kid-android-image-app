@@ -149,6 +149,11 @@ private val BoldLabelStyle = TextStyle(fontWeight = FontWeight.ExtraBold, letter
 // in the artwork would sink into the background and only the outlines would read.
 private const val IconDiscAlpha = 0.85f
 
+// How much of the disc the artwork fills. Past ~0.71 the corners of a square
+// icon cross the disc's edge, but these icons carry no detail right in their
+// corners, so a little over that still reads as contained.
+private const val IconInsetInDisc = 0.78f
+
 @Composable
 private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
     val palette = theme.palette()
@@ -159,40 +164,41 @@ private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
             .background(palette.cardBg)
             .clickable(onClick = onClick),
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(10.dp),
-            contentAlignment = Alignment.Center,
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(
-                    modifier = Modifier
-                        // Sized relative to the card's own width (not a fixed
-                        // dp) so it stays proportional however wide the card
-                        // ends up — e.g. the much wider landscape 2-column grid.
-                        .fillMaxWidth(0.36f)
-                        .aspectRatio(1f)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = IconDiscAlpha)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    ThemeIconGlyph(
-                        iconRes = theme.iconRes,
-                        modifier = Modifier.fillMaxSize(0.75f),
-                    )
-                }
-                Text(
-                    text = theme.name,
-                    style = HeavyTextStyle.copy(
-                        shadow = Shadow(color = Color.Black.copy(alpha = 0.12f), offset = Offset(0f, 2f), blurRadius = 1f),
-                    ),
-                    fontSize = 17.sp,
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
+            Box(
+                modifier = Modifier
+                    // Claims every bit of height the name leaves behind and
+                    // then matches it in width, so the icon is as large as the
+                    // card can make it however wide the column ends up — e.g.
+                    // the much wider landscape grid.
+                    .weight(1f)
+                    .aspectRatio(1f, matchHeightConstraintsFirst = true)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = IconDiscAlpha)),
+                contentAlignment = Alignment.Center,
+            ) {
+                ThemeIconGlyph(
+                    iconRes = theme.iconRes,
+                    modifier = Modifier.fillMaxSize(IconInsetInDisc),
                 )
             }
+            Text(
+                text = theme.name,
+                style = HeavyTextStyle.copy(
+                    shadow = Shadow(color = Color.Black.copy(alpha = 0.12f), offset = Offset(0f, 2f), blurRadius = 1f),
+                ),
+                fontSize = 17.sp,
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+            )
         }
         Box(
             modifier = Modifier
