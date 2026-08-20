@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,13 +21,16 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -155,6 +159,10 @@ fun SettingsScreen(
 @Composable
 private fun LanguagePicker(current: String, onPick: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
+    // The menu is measured from the row it drops out of, so the two line up
+    // however wide the screen is.
+    var anchorWidthPx by remember { mutableIntStateOf(0) }
+    val anchorWidth = with(LocalDensity.current) { anchorWidthPx.toDp() }
     val options = listOf(AppLocales.SYSTEM) + AppLocales.SUPPORTED
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -168,6 +176,7 @@ private fun LanguagePicker(current: String, onPick: (String) -> Unit) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .onSizeChanged { anchorWidthPx = it.width }
                     .clip(RoundedCornerShape(16.dp))
                     .background(NeutralColors.rowBgEnabled)
                     .clickable { expanded = true }
@@ -184,7 +193,11 @@ private fun LanguagePicker(current: String, onPick: (String) -> Unit) {
                 )
                 Text("▾", fontSize = 16.sp, color = NeutralColors.subtitleText)
             }
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.width(anchorWidth),
+            ) {
                 options.forEach { tag ->
                     DropdownMenuItem(
                         text = {
