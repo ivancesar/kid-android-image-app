@@ -55,7 +55,7 @@ The app rotates freely between portrait and landscape (no orientation lock). Scr
 - Tapping a row toggles that theme's visibility on the Home screen.
 - Enabled/disabled state is persisted to `SharedPreferences`, so it survives app restarts.
 - "Done" returns to Home, where the grid now reflects the updated theme selection.
-- A language picker sits above the theme list — "match my phone" plus each shipped language named in its own language. Selecting one applies immediately.
+- A language dropdown sits above the theme list — "Same as phone settings" plus each shipped language named in its own language. Selecting one applies immediately.
 
 ## Themes
 
@@ -116,7 +116,7 @@ Two icon-glyph strings the app draws as text (the gear, tick, house and the two 
 
 ### Switching language
 
-Parent Settings has a language picker above the theme list, behind the parental gate. It offers "match my phone" plus each shipped language named in its own language (`Hrvatski`, not `Croatian`), and applies immediately — Compose recomposes against the new configuration, so nothing restarts.
+Parent Settings has a language dropdown above the theme list, behind the parental gate. "Same as phone settings" is the first entry in the same list as the languages, each named in its own language (`Hrvatski`, not `Croatian`). A dropdown rather than a row of options so that shipping a fourth or tenth language costs no extra room and changes nothing about how the screen reads. Selecting one applies immediately — Compose recomposes against the new configuration, so nothing restarts.
 
 The choice is stored by `AppCompatDelegate.setApplicationLocales()`, which is why the app runs an `AppCompatActivity` on a `Theme.AppCompat` parent rather than a bare `ComponentActivity`. AppCompat persists the selection, survives process death, and on Android 13+ registers it with the system's own per-app language screen. Going straight to `LocaleManager` would avoid the dependency but is API 33+, and `minSdk` here is 26.
 

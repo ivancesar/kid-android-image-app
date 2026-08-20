@@ -28,7 +28,7 @@
 
     <!-- Language picker -->
     <string name="settings_language">Language</string>
-    <string name="settings_language_system">Match my phone</string>
+    <string name="settings_language_system">Same as phone settings</string>
 
     <!-- Category names -->
     <string name="theme_cars_name">Cars</string>
