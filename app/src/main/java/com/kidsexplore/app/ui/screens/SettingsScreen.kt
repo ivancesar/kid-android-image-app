@@ -61,11 +61,6 @@ fun SettingsScreen(
             fontSize = 22.sp,
             color = NeutralColors.labelDark,
         )
-        Text(
-            text = stringResource(R.string.settings_subtitle),
-            fontSize = 14.sp,
-            color = NeutralColors.subtitleText,
-        )
         LazyColumn(
             modifier = Modifier.weight(1f).testTag(THEME_LIST_TEST_TAG),
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -75,15 +70,27 @@ fun SettingsScreen(
             }
 
             // Names the list below and separates it from the language row, which
-            // otherwise reads as the first entry in the category list.
+            // otherwise reads as the first entry in the category list. The
+            // explanation sits here rather than under the screen title so it
+            // describes the thing directly beneath it.
             item(key = "categories-heading") {
-                Text(
-                    text = stringResource(R.string.settings_categories),
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 13.sp,
-                    color = NeutralColors.subtitleText,
+                Column(
                     modifier = Modifier.padding(top = 8.dp),
-                )
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_categories),
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 13.sp,
+                        color = NeutralColors.subtitleText,
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_subtitle),
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp,
+                        color = NeutralColors.cancelText,
+                    )
+                }
             }
 
             items(THEME_DEFS, key = { it.id }) { theme ->

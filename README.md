@@ -56,7 +56,7 @@ The app rotates freely between portrait and landscape (no orientation lock). Scr
 - Enabled/disabled state is persisted to `SharedPreferences`, so it survives app restarts.
 - "Done" returns to Home, where the grid now reflects the updated theme selection.
 - A language dropdown sits above the theme list — "Same as phone settings" plus each shipped language named in its own language. Selecting one applies immediately.
-- "Language" and "Categories" section headings separate the two, so the language row does not read as the first entry in the category list.
+- "Language" and "Categories" section headings separate the two, so the language row does not read as the first entry in the category list. "Choose which themes your child can see." sits under the Categories heading as that section's explanation, rather than under the screen title where it described only half the screen.
 
 ## Themes
 
