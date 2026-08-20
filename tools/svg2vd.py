@@ -162,7 +162,8 @@ def walk(el, css, order, inherited, out):
     if t == 'g':
         # Group-level fills and classes would have to be inherited down; nothing
         # here does that, so a group carrying them would silently lose them.
-        for attr in ('class', 'fill', 'stroke'):
+        for attr in ('class', 'fill', 'stroke', 'stroke-width',
+                     'stroke-linecap', 'stroke-linejoin'):
             if el.get(attr):
                 raise SystemExit('<g> carries %s="%s"; group-level presentation is not '
                                  'inherited by this script' % (attr, el.get(attr)))
@@ -182,11 +183,11 @@ def walk(el, css, order, inherited, out):
                          float(el.get('rx')), float(el.get('ry')), m)
     elif t == 'rect':
         # SVG mirrors a missing rx/ry onto the other; defaulting to 0 would
-        # square off corners that should be round.
+        # square off corners that should be round. x/y default to 0.
         rx, ry = el.get('rx'), el.get('ry')
         rx = float(rx if rx is not None else (ry or 0))
         ry = float(ry if ry is not None else (rx or 0))
-        d = rect_path(float(el.get('x')), float(el.get('y')),
+        d = rect_path(float(el.get('x') or 0), float(el.get('y') or 0),
                       float(el.get('width')), float(el.get('height')), rx, ry, m)
     else:
         raise SystemExit('unsupported element: <%s>' % t)
@@ -195,10 +196,14 @@ def walk(el, css, order, inherited, out):
 def convert(src, dst, name):
     ET.register_namespace('', SVG_NS)
     root = ET.parse(src).getroot()
+    check_supported(root)
     css, order = {}, []
     for st in root.iter('{%s}style' % SVG_NS):
         rules, o = parse_css(st.text or '')
-        css.update(rules)
+        # Merge, matching the within-one-block behaviour; a second <style> block
+        # adding one property must not drop the ones already set.
+        for cls, props in rules.items():
+            css.setdefault(cls, {}).update(props)
         order.extend(x for x in o if x not in order)
 
     vb = [float(x) for x in re.split(r'[\s,]+', root.get('viewBox').strip())]

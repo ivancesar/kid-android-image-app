@@ -115,7 +115,7 @@ Croatian deliberately translates only part of the set. Keys it leaves out fall b
 - `gate_equation` is nothing but `%1$d`/`%2$d` placeholders.
 - The 112 image labels are stand-in text for artwork the app does not ship yet, so translating them would be translating scaffolding.
 
-Six glyphs the app draws as text — the gear, tick, house, dropdown chevron and the two nav arrows — are kept in code rather than resources. They are symbols, not words. The controls carrying them declare a `contentDescription` so they are still announced by name.
+Six glyphs the app draws as text — the gear, tick, house, dropdown chevron and the two nav arrows — are kept in code rather than resources. They are symbols, not words. The controls carrying them are announced by name rather than by glyph: the gear and the nav pills declare a `contentDescription`, the Home button is labelled by the word beside its glyph, and theme rows are `toggleable` so their checked state is announced too.
 
 ### Switching language
 
