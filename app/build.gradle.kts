@@ -41,6 +41,9 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
     implementation("androidx.core:core-ktx:1.19.0")
+    // Per-app language: AppCompatDelegate.setApplicationLocales() persists the
+    // choice and backports it below Android 13, which minSdk 26 still has to serve.
+    implementation("androidx.appcompat:appcompat:1.7.1")
 
     // Instrumented tests (./gradlew connectedDebugAndroidTest) — they need a
     // real Context for SharedPreferences, so they run on a device/emulator.

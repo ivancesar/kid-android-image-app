@@ -27,6 +27,10 @@ class AppViewModelTest {
 
     private fun newViewModel() = AppViewModel(app)
 
+    /** Labels live in resources now, so the expected text is resolved the same way the UI does. */
+    private fun labelsOf(id: String): Array<String> =
+        app.resources.getStringArray(THEME_DEFS.first { it.id == id }.labelsRes)
+
     @Before
     fun clearPrefs() {
         app = ApplicationProvider.getApplicationContext()
@@ -48,33 +52,33 @@ class AppViewModelTest {
 
         assertEquals(Screen.VIEWER, vm.screen)
         assertEquals("cars", vm.activeTheme?.id)
-        assertEquals(THEME_DEFS.first { it.id == "cars" }.labels[0], vm.currentLabel)
+        assertEquals(0, vm.imageIndex)
     }
 
     @Test
     fun nextWalksEveryImageAndWrapsToTheStart() {
         val vm = newViewModel()
         vm.openTheme("cars")
-        val labels = THEME_DEFS.first { it.id == "cars" }.labels
+        val labels = labelsOf("cars")
 
-        labels.forEachIndexed { i, expected ->
-            assertEquals("image at index $i", expected, vm.currentLabel)
+        labels.forEachIndexed { i, _ ->
+            assertEquals("image at index $i", i, vm.imageIndex)
             vm.next()
         }
         // one extra next() past the end wraps back around
-        assertEquals(labels[0], vm.currentLabel)
+        assertEquals(0, vm.imageIndex)
     }
 
     @Test
     fun prevFromTheFirstImageWrapsToTheLast() {
         val vm = newViewModel()
         vm.openTheme("dinosaurs")
-        val labels = THEME_DEFS.first { it.id == "dinosaurs" }.labels
+        val labels = labelsOf("dinosaurs")
 
         vm.prev()
-        assertEquals(labels.last(), vm.currentLabel)
+        assertEquals(labels.lastIndex, vm.imageIndex)
         vm.next()
-        assertEquals(labels.first(), vm.currentLabel)
+        assertEquals(0, vm.imageIndex)
     }
 
     @Test
@@ -85,7 +89,6 @@ class AppViewModelTest {
 
         assertEquals(Screen.HOME, vm.screen)
         assertNull(vm.activeTheme)
-        assertNull(vm.currentLabel)
     }
 
     @Test

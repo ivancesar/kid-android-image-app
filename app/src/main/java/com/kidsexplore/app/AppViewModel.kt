@@ -40,8 +40,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val activeTheme: ThemeDef?
         get() = THEME_DEFS.find { it.id == themeId }
 
-    val currentLabel: String?
-        get() = activeTheme?.labels?.getOrNull(imageIndex)
 
     private fun loadEnabledThemes(): Map<String, Boolean> {
         val disabled = prefs.getStringSet(PREFS_DISABLED_THEMES_KEY, emptySet()) ?: emptySet()
@@ -87,12 +85,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun next() {
-        val count = activeTheme?.labels?.size ?: return
+        val count = activeTheme?.labelCount ?: return
         imageIndex = (imageIndex + 1) % count
     }
 
     fun prev() {
-        val count = activeTheme?.labels?.size ?: return
+        val count = activeTheme?.labelCount ?: return
         imageIndex = (imageIndex - 1 + count) % count
     }
 

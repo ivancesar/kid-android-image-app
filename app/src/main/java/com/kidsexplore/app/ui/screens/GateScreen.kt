@@ -24,6 +24,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.kidsexplore.app.R
 import com.kidsexplore.app.GateQuestion
 import com.kidsexplore.app.ui.theme.HeavyTextStyle
 import com.kidsexplore.app.ui.theme.NeutralColors
@@ -49,21 +51,21 @@ fun GateScreen(
             verticalArrangement = Arrangement.spacedBy(22.dp),
         ) {
             Text(
-                text = "GROWN-UPS ONLY",
+                text = stringResource(R.string.gate_eyebrow),
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 15.sp,
                 color = NeutralColors.labelMuted,
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = "Solve this to continue",
+                text = stringResource(R.string.gate_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 color = NeutralColors.labelDark,
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = "${question.a} + ${question.b} = ?",
+                text = stringResource(R.string.gate_equation, question.a, question.b),
                 style = HeavyTextStyle,
                 fontSize = 40.sp,
                 color = NeutralColors.labelDark,
@@ -103,14 +105,14 @@ fun GateScreen(
             }
             if (wrong) {
                 Text(
-                    text = "Not quite, try again!",
+                    text = stringResource(R.string.gate_wrong),
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     color = NeutralColors.errorText,
                 )
             }
             Text(
-                text = "Cancel",
+                text = stringResource(R.string.gate_cancel),
                 fontSize = 13.sp,
                 color = NeutralColors.cancelText,
                 textDecoration = TextDecoration.Underline,

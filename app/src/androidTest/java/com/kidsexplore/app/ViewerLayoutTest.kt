@@ -9,6 +9,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.kidsexplore.app.R
 import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.ui.screens.ViewerScreen
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
@@ -33,6 +34,13 @@ class ViewerLayoutTest {
     val compose = createComposeRule()
 
     private val cars = THEME_DEFS.first { it.id == "cars" }
+    private val res by lazy {
+        androidx.test.core.app.ApplicationProvider
+            .getApplicationContext<android.content.Context>().resources
+    }
+    private val carLabels: Array<String> by lazy { res.getStringArray(cars.labelsRes) }
+    private fun str(id: Int) = res.getString(id)
+    private val carsName: String by lazy { res.getString(cars.nameRes) }
 
     private fun setViewer(
         orientation: Int,
@@ -48,7 +56,7 @@ class ViewerLayoutTest {
                 KidsExploreTheme {
                     ViewerScreen(
                         theme = cars,
-                        currentLabel = cars.labels[0],
+                        currentLabel = carLabels[0],
                         onHome = onHome,
                         onNext = onNext,
                         onPrev = onPrev,
@@ -62,20 +70,20 @@ class ViewerLayoutTest {
     fun portraitUsesLabelledPillButtons() {
         setViewer(Configuration.ORIENTATION_PORTRAIT)
 
-        compose.onNodeWithText("Back").assertIsDisplayed()
-        compose.onNodeWithText("Next").assertIsDisplayed()
-        compose.onNodeWithText("Home").assertIsDisplayed()
-        compose.onNodeWithText(cars.labels[0]).assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.viewer_back)).assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.viewer_next)).assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.viewer_home_button)).assertIsDisplayed()
+        compose.onNodeWithText(carLabels[0]).assertIsDisplayed()
     }
 
     @Test
     fun landscapeUsesLabelledPillButtonsToo() {
         setViewer(Configuration.ORIENTATION_LANDSCAPE)
 
-        compose.onNodeWithText("Back").assertIsDisplayed()
-        compose.onNodeWithText("Next").assertIsDisplayed()
-        compose.onNodeWithText("Home").assertIsDisplayed()
-        compose.onNodeWithText(cars.labels[0]).assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.viewer_back)).assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.viewer_next)).assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.viewer_home_button)).assertIsDisplayed()
+        compose.onNodeWithText(carLabels[0]).assertIsDisplayed()
     }
 
     @Test
@@ -83,7 +91,7 @@ class ViewerLayoutTest {
         setViewer(Configuration.ORIENTATION_PORTRAIT)
 
         // the header was deliberately reduced to just the Home button
-        compose.onNodeWithText(cars.name).assertDoesNotExist()
+        compose.onNodeWithText(carsName).assertDoesNotExist()
     }
 
     @Test
@@ -92,8 +100,8 @@ class ViewerLayoutTest {
         var prev = 0
         setViewer(Configuration.ORIENTATION_PORTRAIT, onNext = { next++ }, onPrev = { prev++ })
 
-        compose.onNodeWithText("Next").performClick()
-        compose.onNodeWithText("Back").performClick()
+        compose.onNodeWithText(str(R.string.viewer_next)).performClick()
+        compose.onNodeWithText(str(R.string.viewer_back)).performClick()
 
         compose.runOnIdle {
             assertEquals("next tapped once", 1, next)
@@ -107,8 +115,8 @@ class ViewerLayoutTest {
         var prev = 0
         setViewer(Configuration.ORIENTATION_LANDSCAPE, onNext = { next++ }, onPrev = { prev++ })
 
-        compose.onNodeWithText("Next").performClick()
-        compose.onNodeWithText("Back").performClick()
+        compose.onNodeWithText(str(R.string.viewer_next)).performClick()
+        compose.onNodeWithText(str(R.string.viewer_back)).performClick()
 
         compose.runOnIdle {
             assertEquals("next tapped once", 1, next)
@@ -121,7 +129,7 @@ class ViewerLayoutTest {
         var home = 0
         setViewer(Configuration.ORIENTATION_PORTRAIT, onHome = { home++ })
 
-        compose.onNodeWithText("Home").performClick()
+        compose.onNodeWithText(str(R.string.viewer_home_button)).performClick()
 
         compose.runOnIdle { assertEquals(1, home) }
     }

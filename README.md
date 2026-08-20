@@ -55,6 +55,7 @@ The app rotates freely between portrait and landscape (no orientation lock). Scr
 - Tapping a row toggles that theme's visibility on the Home screen.
 - Enabled/disabled state is persisted to `SharedPreferences`, so it survives app restarts.
 - "Done" returns to Home, where the grid now reflects the updated theme selection.
+- A language picker sits above the theme list — "match my phone" plus each shipped language named in its own language. Selecting one applies immediately.
 
 ## Themes
 
@@ -77,6 +78,8 @@ Fourteen fixed themes, each with a name, a hue, an icon, and 8 item labels:
 | Vegetables | `vegetable` | 125 |
 | Space | `space` | 250 |
 
+Names shown are the English ones; a theme's display name and its 8 labels are `@StringRes`/`@ArrayRes` ids, not literals, so both translate. See **Languages** below.
+
 They are declared in that order in `THEME_DEFS`, loosely grouped (things that go, creatures, growing things, space), and that one list drives both the Home grid and the Settings list.
 
 Every theme's color palette (card fill, stripe, and border/accent) is generated from just its hue using the same OKLCH formula throughout the app, so palettes stay visually consistent without hand-picked hex values:
@@ -97,7 +100,35 @@ python3 tools/svg2vd.py icons-src app/src/main/res/drawable
 
 The converter inlines the SVGs' CSS classes into path attributes, re-expresses `<circle>`/`<rect>`/`<ellipse>` as cubic Bézier path data, and bakes element transforms into the path — all things VectorDrawable can't express directly.
 
-**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>`. The theme id, the SVG filename and the drawable name are kept identical on purpose; `ThemeDefsTest` asserts that, so a mismatch fails the build's test run rather than rendering a blank card.
+**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, add `theme_<id>_name` and a `labels_<id>` array to every `values*/strings.xml`, and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>`. The theme id, the SVG filename and the drawable name are kept identical on purpose; `ThemeDefsTest` asserts that, so a mismatch fails the build's test run rather than rendering a blank card.
+
+## Languages
+
+The app ships English and Croatian. Every user-visible string lives in `res/values/strings.xml`; Croatian overrides sit in `res/values-hr/strings.xml`.
+
+Croatian deliberately translates only part of the set. Keys it leaves out fall back to the English file, which is Android's normal behaviour and avoids maintaining a duplicate that has to be re-edited whenever the English changes:
+
+- `app_name` and `home_brand` are the product name.
+- `gate_equation` is nothing but `%1$d`/`%2$d` placeholders.
+- The 112 image labels are stand-in text for artwork the app does not ship yet, so translating them would be translating scaffolding.
+
+Two icon-glyph strings the app draws as text (the gear, tick, house and the two nav arrows) are kept in code rather than resources — they are symbols, not words.
+
+### Switching language
+
+Parent Settings has a language picker above the theme list, behind the parental gate. It offers "match my phone" plus each shipped language named in its own language (`Hrvatski`, not `Croatian`), and applies immediately — Compose recomposes against the new configuration, so nothing restarts.
+
+The choice is stored by `AppCompatDelegate.setApplicationLocales()`, which is why the app runs an `AppCompatActivity` on a `Theme.AppCompat` parent rather than a bare `ComponentActivity`. AppCompat persists the selection, survives process death, and on Android 13+ registers it with the system's own per-app language screen. Going straight to `LocaleManager` would avoid the dependency but is API 33+, and `minSdk` here is 26.
+
+`res/xml/locales_config.xml` lists the shipped languages for Android 13+; `AppLocales.SUPPORTED` lists them for the in-app picker. Nothing links the two at compile time, so `LocalesConfigTest` asserts they match.
+
+### Adding a language
+
+1. Copy `res/values/strings.xml` to `res/values-<code>/strings.xml` and translate the values, leaving every `name="..."` alone. Omit any key that should stay as the English default.
+2. Add the code to `res/xml/locales_config.xml` **and** to `AppLocales.SUPPORTED`.
+3. Run the tests — `ThemeDefsTest` checks every shipped language has a non-blank, unique name per theme and exactly `LABELS_PER_THEME` labels per array, so a dropped array item fails there rather than crashing the Viewer.
+
+Card names render on one line and ellipsize rather than wrap, so keep theme names short; `Construction` is about the practical limit at the current card width.
 
 ### On images
 
@@ -107,7 +138,8 @@ The Viewer never shows real photos — there are none bundled with the app. Each
 
 - Kotlin, Jetpack Compose (Material 3), single `ComponentActivity`
 - One `AndroidViewModel` (`AppViewModel`) holds all app state: current screen, selected theme, viewer position, enabled themes, and the active gate question
-- No navigation library, no networking, no local database — `SharedPreferences` is the only persistence
+- No navigation library, no networking, no local database — `SharedPreferences` holds the enabled-theme set, and `AppCompatDelegate` holds the language choice
+- `androidx.appcompat` is present for one reason: per-app language selection below Android 13
 - Gradle Kotlin DSL, AGP's built-in Kotlin support (no separate `org.jetbrains.kotlin.android` plugin)
 
 ## Project structure
@@ -118,6 +150,7 @@ app/src/main/java/com/kidsexplore/app/
 ├── AppViewModel.kt              # screen state machine, gate logic, persistence
 ├── model/
 │   └── ThemeDef.kt              # theme data + the 14 THEME_DEFS entries
+├── AppLocales.kt                # language selection, backed by AppCompatDelegate
 └── ui/
     ├── theme/
     │   ├── OklchColor.kt        # OKLCH → sRGB conversion, per-theme palettes
@@ -130,6 +163,9 @@ app/src/main/java/com/kidsexplore/app/
         ├── GateScreen.kt
         └── SettingsScreen.kt
 
+res/values/strings.xml           # all user-visible text (English)
+res/values-hr/strings.xml        # Croatian overrides; missing keys fall back
+res/xml/locales_config.xml       # languages the app ships
 icons-src/                       # source SVGs, one per theme id
 tools/svg2vd.py                  # icons-src/*.svg -> res/drawable/ic_theme_*.xml
 ```

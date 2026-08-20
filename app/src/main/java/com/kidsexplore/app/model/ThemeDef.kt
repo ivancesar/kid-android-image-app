@@ -1,126 +1,100 @@
 package com.kidsexplore.app.model
 
+import androidx.annotation.ArrayRes
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import com.kidsexplore.app.R
 
 /**
- * One browsable theme. [iconRes] points at `res/drawable/ic_theme_<id>.xml`,
- * generated from the matching `icons-src/<id>.svg` by `tools/svg2vd.py` — the
- * id, the source filename, and the drawable name are deliberately kept
- * identical so adding a theme is just dropping in an SVG and adding an entry.
+ * One browsable theme.
+ *
+ * Everything a user reads is a resource id, not a literal, so the whole
+ * catalogue translates: [nameRes] is the card and settings title, [labelsRes]
+ * a `<string-array>` of the item labels in paging order. [iconRes] points at
+ * `res/drawable/ic_theme_<id>.xml`, generated from `icons-src/<id>.svg` by
+ * `tools/svg2vd.py`. The id, the SVG filename, the drawable name and the two
+ * resource names are deliberately kept identical, so adding a theme is
+ * dropping in an SVG, adding the strings, and adding one entry here.
+ *
+ * [labelCount] is held here rather than read back from the array so the
+ * ViewModel can wrap the paging index without touching resources — a count is
+ * structural, not translatable. `ThemeDefsTest` asserts it matches the array
+ * in every shipped language.
  */
 data class ThemeDef(
     val id: String,
-    val name: String,
+    @StringRes val nameRes: Int,
     val hue: Float,
     @DrawableRes val iconRes: Int,
-    val labels: List<String>,
+    @ArrayRes val labelsRes: Int,
+    val labelCount: Int = LABELS_PER_THEME,
 )
+
+/** Every theme ships the same number of item labels. */
+const val LABELS_PER_THEME = 8
 
 val THEME_DEFS: List<ThemeDef> = listOf(
     // Things that go
     ThemeDef(
-        id = "cars", name = "Cars", hue = 15f, iconRes = R.drawable.ic_theme_cars,
-        labels = listOf(
-            "Red sports car, side view", "Yellow taxi, front view", "Blue pickup truck", "Green race car with number",
-            "Police car with lights on", "Yellow school bus", "Motorcycle, side view", "Orange convertible car",
-        )
+        id = "cars", nameRes = R.string.theme_cars_name, hue = 15f,
+        iconRes = R.drawable.ic_theme_cars, labelsRes = R.array.labels_cars,
     ),
     ThemeDef(
-        id = "construction", name = "Construction", hue = 45f, iconRes = R.drawable.ic_theme_construction,
-        labels = listOf(
-            "Yellow bulldozer pushing dirt", "Crane lifting a steel beam", "Excavator digging a hole", "Cement mixer truck",
-            "Dump truck full of dirt", "Road roller flattening asphalt", "Yellow forklift with pallet", "Backhoe loader digging",
-        )
+        id = "construction", nameRes = R.string.theme_construction_name, hue = 45f,
+        iconRes = R.drawable.ic_theme_construction, labelsRes = R.array.labels_construction,
     ),
     ThemeDef(
-        id = "trains", name = "Trains", hue = 350f, iconRes = R.drawable.ic_theme_trains,
-        labels = listOf(
-            "Red steam train, side view", "Bullet train speeding by", "Freight train with cargo cars", "Toy train on a track",
-            "Train crossing a bridge", "Subway train at a station", "Yellow train engine, front view", "Train going through tunnel",
-        )
+        id = "trains", nameRes = R.string.theme_trains_name, hue = 350f,
+        iconRes = R.drawable.ic_theme_trains, labelsRes = R.array.labels_trains,
     ),
 
     // Creatures
     ThemeDef(
-        id = "animals", name = "Animals", hue = 320f, iconRes = R.drawable.ic_theme_animals,
-        labels = listOf(
-            "Lion resting in tall grass", "Elephant walking in savanna", "Giraffe eating tree leaves", "Panda sitting with bamboo",
-            "Owl perched on a branch", "Rabbit hopping in a field", "Puppy playing with a ball", "Kitten napping in sun",
-        )
+        id = "animals", nameRes = R.string.theme_animals_name, hue = 320f,
+        iconRes = R.drawable.ic_theme_animals, labelsRes = R.array.labels_animals,
     ),
     ThemeDef(
-        id = "bird", name = "Birds", hue = 225f, iconRes = R.drawable.ic_theme_bird,
-        labels = listOf(
-            "Robin perched on a branch", "Blue jay with bright feathers", "Woodpecker on a tree trunk", "Flamingo standing in water",
-            "Penguin waddling on ice", "Eagle soaring over mountains", "Hummingbird at a flower", "Parrot with rainbow feathers",
-        )
+        id = "bird", nameRes = R.string.theme_bird_name, hue = 225f,
+        iconRes = R.drawable.ic_theme_bird, labelsRes = R.array.labels_bird,
     ),
     ThemeDef(
-        id = "insects", name = "Insects", hue = 200f, iconRes = R.drawable.ic_theme_insects,
-        labels = listOf(
-            "Butterfly on a purple flower", "Bumblebee gathering pollen", "Ladybug on a green leaf", "Dragonfly over a pond",
-            "Ant carrying a crumb", "Grasshopper in tall grass", "Caterpillar on a stem", "Firefly glowing at dusk",
-        )
+        id = "insects", nameRes = R.string.theme_insects_name, hue = 200f,
+        iconRes = R.drawable.ic_theme_insects, labelsRes = R.array.labels_insects,
     ),
     ThemeDef(
-        id = "ocean", name = "Ocean", hue = 175f, iconRes = R.drawable.ic_theme_ocean,
-        labels = listOf(
-            "Clownfish swimming by coral", "Sea turtle gliding underwater", "Octopus with curled arms", "Starfish on the sand",
-            "Whale breaching the surface", "Seahorse near seaweed", "Crab on the beach", "School of tropical fish",
-        )
+        id = "ocean", nameRes = R.string.theme_ocean_name, hue = 175f,
+        iconRes = R.drawable.ic_theme_ocean, labelsRes = R.array.labels_ocean,
     ),
     ThemeDef(
-        id = "farm", name = "Farm", hue = 75f, iconRes = R.drawable.ic_theme_farm,
-        labels = listOf(
-            "Pig in a muddy pen", "Cow grazing in a field", "Chicken by the barn", "Sheep with wooly coat",
-            "Horse in a green pasture", "Duck swimming in a pond", "Red barn with silo", "Tractor in a wheat field",
-        )
+        id = "farm", nameRes = R.string.theme_farm_name, hue = 75f,
+        iconRes = R.drawable.ic_theme_farm, labelsRes = R.array.labels_farm,
     ),
     ThemeDef(
-        id = "dinosaurs", name = "Dinosaurs", hue = 285f, iconRes = R.drawable.ic_theme_dinosaurs,
-        labels = listOf(
-            "T-Rex roaring, side view", "Triceratops grazing on plants", "Stegosaurus walking, side view", "Pterodactyl flying over cliffs",
-            "Brontosaurus beside a lake", "Velociraptor running fast", "Ankylosaurus with tail spikes", "Baby dinosaur hatching from egg",
-        )
+        id = "dinosaurs", nameRes = R.string.theme_dinosaurs_name, hue = 285f,
+        iconRes = R.drawable.ic_theme_dinosaurs, labelsRes = R.array.labels_dinosaurs,
     ),
 
     // Growing things
     ThemeDef(
-        id = "flowers", name = "Flowers", hue = 302f, iconRes = R.drawable.ic_theme_flowers,
-        labels = listOf(
-            "Sunflower facing the sun", "Red rose with green leaves", "Tulips in a spring garden", "Daisy with white petals",
-            "Lavender swaying in a field", "Cherry blossoms on a branch", "Orchid in a small pot", "Poppy in a summer meadow",
-        )
+        id = "flowers", nameRes = R.string.theme_flowers_name, hue = 302f,
+        iconRes = R.drawable.ic_theme_flowers, labelsRes = R.array.labels_flowers,
     ),
     ThemeDef(
-        id = "forest", name = "Forest", hue = 150f, iconRes = R.drawable.ic_theme_forest,
-        labels = listOf(
-            "Tall pine trees in a row", "Mushrooms on a mossy log", "Sunlight through the leaves", "Fox trotting between trees",
-            "Stream running over rocks", "Acorns under an oak tree", "Deer standing in a clearing", "Autumn leaves on the ground",
-        )
+        id = "forest", nameRes = R.string.theme_forest_name, hue = 150f,
+        iconRes = R.drawable.ic_theme_forest, labelsRes = R.array.labels_forest,
     ),
     ThemeDef(
-        id = "fruit", name = "Fruit", hue = 100f, iconRes = R.drawable.ic_theme_fruit,
-        labels = listOf(
-            "Red apple on a branch", "Bunch of yellow bananas", "Strawberries in a basket", "Orange cut in half",
-            "Bunch of purple grapes", "Watermelon slice on a plate", "Ripe pear on a table", "Pineapple with spiky leaves",
-        )
+        id = "fruit", nameRes = R.string.theme_fruit_name, hue = 100f,
+        iconRes = R.drawable.ic_theme_fruit, labelsRes = R.array.labels_fruit,
     ),
     ThemeDef(
-        id = "vegetable", name = "Vegetables", hue = 125f, iconRes = R.drawable.ic_theme_vegetable,
-        labels = listOf(
-            "Orange carrot with green top", "Broccoli floret on a board", "Red tomato on the vine", "Corn on the cob",
-            "Green peas in a pod", "Purple eggplant, side view", "Potatoes in a wooden crate", "Bell peppers in three colors",
-        )
+        id = "vegetable", nameRes = R.string.theme_vegetable_name, hue = 125f,
+        iconRes = R.drawable.ic_theme_vegetable, labelsRes = R.array.labels_vegetable,
     ),
 
     // Out there
     ThemeDef(
-        id = "space", name = "Space", hue = 250f, iconRes = R.drawable.ic_theme_space,
-        labels = listOf(
-            "Rocket launching into sky", "Astronaut floating in space", "Planet Saturn with its rings", "Full moon close-up",
-            "Space shuttle on launch pad", "Cartoon alien spaceship", "Stars and a bright galaxy", "Sun with orange flares",
-        )
+        id = "space", nameRes = R.string.theme_space_name, hue = 250f,
+        iconRes = R.drawable.ic_theme_space, labelsRes = R.array.labels_space,
     ),
 )

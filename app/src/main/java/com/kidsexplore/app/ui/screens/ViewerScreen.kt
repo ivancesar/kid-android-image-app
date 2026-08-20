@@ -38,6 +38,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.kidsexplore.app.R
 import com.kidsexplore.app.model.ThemeDef
 import com.kidsexplore.app.ui.theme.NeutralColors
 import com.kidsexplore.app.ui.theme.ThemePalette
@@ -101,9 +103,9 @@ fun ViewerScreen(
                         .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 30.dp),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    NavPillButton(label = "◀ Back", accent = palette.cardBorder, onClick = onPrev)
+                    NavPillButton(label = "◀ " + stringResource(R.string.viewer_back), accent = palette.cardBorder, onClick = onPrev)
                     Spacer(modifier = Modifier.width(24.dp))
-                    NavPillButton(label = "▶ Next", accent = palette.cardBorder, onClick = onNext)
+                    NavPillButton(label = "▶ " + stringResource(R.string.viewer_next), accent = palette.cardBorder, onClick = onNext)
                 }
             }
         } else {
@@ -117,7 +119,7 @@ fun ViewerScreen(
                     .then(swipeModifier),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                NavPillButton(label = "◀ Back", accent = palette.cardBorder, onClick = onPrev)
+                NavPillButton(label = "◀ " + stringResource(R.string.viewer_back), accent = palette.cardBorder, onClick = onPrev)
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -127,7 +129,7 @@ fun ViewerScreen(
                 ) {
                     ImageCard(palette = palette, currentLabel = currentLabel)
                 }
-                NavPillButton(label = "▶ Next", accent = palette.cardBorder, onClick = onNext)
+                NavPillButton(label = "▶ " + stringResource(R.string.viewer_next), accent = palette.cardBorder, onClick = onNext)
             }
 
             Row(
@@ -176,7 +178,7 @@ private fun HomeButton(onClick: () -> Unit) {
         verticalArrangement = Arrangement.Center,
     ) {
         Text("⌂", fontSize = 15.sp)
-        Text("Home", fontWeight = FontWeight.ExtraBold, fontSize = 9.sp, color = NeutralColors.labelDarker)
+        Text(stringResource(R.string.viewer_home_button), fontWeight = FontWeight.ExtraBold, fontSize = 9.sp, color = NeutralColors.labelDarker)
     }
 }
 

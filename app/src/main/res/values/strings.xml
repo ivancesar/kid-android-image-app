@@ -1,3 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Default (English) strings. -->
 <resources>
+
+    <!-- Launcher -->
     <string name="app_name">Kids Explore</string>
+
+    <!-- Home screen -->
+    <string name="home_brand">KIDS EXPLORE</string>
+    <string name="home_title">Pick something to look at!</string>
+
+    <!-- Viewer screen -->
+    <string name="viewer_home_button">Home</string>
+    <string name="viewer_back">Back</string>
+    <string name="viewer_next">Next</string>
+
+    <!-- Parental gate -->
+    <string name="gate_eyebrow">GROWN-UPS ONLY</string>
+    <string name="gate_title">Solve this to continue</string>
+    <string name="gate_equation">%1$d + %2$d = ?</string>
+    <string name="gate_wrong">Not quite, try again!</string>
+    <string name="gate_cancel">Cancel</string>
+
+    <!-- Parent settings -->
+    <string name="settings_title">Parent Settings</string>
+    <string name="settings_subtitle">Choose which themes your child can see.</string>
+    <string name="settings_done">Done</string>
+
+    <!-- Language picker -->
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">Match my phone</string>
+
+    <!-- Category names -->
+    <string name="theme_cars_name">Cars</string>
+    <string name="theme_construction_name">Construction</string>
+    <string name="theme_trains_name">Trains</string>
+    <string name="theme_animals_name">Animals</string>
+    <string name="theme_bird_name">Birds</string>
+    <string name="theme_insects_name">Insects</string>
+    <string name="theme_ocean_name">Ocean</string>
+    <string name="theme_farm_name">Farm</string>
+    <string name="theme_dinosaurs_name">Dinosaurs</string>
+    <string name="theme_flowers_name">Flowers</string>
+    <string name="theme_forest_name">Forest</string>
+    <string name="theme_fruit_name">Fruit</string>
+    <string name="theme_vegetable_name">Vegetables</string>
+    <string name="theme_space_name">Space</string>
+
+    <!-- Image labels: 8 per category, in paging order -->
+
+    <string-array name="labels_cars">
+        <item>Red sports car, side view</item>
+        <item>Yellow taxi, front view</item>
+        <item>Blue pickup truck</item>
+        <item>Green race car with number</item>
+        <item>Police car with lights on</item>
+        <item>Yellow school bus</item>
+        <item>Motorcycle, side view</item>
+        <item>Orange convertible car</item>
+    </string-array>
+
+    <string-array name="labels_construction">
+        <item>Yellow bulldozer pushing dirt</item>
+        <item>Crane lifting a steel beam</item>
+        <item>Excavator digging a hole</item>
+        <item>Cement mixer truck</item>
+        <item>Dump truck full of dirt</item>
+        <item>Road roller flattening asphalt</item>
+        <item>Yellow forklift with pallet</item>
+        <item>Backhoe loader digging</item>
+    </string-array>
+
+    <string-array name="labels_trains">
+        <item>Red steam train, side view</item>
+        <item>Bullet train speeding by</item>
+        <item>Freight train with cargo cars</item>
+        <item>Toy train on a track</item>
+        <item>Train crossing a bridge</item>
+        <item>Subway train at a station</item>
+        <item>Yellow train engine, front view</item>
+        <item>Train going through tunnel</item>
+    </string-array>
+
+    <string-array name="labels_animals">
+        <item>Lion resting in tall grass</item>
+        <item>Elephant walking in savanna</item>
+        <item>Giraffe eating tree leaves</item>
+        <item>Panda sitting with bamboo</item>
+        <item>Owl perched on a branch</item>
+        <item>Rabbit hopping in a field</item>
+        <item>Puppy playing with a ball</item>
+        <item>Kitten napping in sun</item>
+    </string-array>
+
+    <string-array name="labels_bird">
+        <item>Robin perched on a branch</item>
+        <item>Blue jay with bright feathers</item>
+        <item>Woodpecker on a tree trunk</item>
+        <item>Flamingo standing in water</item>
+        <item>Penguin waddling on ice</item>
+        <item>Eagle soaring over mountains</item>
+        <item>Hummingbird at a flower</item>
+        <item>Parrot with rainbow feathers</item>
+    </string-array>
+
+    <string-array name="labels_insects">
+        <item>Butterfly on a purple flower</item>
+        <item>Bumblebee gathering pollen</item>
+        <item>Ladybug on a green leaf</item>
+        <item>Dragonfly over a pond</item>
+        <item>Ant carrying a crumb</item>
+        <item>Grasshopper in tall grass</item>
+        <item>Caterpillar on a stem</item>
+        <item>Firefly glowing at dusk</item>
+    </string-array>
+
+    <string-array name="labels_ocean">
+        <item>Clownfish swimming by coral</item>
+        <item>Sea turtle gliding underwater</item>
+        <item>Octopus with curled arms</item>
+        <item>Starfish on the sand</item>
+        <item>Whale breaching the surface</item>
+        <item>Seahorse near seaweed</item>
+        <item>Crab on the beach</item>
+        <item>School of tropical fish</item>
+    </string-array>
+
+    <string-array name="labels_farm">
+        <item>Pig in a muddy pen</item>
+        <item>Cow grazing in a field</item>
+        <item>Chicken by the barn</item>
+        <item>Sheep with wooly coat</item>
+        <item>Horse in a green pasture</item>
+        <item>Duck swimming in a pond</item>
+        <item>Red barn with silo</item>
+        <item>Tractor in a wheat field</item>
+    </string-array>
+
+    <string-array name="labels_dinosaurs">
+        <item>T-Rex roaring, side view</item>
+        <item>Triceratops grazing on plants</item>
+        <item>Stegosaurus walking, side view</item>
+        <item>Pterodactyl flying over cliffs</item>
+        <item>Brontosaurus beside a lake</item>
+        <item>Velociraptor running fast</item>
+        <item>Ankylosaurus with tail spikes</item>
+        <item>Baby dinosaur hatching from egg</item>
+    </string-array>
+
+    <string-array name="labels_flowers">
+        <item>Sunflower facing the sun</item>
+        <item>Red rose with green leaves</item>
+        <item>Tulips in a spring garden</item>
+        <item>Daisy with white petals</item>
+        <item>Lavender swaying in a field</item>
+        <item>Cherry blossoms on a branch</item>
+        <item>Orchid in a small pot</item>
+        <item>Poppy in a summer meadow</item>
+    </string-array>
+
+    <string-array name="labels_forest">
+        <item>Tall pine trees in a row</item>
+        <item>Mushrooms on a mossy log</item>
+        <item>Sunlight through the leaves</item>
+        <item>Fox trotting between trees</item>
+        <item>Stream running over rocks</item>
+        <item>Acorns under an oak tree</item>
+        <item>Deer standing in a clearing</item>
+        <item>Autumn leaves on the ground</item>
+    </string-array>
+
+    <string-array name="labels_fruit">
+        <item>Red apple on a branch</item>
+        <item>Bunch of yellow bananas</item>
+        <item>Strawberries in a basket</item>
+        <item>Orange cut in half</item>
+        <item>Bunch of purple grapes</item>
+        <item>Watermelon slice on a plate</item>
+        <item>Ripe pear on a table</item>
+        <item>Pineapple with spiky leaves</item>
+    </string-array>
+
+    <string-array name="labels_vegetable">
+        <item>Orange carrot with green top</item>
+        <item>Broccoli floret on a board</item>
+        <item>Red tomato on the vine</item>
+        <item>Corn on the cob</item>
+        <item>Green peas in a pod</item>
+        <item>Purple eggplant, side view</item>
+        <item>Potatoes in a wooden crate</item>
+        <item>Bell peppers in three colors</item>
+    </string-array>
+
+    <string-array name="labels_space">
+        <item>Rocket launching into sky</item>
+        <item>Astronaut floating in space</item>
+        <item>Planet Saturn with its rings</item>
+        <item>Full moon close-up</item>
+        <item>Space shuttle on launch pad</item>
+        <item>Cartoon alien spaceship</item>
+        <item>Stars and a bright galaxy</item>
+        <item>Sun with orange flares</item>
+    </string-array>
 </resources>

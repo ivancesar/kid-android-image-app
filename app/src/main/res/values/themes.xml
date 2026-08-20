@@ -1,5 +1,5 @@
 <resources>
-    <style name="Theme.KidsExplore" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.KidsExplore" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">@android:color/white</item>
     </style>
 </resources>
