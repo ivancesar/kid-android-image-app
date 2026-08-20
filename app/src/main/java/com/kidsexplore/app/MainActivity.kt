@@ -41,7 +41,7 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel()) {
                 val labels = stringArrayResource(theme.labelsRes)
                 ViewerScreen(
                     theme = theme,
-                    currentLabel = labels[viewModel.imageIndex.coerceIn(0, labels.lastIndex)],
+                    currentLabel = labels[viewModel.imageIndex],
                     onHome = viewModel::goHome,
                     onNext = viewModel::next,
                     onPrev = viewModel::prev,

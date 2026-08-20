@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.xmlpull.v1.XmlPullParser
@@ -17,17 +18,33 @@ import org.xmlpull.v1.XmlPullParser
 @RunWith(AndroidJUnit4::class)
 class LocalesConfigTest {
 
-    @Test
-    fun localesConfigMatchesTheInAppPicker() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    private val context = ApplicationProvider.getApplicationContext<Context>()
+
+    private fun declaredLocales(): List<String> {
         val parser = context.resources.getXml(R.xml.locales_config)
         val declared = mutableListOf<String>()
-        while (parser.next() != XmlPullParser.END_DOCUMENT) {
-            if (parser.eventType == XmlPullParser.START_TAG && parser.name == "locale") {
-                val name = parser.getAttributeValue("http://schemas.android.com/apk/res/android", "name")
-                if (name != null) declared.add(name)
+        try {
+            while (parser.next() != XmlPullParser.END_DOCUMENT) {
+                if (parser.eventType == XmlPullParser.START_TAG && parser.name == "locale") {
+                    parser.getAttributeValue("http://schemas.android.com/apk/res/android", "name")
+                        ?.let { declared.add(it) }
+                }
             }
+        } finally {
+            parser.close()
         }
-        assertEquals(declared.sorted(), AppLocales.SUPPORTED.sorted())
+        return declared
+    }
+
+    @Test
+    fun localesConfigMatchesTheInAppPicker() {
+        assertEquals(AppLocales.SUPPORTED.sorted(), declaredLocales().sorted())
+    }
+
+    @Test
+    fun localesConfigIsNotEmpty() {
+        // A typo in the resource name or an empty file would make the test above
+        // pass only if SUPPORTED were also empty.
+        assertTrue("locales_config.xml declares no locales", declaredLocales().isNotEmpty())
     }
 }

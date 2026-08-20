@@ -39,6 +39,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import com.kidsexplore.app.R
 import com.kidsexplore.app.model.ThemeDef
 import com.kidsexplore.app.ui.theme.NeutralColors
@@ -103,9 +108,9 @@ fun ViewerScreen(
                         .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 30.dp),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    NavPillButton(label = "◀ " + stringResource(R.string.viewer_back), accent = palette.cardBorder, onClick = onPrev)
+                    NavPillButton(icon = "◀", label = stringResource(R.string.viewer_back), accent = palette.cardBorder, onClick = onPrev)
                     Spacer(modifier = Modifier.width(24.dp))
-                    NavPillButton(label = "▶ " + stringResource(R.string.viewer_next), accent = palette.cardBorder, onClick = onNext)
+                    NavPillButton(icon = "▶", label = stringResource(R.string.viewer_next), accent = palette.cardBorder, onClick = onNext)
                 }
             }
         } else {
@@ -119,7 +124,7 @@ fun ViewerScreen(
                     .then(swipeModifier),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                NavPillButton(label = "◀ " + stringResource(R.string.viewer_back), accent = palette.cardBorder, onClick = onPrev)
+                NavPillButton(icon = "◀", label = stringResource(R.string.viewer_back), accent = palette.cardBorder, onClick = onPrev)
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -129,7 +134,7 @@ fun ViewerScreen(
                 ) {
                     ImageCard(palette = palette, currentLabel = currentLabel)
                 }
-                NavPillButton(label = "▶ " + stringResource(R.string.viewer_next), accent = palette.cardBorder, onClick = onNext)
+                NavPillButton(icon = "▶", label = stringResource(R.string.viewer_next), accent = palette.cardBorder, onClick = onNext)
             }
 
             Row(
@@ -173,7 +178,8 @@ private fun HomeButton(onClick: () -> Unit) {
             .size(44.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .semantics { role = Role.Button },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -182,20 +188,33 @@ private fun HomeButton(onClick: () -> Unit) {
     }
 }
 
+/**
+ * [icon] is an arrow glyph and stays out of resources; [label] is the word
+ * beside it. Kept as two arguments rather than one concatenated string so a
+ * translation containing a space cannot split in the wrong place, and so the
+ * glyph does not end up on the wrong side of the word under RTL.
+ */
 @Composable
-private fun NavPillButton(label: String, accent: Color, onClick: () -> Unit) {
-    val (icon, text) = label.split(" ", limit = 2)
+private fun NavPillButton(icon: String, label: String, accent: Color, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .size(width = 100.dp, height = 80.dp)
             .clip(RoundedCornerShape(24.dp))
             .background(accent)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .semantics { role = Role.Button; contentDescription = label },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Text(icon, fontSize = 28.sp, color = Color.White)
-        Text(text, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, color = Color.White)
+        Text(
+            text = label,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 13.sp,
+            color = Color.White,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

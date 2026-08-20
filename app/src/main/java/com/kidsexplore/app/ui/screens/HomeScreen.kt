@@ -42,9 +42,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import com.kidsexplore.app.R
 import com.kidsexplore.app.ui.THEME_LIST_TEST_TAG
 import com.kidsexplore.app.model.ThemeDef
@@ -122,12 +127,16 @@ fun HomeScreen(
                         fontSize = 15.sp,
                         color = NeutralColors.labelMuted,
                     )
+                    // The glyph alone announces as "gear" or as nothing at all,
+                    // so the button carries the destination's own name.
+                    val gateLabel = stringResource(R.string.settings_title)
                     Box(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
                             .background(NeutralColors.gearButtonBg)
-                            .clickable(onClick = onOpenGate),
+                            .clickable(onClick = onOpenGate)
+                            .semantics { role = Role.Button; contentDescription = gateLabel },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text("⚙", fontSize = 16.sp, color = NeutralColors.labelMuted)
@@ -202,6 +211,9 @@ private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
                 color = Color.White,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
+                // Clipped mid-glyph reads as a rendering fault; an ellipsis reads
+                // as a name that didn't fit.
+                overflow = TextOverflow.Ellipsis,
             )
         }
         Box(

@@ -23,13 +23,13 @@
 
     <!-- Parent settings -->
     <string name="settings_title">Postavke za roditelje</string>
-    <string name="settings_subtitle">Odredite koje teme vaše dijete može vidjeti</string>
+    <string name="settings_categories">Kategorije</string>
+    <string name="settings_subtitle">Odredite koje kategorije vaše dijete može vidjeti.</string>
     <string name="settings_done">Gotovo</string>
 
     <!-- Language picker -->
     <string name="settings_language">Jezik</string>
     <string name="settings_language_system">Prema postavkama telefona</string>
-    <string name="settings_categories">Kategorije</string>
 
     <!-- Category names -->
     <string name="theme_cars_name">Auti</string>

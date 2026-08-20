@@ -101,7 +101,9 @@ python3 tools/svg2vd.py icons-src app/src/main/res/drawable
 
 The converter inlines the SVGs' CSS classes into path attributes, re-expresses `<circle>`/`<rect>`/`<ellipse>` as cubic Bézier path data, and bakes element transforms into the path — all things VectorDrawable can't express directly.
 
-**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, add `theme_<id>_name` and a `labels_<id>` array to every `values*/strings.xml`, and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>`. The theme id, the SVG filename and the drawable name are kept identical on purpose; `ThemeDefsTest` asserts that, so a mismatch fails the build's test run rather than rendering a blank card.
+It deliberately supports only the subset this icon set uses, and raises on anything else rather than guessing: group-level fills or classes, `style="..."` attributes, `fill-rule`/`clip-rule`, opacity, a non-zero `viewBox` origin, and colours carrying alpha. A silently mis-converted icon looks plausible and ships; a refusal costs one line of support code. Pass `--check` to verify the committed drawables without writing anything.
+
+**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, add `theme_<id>_name` and a `labels_<id>` array to every `values*/strings.xml`, and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>`. The theme id, the SVG filename and the resource names are kept identical on purpose. `ThemeDefsTest` (instrumented, needs a device) asserts the resource names match the id; `IconsInSyncTest` (plain JVM, runs in `./gradlew build`) re-runs the converter and fails if any committed drawable disagrees with its source.
 
 ## Languages
 
@@ -113,13 +115,15 @@ Croatian deliberately translates only part of the set. Keys it leaves out fall b
 - `gate_equation` is nothing but `%1$d`/`%2$d` placeholders.
 - The 112 image labels are stand-in text for artwork the app does not ship yet, so translating them would be translating scaffolding.
 
-Two icon-glyph strings the app draws as text (the gear, tick, house and the two nav arrows) are kept in code rather than resources — they are symbols, not words.
+Six glyphs the app draws as text — the gear, tick, house, dropdown chevron and the two nav arrows — are kept in code rather than resources. They are symbols, not words. The controls carrying them declare a `contentDescription` so they are still announced by name.
 
 ### Switching language
 
-Parent Settings has a language dropdown above the theme list, behind the parental gate. "Same as phone settings" is the first entry in the same list as the languages, each named in its own language (`Hrvatski`, not `Croatian`). A dropdown rather than a row of options so that shipping a fourth or tenth language costs no extra room and changes nothing about how the screen reads. Selecting one applies immediately — Compose recomposes against the new configuration, so nothing restarts.
+Parent Settings has a language dropdown above the theme list, behind the parental gate. "Same as phone settings" is the first entry in the same list as the languages, each named in its own language (`Hrvatski`, not `Croatian`). A dropdown rather than a row of options so that shipping a fourth or tenth language costs no extra room and changes nothing about how the screen reads. Selecting one applies immediately: AppCompat recreates the activity against the new configuration. The `AppViewModel` survives that, so the current screen and position are kept and the change looks instant.
 
-The choice is stored by `AppCompatDelegate.setApplicationLocales()`, which is why the app runs an `AppCompatActivity` on a `Theme.AppCompat` parent rather than a bare `ComponentActivity`. AppCompat persists the selection, survives process death, and on Android 13+ registers it with the system's own per-app language screen. Going straight to `LocaleManager` would avoid the dependency but is API 33+, and `minSdk` here is 26.
+The choice is stored by `AppCompatDelegate.setApplicationLocales()`, which is why the app runs an `AppCompatActivity` on a `Theme.AppCompat` parent rather than a bare `ComponentActivity`. Going straight to `LocaleManager` would avoid the dependency but is API 33+, and `minSdk` here is 26.
+
+On Android 13+ the framework owns the storage and registers the choice with the system's own per-app language screen. **Below 13 there is no such store, and AppCompat only keeps its own if the app opts in** by declaring `AppLocalesMetadataHolderService` with `autoStoreLocales=true` in the manifest. Without that declaration the language applies for the session and is silently lost on the next cold start — on exactly the API range (26–32) the dependency exists to serve.
 
 `res/xml/locales_config.xml` lists the shipped languages for Android 13+; `AppLocales.SUPPORTED` lists them for the in-app picker. Nothing links the two at compile time, so `LocalesConfigTest` asserts they match.
 
@@ -127,9 +131,9 @@ The choice is stored by `AppCompatDelegate.setApplicationLocales()`, which is wh
 
 1. Copy `res/values/strings.xml` to `res/values-<code>/strings.xml` and translate the values, leaving every `name="..."` alone. Omit any key that should stay as the English default.
 2. Add the code to `res/xml/locales_config.xml` **and** to `AppLocales.SUPPORTED`.
-3. Run the tests — `ThemeDefsTest` checks every shipped language has a non-blank, unique name per theme and exactly `LABELS_PER_THEME` labels per array, so a dropped array item fails there rather than crashing the Viewer.
+3. Run the tests. `ThemeDefsTest` checks every shipped language for a non-blank, unique name per theme and for label arrays that still match the default's length — arrays replace rather than merge, so a dropped item would otherwise leave the Viewer paging onto an index that no longer exists. It cannot detect a language that simply isn't translated; fallback makes that indistinguishable from a deliberate omission, which is why `croatianOverridesTheDefaultsRatherThanFallingBackWholesale` pins that separately.
 
-Card names render on one line and ellipsize rather than wrap, so keep theme names short; `Construction` is about the practical limit at the current card width.
+Card names render on one line and ellipsize rather than wrap (`TextOverflow.Ellipsis`), so keep them short; `Construction` is about the practical limit at the current card width.
 
 ### On images
 
@@ -137,7 +141,7 @@ The Viewer never shows real photos — there are none bundled with the app. Each
 
 ## Tech stack
 
-- Kotlin, Jetpack Compose (Material 3), single `ComponentActivity`
+- Kotlin, Jetpack Compose (Material 3), single `AppCompatActivity` (AppCompat is required for per-app language below Android 13)
 - One `AndroidViewModel` (`AppViewModel`) holds all app state: current screen, selected theme, viewer position, enabled themes, and the active gate question
 - No navigation library, no networking, no local database — `SharedPreferences` holds the enabled-theme set, and `AppCompatDelegate` holds the language choice
 - `androidx.appcompat` is present for one reason: per-app language selection below Android 13

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Default (English) strings. -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Launcher -->
-    <string name="app_name">Kids Explore</string>
+    <string name="app_name" translatable="false">Kids Explore</string>
 
     <!-- Home screen -->
-    <string name="home_brand">KIDS EXPLORE</string>
+    <string name="home_brand" translatable="false">KIDS EXPLORE</string>
     <string name="home_title">Pick something to look at!</string>
 
     <!-- Viewer screen -->
@@ -17,13 +17,15 @@
     <!-- Parental gate -->
     <string name="gate_eyebrow">GROWN-UPS ONLY</string>
     <string name="gate_title">Solve this to continue</string>
-    <string name="gate_equation">%1$d + %2$d = ?</string>
+    <!-- Operators and placeholders only. A language needing a different
+         arrangement can still override it; it is simply not required to. -->
+    <string name="gate_equation" tools:ignore="MissingTranslation">%1$d + %2$d = ?</string>
     <string name="gate_wrong">Not quite, try again!</string>
     <string name="gate_cancel">Cancel</string>
 
     <!-- Parent settings -->
     <string name="settings_title">Parent Settings</string>
-    <string name="settings_subtitle">Choose which themes your child can see.</string>
+    <string name="settings_subtitle">Choose which categories your child can see.</string>
     <string name="settings_done">Done</string>
 
     <!-- Language picker -->

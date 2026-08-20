@@ -30,6 +30,12 @@ android {
             isMinifyEnabled = false
         }
     }
+
+    androidResources {
+        // AppCompat brings ~100 locale folders of its own strings. The app ships
+        // two languages, so the rest are dead weight in every APK.
+        localeFilters += listOf("en", "hr")
+    }
 }
 
 dependencies {
@@ -44,6 +50,9 @@ dependencies {
     // Per-app language: AppCompatDelegate.setApplicationLocales() persists the
     // choice and backports it below Android 13, which minSdk 26 still has to serve.
     implementation("androidx.appcompat:appcompat:1.7.1")
+
+    // Plain JVM tests (./gradlew test), for things that need no device.
+    testImplementation("junit:junit:4.13.2")
 
     // Instrumented tests (./gradlew connectedDebugAndroidTest) — they need a
     // real Context for SharedPreferences, so they run on a device/emulator.

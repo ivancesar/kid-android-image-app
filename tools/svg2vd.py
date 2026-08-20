@@ -6,6 +6,16 @@ classes to fill/stroke props, <path>/<circle>/<ellipse>/<rect> elements, plain
 <g> wrappers, and translate+rotate transforms. Primitives and transformed
 elements are emitted as cubic Beziers, which are affine-invariant, so a baked
 transform stays exact instead of fighting SVG-vs-VectorDrawable arc semantics.
+
+Anything outside that subset raises rather than guessing. That matters more
+than breadth here: a silently mis-converted icon looks plausible and ships,
+whereas a refusal costs one line of support code. Illustrator emits several
+such constructs readily (group-level classes, style="", fill-rule="evenodd",
+a non-zero viewBox origin), so each is checked for by name.
+
+Usage:
+    python3 tools/svg2vd.py <src-dir> <out-dir>
+    python3 tools/svg2vd.py <src-dir> <out-dir> --check   # verify, write nothing
 """
 import math, os, re, sys
 import xml.etree.ElementTree as ET
@@ -17,8 +27,9 @@ def tag(e):
     return e.tag.split('}')[-1]
 
 def parse_css(text):
-    """.st0 { fill: #fff; }  ->  {'st0': {'fill': '#fff'}}; multi-selector aware."""
+    """.st0 { fill: #fff; } -> ({'st0': {...}}, ['st0', ...] in stylesheet order)."""
     rules = {}
+    order = []
     for sel, body in re.findall(r'([^{}]+)\{([^}]*)\}', text):
         props = {}
         for decl in body.split(';'):
@@ -29,7 +40,10 @@ def parse_css(text):
             name = name.strip().lstrip('.')
             if name:
                 rules.setdefault(name, {}).update(props)
-    return rules
+                if name in order:
+                    order.remove(name)
+                order.append(name)
+    return rules, order
 
 def parse_transform(s):
     """Compose a transform list into a single affine (a,b,c,d,e,f)."""
@@ -111,27 +125,51 @@ def color(c):
     h = c[1:]
     if len(h) == 3:
         h = ''.join(ch * 2 for ch in h)
+    if len(h) != 6:
+        # #RGBA / #RRGGBBAA carry alpha this script does not map; silently
+        # reading them as opaque would be wrong in a way nobody would notice.
+        raise SystemExit('unsupported color length: #%s' % h)
     return '#FF' + h.upper()
 
-def props_for(el, css):
+UNSUPPORTED_ATTRS = ('style', 'fill-rule', 'clip-rule', 'opacity',
+                     'fill-opacity', 'stroke-opacity', 'stroke-dasharray', 'mask', 'clip-path')
+
+def check_supported(el):
+    for attr in UNSUPPORTED_ATTRS:
+        if el.get(attr):
+            raise SystemExit('<%s> carries unsupported %s="%s" - convert it by hand or '
+                             'extend this script' % (tag(el), attr, el.get(attr)))
+
+def props_for(el, css, order):
     p = {}
-    for cls in (el.get('class') or '').split():
-        p.update(css.get(cls, {}))
+    # CSS is last-rule-wins, not last-class-in-the-attribute-wins, so apply the
+    # element's classes in stylesheet order rather than attribute order.
+    classes = set((el.get('class') or '').split())
+    for cls in order:
+        if cls in classes:
+            p.update(css.get(cls, {}))
     for k in ('fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin'):
         if el.get(k):
             p[k] = el.get(k)
     return p
 
-def walk(el, css, inherited, out):
+def walk(el, css, order, inherited, out):
     m = mul(inherited, parse_transform(el.get('transform')))
     t = tag(el)
-    if t == 'g':
-        for child in el:
-            walk(child, css, m, out)
-        return
     if t in ('defs', 'style', 'title', 'desc'):
         return
-    p = props_for(el, css)
+    check_supported(el)
+    if t == 'g':
+        # Group-level fills and classes would have to be inherited down; nothing
+        # here does that, so a group carrying them would silently lose them.
+        for attr in ('class', 'fill', 'stroke'):
+            if el.get(attr):
+                raise SystemExit('<g> carries %s="%s"; group-level presentation is not '
+                                 'inherited by this script' % (attr, el.get(attr)))
+        for child in el:
+            walk(child, css, order, m, out)
+        return
+    p = props_for(el, css, order)
     if t == 'path':
         d = el.get('d')
         if m != (1.0, 0.0, 0.0, 1.0, 0.0, 0.0):
@@ -143,9 +181,13 @@ def walk(el, css, inherited, out):
         d = ellipse_path(float(el.get('cx')), float(el.get('cy')),
                          float(el.get('rx')), float(el.get('ry')), m)
     elif t == 'rect':
+        # SVG mirrors a missing rx/ry onto the other; defaulting to 0 would
+        # square off corners that should be round.
+        rx, ry = el.get('rx'), el.get('ry')
+        rx = float(rx if rx is not None else (ry or 0))
+        ry = float(ry if ry is not None else (rx or 0))
         d = rect_path(float(el.get('x')), float(el.get('y')),
-                      float(el.get('width')), float(el.get('height')),
-                      float(el.get('rx') or 0), float(el.get('ry') or 0), m)
+                      float(el.get('width')), float(el.get('height')), rx, ry, m)
     else:
         raise SystemExit('unsupported element: <%s>' % t)
     out.append((d, p))
@@ -153,14 +195,19 @@ def walk(el, css, inherited, out):
 def convert(src, dst, name):
     ET.register_namespace('', SVG_NS)
     root = ET.parse(src).getroot()
-    css = {}
+    css, order = {}, []
     for st in root.iter('{%s}style' % SVG_NS):
-        css.update(parse_css(st.text or ''))
+        rules, o = parse_css(st.text or '')
+        css.update(rules)
+        order.extend(x for x in o if x not in order)
 
     vb = [float(x) for x in re.split(r'[\s,]+', root.get('viewBox').strip())]
+    if vb[0] != 0 or vb[1] != 0:
+        # VectorDrawable has no viewBox origin; every shape would need shifting.
+        raise SystemExit('viewBox origin must be 0 0, got %g %g' % (vb[0], vb[1]))
     shapes = []
     for child in root:
-        walk(child, css, (1.0, 0.0, 0.0, 1.0, 0.0, 0.0), shapes)
+        walk(child, css, order, (1.0, 0.0, 0.0, 1.0, 0.0, 0.0), shapes)
 
     lines = ['<?xml version="1.0" encoding="utf-8"?>',
              '<!-- Generated from icons-src/%s by tools/svg2vd.py. Do not edit by hand. -->' % name,
@@ -195,12 +242,28 @@ def convert(src, dst, name):
         fh.write('\n'.join(lines) + '\n')
     return len(shapes)
 
-if __name__ == '__main__':
+def main():
     src_dir, out_dir = sys.argv[1], sys.argv[2]
+    check = '--check' in sys.argv[3:]
+    stale = []
     for f in sorted(os.listdir(src_dir)):
         if not f.endswith('.svg'):
             continue
-        stem = f[:-4]
-        dst = os.path.join(out_dir, 'ic_theme_%s.xml' % stem)
-        n = convert(os.path.join(src_dir, f), dst, f)
-        print('%-18s -> %-28s %2d paths' % (f, os.path.basename(dst), n))
+        dst = os.path.join(out_dir, 'ic_theme_%s.xml' % f[:-4])
+        if check:
+            import tempfile
+            tmp = os.path.join(tempfile.mkdtemp(), os.path.basename(dst))
+            n = convert(os.path.join(src_dir, f), tmp, f)
+            same = os.path.exists(dst) and open(tmp).read() == open(dst).read()
+            print('%-18s %s' % (f, 'ok' if same else 'STALE'))
+            if not same:
+                stale.append(dst)
+        else:
+            n = convert(os.path.join(src_dir, f), dst, f)
+            print('%-18s -> %-28s %2d paths' % (f, os.path.basename(dst), n))
+    if stale:
+        raise SystemExit('%d drawable(s) out of sync with icons-src; re-run without --check'
+                         % len(stale))
+
+if __name__ == '__main__':
+    main()

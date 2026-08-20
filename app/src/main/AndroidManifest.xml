@@ -19,6 +19,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+          Below Android 13 the framework has no per-app language store, so
+          AppCompatDelegate keeps its own - but only if the app opts in here.
+          Without this the chosen language applies for the session and is
+          silently lost on the next cold start, which is exactly the range
+          (minSdk 26 to API 32) the AppCompat dependency exists to serve.
+        -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
     </application>
 
 </manifest>

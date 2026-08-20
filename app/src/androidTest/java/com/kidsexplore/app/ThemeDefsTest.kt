@@ -5,7 +5,6 @@ import android.content.res.Configuration
 import androidx.core.content.ContextCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.kidsexplore.app.model.LABELS_PER_THEME
 import com.kidsexplore.app.model.THEME_DEFS
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -56,11 +55,17 @@ class ThemeDefsTest {
     }
 
     /**
-     * Runs per shipped language: a translation that drops an item would
-     * otherwise leave the Viewer paging onto an index that no longer exists.
+     * Runs per shipped language. Note this cannot detect a language that simply
+     * isn't translated — resource fallback resolves missing keys to `values/`,
+     * which is deliberate. What it does catch is a translation that declares a
+     * *shorter* label array: arrays replace rather than merge, so a dropped item
+     * would leave the Viewer paging onto an index that no longer exists.
      */
     @Test
     fun everyLanguageHasCompleteNamesAndLabels() {
+        val expectedCounts = THEME_DEFS.associate {
+            it.id to context.resources.getStringArray(it.labelsRes).size
+        }
         AppLocales.SUPPORTED.forEach { tag ->
             val res = localized(tag).resources
             val names = mutableSetOf<String>()
@@ -70,7 +75,7 @@ class ThemeDefsTest {
                 assertTrue("[$tag] duplicate theme name '$name'", names.add(name))
 
                 val labels = res.getStringArray(theme.labelsRes)
-                assertEquals("[$tag] ${theme.id} label count", theme.labelCount, labels.size)
+                assertEquals("[$tag] ${theme.id} label count", expectedCounts[theme.id], labels.size)
                 assertEquals("[$tag] ${theme.id} labels are not unique", labels.size, labels.toSet().size)
                 labels.forEachIndexed { i, l ->
                     assertTrue("[$tag] ${theme.id} label $i is blank", l.isNotBlank())
@@ -79,8 +84,36 @@ class ThemeDefsTest {
         }
     }
 
+    /**
+     * The complement to the test above: because fallback is silent, an empty or
+     * missing `values-hr` would leave every other assertion passing while the
+     * app shipped in English only. This pins that Croatian actually overrides.
+     */
     @Test
-    fun everyThemeShipsTheSameNumberOfLabels() {
-        THEME_DEFS.forEach { assertEquals(LABELS_PER_THEME, it.labelCount) }
+    fun croatianOverridesTheDefaultsRatherThanFallingBackWholesale() {
+        val en = localized("en").resources
+        val hr = localized("hr").resources
+
+        assertTrue(
+            "settings_title is identical in en and hr - is values-hr present?",
+            en.getString(R.string.settings_title) != hr.getString(R.string.settings_title),
+        )
+
+        val translated = THEME_DEFS.count { en.getString(it.nameRes) != hr.getString(it.nameRes) }
+        // 13 of 14 differ; "Ocean" is the same word in both languages.
+        assertTrue("only $translated of ${THEME_DEFS.size} theme names differ in hr", translated >= 10)
+    }
+
+    /**
+     * The rest of the suite resolves expected text from resources, which makes
+     * it locale-independent but also blind to the content itself. This pins a
+     * couple of default strings so an empty or garbled `values/` fails here.
+     */
+    @Test
+    fun defaultStringsSayWhatTheyShould() {
+        val en = localized("en").resources
+        assertEquals("Cars", en.getString(THEME_DEFS.first { it.id == "cars" }.nameRes))
+        assertEquals("Done", en.getString(R.string.settings_done))
+        assertEquals("Pick something to look at!", en.getString(R.string.home_title))
     }
 }

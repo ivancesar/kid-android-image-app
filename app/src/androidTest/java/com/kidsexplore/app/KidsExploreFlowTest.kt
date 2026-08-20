@@ -57,8 +57,8 @@ class KidsExploreFlowTest {
      * Home's grid and the Settings list both scroll now that there are 14
      * themes, and a lazy list never composes its off-screen items — so a theme
      * has to be scrolled into view before it can be clicked or asserted on.
-     * Targeted by tag rather than "the scrollable on screen": Settings also
-     * holds the horizontally scrolling language picker.
+     * Targeted by tag rather than "the scrollable on screen", which is
+     * ambiguous the moment a screen holds more than one scrollable.
      */
     private fun scrollToTheme(name: String) {
         compose.onNodeWithTag(THEME_LIST_TEST_TAG).performScrollToNode(hasText(name))

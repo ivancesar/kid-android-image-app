@@ -19,9 +19,15 @@ object AppLocales {
     /** Must match `res/xml/locales_config.xml`; `LocalesConfigTest` enforces it. */
     val SUPPORTED = listOf("en", "hr")
 
-    /** The selected tag, or [SYSTEM] when the user hasn't overridden the phone. */
+    /**
+     * The selected tag, or [SYSTEM] when the user hasn't overridden the phone.
+     *
+     * Uses the full tag rather than just the language: flattening `pt-BR` to
+     * `pt` would stop it ever matching its own entry in [SUPPORTED], leaving the
+     * picker with nothing ticked and re-applying on every tap.
+     */
     fun current(): String =
-        AppCompatDelegate.getApplicationLocales().takeUnless { it.isEmpty }?.get(0)?.language ?: SYSTEM
+        AppCompatDelegate.getApplicationLocales().takeUnless { it.isEmpty }?.get(0)?.toLanguageTag() ?: SYSTEM
 
     fun apply(tag: String) {
         AppCompatDelegate.setApplicationLocales(
@@ -35,6 +41,8 @@ object AppLocales {
      */
     fun endonym(tag: String): String {
         val locale = Locale.forLanguageTag(tag)
-        return locale.getDisplayLanguage(locale).replaceFirstChar { it.uppercase(locale) }
+        // getDisplayName, not getDisplayLanguage: the latter renders pt-BR and
+        // pt identically, so region-qualified entries would be indistinguishable.
+        return locale.getDisplayName(locale).replaceFirstChar { it.uppercase(locale) }
     }
 }

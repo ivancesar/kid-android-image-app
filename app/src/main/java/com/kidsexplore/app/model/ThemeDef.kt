@@ -15,11 +15,6 @@ import com.kidsexplore.app.R
  * `tools/svg2vd.py`. The id, the SVG filename, the drawable name and the two
  * resource names are deliberately kept identical, so adding a theme is
  * dropping in an SVG, adding the strings, and adding one entry here.
- *
- * [labelCount] is held here rather than read back from the array so the
- * ViewModel can wrap the paging index without touching resources — a count is
- * structural, not translatable. `ThemeDefsTest` asserts it matches the array
- * in every shipped language.
  */
 data class ThemeDef(
     val id: String,
@@ -27,11 +22,7 @@ data class ThemeDef(
     val hue: Float,
     @DrawableRes val iconRes: Int,
     @ArrayRes val labelsRes: Int,
-    val labelCount: Int = LABELS_PER_THEME,
 )
-
-/** Every theme ships the same number of item labels. */
-const val LABELS_PER_THEME = 8
 
 val THEME_DEFS: List<ThemeDef> = listOf(
     // Things that go
@@ -76,7 +67,7 @@ val THEME_DEFS: List<ThemeDef> = listOf(
 
     // Growing things
     ThemeDef(
-        id = "flowers", nameRes = R.string.theme_flowers_name, hue = 302f,
+        id = "flowers", nameRes = R.string.theme_flowers_name, hue = 296f,
         iconRes = R.drawable.ic_theme_flowers, labelsRes = R.array.labels_flowers,
     ),
     ThemeDef(

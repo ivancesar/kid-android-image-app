@@ -40,6 +40,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val activeTheme: ThemeDef?
         get() = THEME_DEFS.find { it.id == themeId }
 
+    /**
+     * How many images the active theme has. Read from the label array rather
+     * than mirrored on [ThemeDef], so the two can never drift; the count is the
+     * same in every language, so which locale resolves here does not matter.
+     */
+    private val activeLabelCount: Int?
+        get() = activeTheme?.let { getApplication<Application>().resources.getStringArray(it.labelsRes).size }
 
     private fun loadEnabledThemes(): Map<String, Boolean> {
         val disabled = prefs.getStringSet(PREFS_DISABLED_THEMES_KEY, emptySet()) ?: emptySet()
@@ -85,12 +92,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun next() {
-        val count = activeTheme?.labelCount ?: return
+        val count = activeLabelCount ?: return
         imageIndex = (imageIndex + 1) % count
     }
 
     fun prev() {
-        val count = activeTheme?.labelCount ?: return
+        val count = activeLabelCount ?: return
         imageIndex = (imageIndex - 1 + count) % count
     }
 
