@@ -29,6 +29,7 @@
     <!-- Language picker -->
     <string name="settings_language">Jezik</string>
     <string name="settings_language_system">Prema postavkama telefona</string>
+    <string name="settings_categories">Kategorije</string>
 
     <!-- Category names -->
     <string name="theme_cars_name">Auti</string>

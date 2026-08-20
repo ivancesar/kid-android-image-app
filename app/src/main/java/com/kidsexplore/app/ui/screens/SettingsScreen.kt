@@ -74,6 +74,18 @@ fun SettingsScreen(
                 LanguagePicker(current = currentLanguage, onPick = onPickLanguage)
             }
 
+            // Names the list below and separates it from the language row, which
+            // otherwise reads as the first entry in the category list.
+            item(key = "categories-heading") {
+                Text(
+                    text = stringResource(R.string.settings_categories),
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 13.sp,
+                    color = NeutralColors.subtitleText,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+
             items(THEME_DEFS, key = { it.id }) { theme ->
                 val enabled = enabledThemes[theme.id] != false
                 val cardBorder = theme.palette().cardBorder

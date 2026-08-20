@@ -30,6 +30,9 @@
     <string name="settings_language">Language</string>
     <string name="settings_language_system">Same as phone settings</string>
 
+    <!-- Section heading above the category list -->
+    <string name="settings_categories">Categories</string>
+
     <!-- Category names -->
     <string name="theme_cars_name">Cars</string>
     <string name="theme_construction_name">Construction</string>
