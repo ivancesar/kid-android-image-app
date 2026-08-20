@@ -103,7 +103,7 @@ The converter inlines the SVGs' CSS classes into path attributes, re-expresses `
 
 It deliberately supports only the subset this icon set uses, and raises on anything else rather than guessing: group-level fills or classes, `style="..."` attributes, `fill-rule`/`clip-rule`, opacity, a non-zero `viewBox` origin, and colours carrying alpha. A silently mis-converted icon looks plausible and ships; a refusal costs one line of support code. Pass `--check` to verify the committed drawables without writing anything.
 
-**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, add `theme_<id>_name` and a `labels_<id>` array to every `values*/strings.xml`, and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>`. The theme id, the SVG filename and the resource names are kept identical on purpose. `ThemeDefsTest` (instrumented, needs a device) asserts the resource names match the id; `IconsInSyncTest` (plain JVM, runs in `./gradlew build`) re-runs the converter and fails if any committed drawable disagrees with its source.
+**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, add `theme_<id>_name` and a `labels_<id>` array to every `values*/strings.xml`, and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>`. The theme id, the SVG filename and the resource names are kept identical on purpose. `ThemeDefsTest` (instrumented, needs a device) asserts the resource names match the id; the `checkIconsInSync` Gradle task (wired into `check`, so it runs in `./gradlew build`) re-runs the converter and fails if any committed drawable disagrees with its source.
 
 ## Languages
 

@@ -69,19 +69,31 @@ dependencies {
  * the converter as inputs: a test's up-to-date check keys off its own classpath,
  * so it would be skipped after an SVG-only edit — precisely when it must run.
  */
-val checkIconsInSync by tasks.registering(Exec::class) {
+val checkIconsInSync = tasks.register<Exec>("checkIconsInSync") {
     group = "verification"
     description = "Fails if res/drawable/ic_theme_*.xml is out of sync with icons-src."
 
     val repoRoot = rootProject.layout.projectDirectory
-    inputs.dir(repoRoot.dir("icons-src")).withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.file(repoRoot.file("tools/svg2vd.py")).withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.dir(layout.projectDirectory.dir("src/main/res/drawable")).withPathSensitivity(PathSensitivity.RELATIVE)
-    // Nothing is produced; the marker only gives Gradle somewhere to record success.
+    val sources = repoRoot.dir("icons-src")
+    val converter = repoRoot.file("tools/svg2vd.py")
+    val drawables = layout.projectDirectory.dir("src/main/res/drawable")
+
+    inputs.dir(sources).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file(converter).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir(drawables).withPathSensitivity(PathSensitivity.RELATIVE)
+    // Nothing is produced; the marker only gives Gradle an output to key
+    // up-to-dateness on. It is written in doLast, so a failing run never
+    // records success.
     outputs.file(layout.buildDirectory.file("icons-in-sync.marker"))
 
+    // Paths derived from the inputs above rather than written out a second
+    // time, so the two cannot drift apart.
+    fun relative(f: File) = f.relativeTo(repoRoot.asFile).path
     workingDir = repoRoot.asFile
-    commandLine("python3", "tools/svg2vd.py", "icons-src", "app/src/main/res/drawable", "--check")
+    commandLine(
+        "python3", relative(converter.asFile),
+        relative(sources.asFile), relative(drawables.asFile), "--check",
+    )
 
     doLast {
         outputs.files.singleFile.apply { parentFile.mkdirs(); writeText("ok") }
