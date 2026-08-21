@@ -73,7 +73,7 @@
     <!-- Attribution -->
     <string name="settings_attribution">Zasluge</string>
     <string name="attribution_images">Slike ustupio Unsplash pod svojom Unsplash licencom</string>
-    <string name="attribution_photographers_label">Fotografije</string>
+    <string name="attribution_photographers_line">Fotografije: %1$s</string>
 
     <!--
       Construction's fourteen items, in the same order as the photographs in

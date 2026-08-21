@@ -42,7 +42,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.liveRegion
@@ -260,11 +259,12 @@ private fun PhotoCard(palette: ThemePalette, label: String, @DrawableRes image: 
     ) {
         Image(
             painter = painter,
-            // Set through semantics rather than the parameter so the live
-            // region can be declared in the same block; passing both a
-            // contentDescription and a semantics modifier would set the
-            // property twice.
-            contentDescription = null,
+            // Through the parameter, not a semantics block of our own: Image
+            // sets Role.Image in the same branch it sets the description, so
+            // passing null here and declaring the description ourselves would
+            // announce the label without ever saying it labels a picture. The
+            // live region is a different property and composes with it.
+            contentDescription = label,
             // Crop, not Fit: the frame's padding leaves an opening a few
             // pixels off the photo's own ratio, and cropping that away is
             // invisible where a second round of letterboxing would not be.
@@ -272,10 +272,7 @@ private fun PhotoCard(palette: ThemePalette, label: String, @DrawableRes image: 
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(24.dp - CardFrameWidth))
-                .semantics {
-                    contentDescription = label
-                    liveRegion = LiveRegionMode.Polite
-                },
+                .semantics { liveRegion = LiveRegionMode.Polite },
         )
     }
 }

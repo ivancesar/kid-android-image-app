@@ -4,6 +4,10 @@ import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.LayoutDirection as LayoutDirectionOverride
 import androidx.compose.ui.test.then
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -245,6 +249,22 @@ class ViewerLayoutTest {
 
         compose.onNodeWithText(constructionLabels[0]).assertDoesNotExist()
         compose.onNodeWithContentDescription(constructionLabels[0]).assertIsDisplayed()
+    }
+
+    /**
+     * `Image` sets `Role.Image` in the same branch it sets the description, so
+     * passing `contentDescription = null` and declaring the description in a
+     * `semantics` block instead drops the role without any visible symptom.
+     * TalkBack then announces the label without ever saying it labels a
+     * picture. Nothing else in the suite would notice, which is why this is
+     * asserted rather than assumed.
+     */
+    @Test
+    fun aPhotographAnnouncesItselfAsAnImage() {
+        setConstruction(narrow)
+
+        compose.onNodeWithContentDescription(constructionLabels[0])
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Image))
     }
 
     /** The wide layout has to hold for a photograph exactly as it does for the card. */

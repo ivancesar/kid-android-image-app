@@ -205,9 +205,14 @@ private fun Attribution() {
             // as a sentence either way, and a list of twelve names is a wall
             // of rows a parent has to swipe through to reach the end of the
             // screen.
+            //
+            // A format string, not concatenation: the separator and the word
+            // order belong to the language, and gluing them together here puts
+            // both out of a translator's reach.
             text = stringResource(
-                R.string.attribution_photographers_label,
-            ) + ": " + stringResource(R.string.attribution_photographers),
+                R.string.attribution_photographers_line,
+                stringResource(R.string.attribution_photographers),
+            ),
             fontSize = 12.sp,
             lineHeight = 16.sp,
             color = NeutralColors.cancelText,

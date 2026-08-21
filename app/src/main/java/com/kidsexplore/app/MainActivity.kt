@@ -74,21 +74,26 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
             // from, which is the point of the sealed state.
             val theme = THEME_DEFS.first { it.id == state.themeId }
             // The ViewModel wraps the index against ThemeDef.labelCount, which
-            // it trusts to match this array; ThemeResourcesTest holds them
-            // together. Coerced anyway — a mismatch should not crash a child's
-            // screen, and the test is what makes the drift loud.
+            // it trusts to match both this array and the theme's photographs;
+            // ThemeResourcesTest holds all three together. Coerced anyway — a
+            // mismatch should not crash a child's screen, and the test is what
+            // makes the drift loud.
             val labels = stringArrayResource(theme.labelsRes)
+            // One index behind both, deliberately. Clamping the label while
+            // reading the photograph at the raw index would pair a real photo
+            // with a different photo's caption — which TalkBack then reads out
+            // as fact. Whatever the two collections disagree about, the pair
+            // stays consistent.
+            val index = state.imageIndex.coerceIn(labels.indices)
             ViewerScreen(
                 theme = theme,
-                currentLabel = labels[state.imageIndex.coerceIn(labels.indices)],
+                currentLabel = labels[index],
                 onHome = viewModel::goHome,
                 onNext = viewModel::next,
                 onPrev = viewModel::prev,
-                // getOrNull, not [], for the same reason the labels are
-                // coerced: a theme whose photographs and labelCount drifted
-                // apart should fall back to the placeholder card, not crash.
-                // ThemeResourcesTest is what makes that drift loud.
-                currentImage = theme.imageRes.getOrNull(state.imageIndex),
+                // getOrNull: a theme with fewer photographs than labels falls
+                // back to the placeholder card rather than crashing.
+                currentImage = theme.imageRes.getOrNull(index),
             )
         }
 

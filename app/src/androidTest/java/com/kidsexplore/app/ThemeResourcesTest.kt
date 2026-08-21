@@ -234,7 +234,7 @@ class ThemeResourcesTest {
             R.string.settings_subtitle, R.string.settings_categories,
             R.string.settings_done, R.string.settings_language,
             R.string.settings_language_system, R.string.settings_attribution,
-            R.string.attribution_images, R.string.attribution_photographers_label,
+            R.string.attribution_images, R.string.attribution_photographers_line,
         )
         mustTranslate.forEach { id ->
             val name = resources.getResourceEntryName(id)
