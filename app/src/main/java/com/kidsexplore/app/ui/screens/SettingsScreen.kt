@@ -179,14 +179,21 @@ fun SettingsScreen(
  * Last in the list for the same reason — nothing here is an action, so it
  * should not sit between a parent and the controls that are.
  *
- * The Unsplash License asks for no credit at all, so the second line is a
- * courtesy; the first is the notice itself, and is the part that has to stay.
+ * One line per source, each naming the category it covers: a single blanket
+ * line stopped being true the moment a second theme got its pictures
+ * somewhere else. The Unsplash License asks for no credit and NASA's
+ * material is not copyrighted at all, so the photographers' names are a
+ * courtesy; the notices are the part that has to stay.
  */
 @Composable
 private fun Attribution() {
     Column(
         modifier = Modifier.padding(top = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        // Wider than the gap inside a block, so the two sources read as two
+        // things. The names sit under Unsplash's notice because they are
+        // Unsplash's photographers; a flat list spaced evenly left the NASA
+        // line looking like the tail of that name list.
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Text(
             text = stringResource(R.string.settings_attribution),
@@ -194,30 +201,40 @@ private fun Attribution() {
             fontSize = 13.sp,
             color = NeutralColors.subtitleText,
         )
-        Text(
-            text = stringResource(R.string.attribution_images),
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
-            color = NeutralColors.cancelText,
-        )
-        Text(
-            // One sentence rather than a heading and a list: TalkBack reads it
-            // as a sentence either way, and a list of twelve names is a wall
-            // of rows a parent has to swipe through to reach the end of the
-            // screen.
-            //
-            // A format string, not concatenation: the separator and the word
-            // order belong to the language, and gluing them together here puts
-            // both out of a translator's reach.
-            text = stringResource(
-                R.string.attribution_photographers_line,
-                stringResource(R.string.attribution_photographers),
-            ),
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
-            color = NeutralColors.cancelText,
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            AttributionLine(stringResource(R.string.attribution_images))
+            AttributionLine(
+                // One sentence rather than a heading and a list: TalkBack
+                // reads it as a sentence either way, and a list of twelve
+                // names is a wall of rows a parent has to swipe through to
+                // reach the end of the screen.
+                //
+                // A format string, not concatenation: the separator and the
+                // word order belong to the language, and gluing them together
+                // here puts both out of a translator's reach.
+                stringResource(
+                    R.string.attribution_photographers_line,
+                    stringResource(R.string.attribution_photographers),
+                ),
+            )
+        }
+        // Its own block rather than another clause on the Unsplash one: the
+        // two sources cover different categories and carry different terms,
+        // and NASA's material is not licensed so much as simply not
+        // copyrighted.
+        AttributionLine(stringResource(R.string.attribution_nasa))
     }
+}
+
+/** Body text in [Attribution]; every line is set the same way. */
+@Composable
+private fun AttributionLine(text: String) {
+    Text(
+        text = text,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        color = NeutralColors.cancelText,
+    )
 }
 
 /**

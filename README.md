@@ -46,7 +46,7 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - The same labelled "◀ Back" / "▶ Next" pill buttons are used at every size, so the controls look and behave identically regardless of how the device is held. The arrows and the swipe direction mirror in an RTL locale, where the sequence advances right-to-left. Which arrangement is used depends on the window's width, not its orientation — the breakpoint is 600dp:
   - **Narrow (under 600dp)**: the card fills the remaining space above a button row, with Back/Next side by side underneath it.
   - **Wide (600dp and up)**: Back/Next flank the card in a single row — the card sits between them rather than under them — and the row fills the full screen height (down to, but not under, the status bar), so the image gets as much vertical room as the display allows. The Home button floats over the top-left corner of the image instead of sitting in its own header row, since there's no header row to spare the height for.
-- Either way, Back/Next cycle through the theme's items, wrapping around at both ends. Construction has 14; every other theme has 8. The placeholder card announces its label to a screen reader as a live region; a photograph announces nothing (see [On images](#on-images)).
+- Either way, Back/Next cycle through the theme's items, wrapping around at both ends. Construction has 14 and Space 17; every other theme has 8. The placeholder card announces its label to a screen reader as a live region; a photograph announces nothing (see [On images](#on-images)).
 - The card also responds to a horizontal swipe — swipe left for next, right for back — as an alternative to the buttons, in both orientations.
 
 ### Parental Gate ("Grown-ups only")
@@ -67,16 +67,16 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - "Done" returns to Home, where the grid now reflects the updated theme selection.
 - A language dropdown sits above the theme list — "Same as phone settings" plus each shipped language named in its own language. Selecting one applies immediately.
 - "Language" and "Categories" section headings separate the two, so the language row does not read as the first entry in the category list. "Choose which themes your child can see." sits under the Categories heading as that section's explanation, rather than under the screen title where it described only half the screen.
-- An **Attribution** section sits at the foot of the list: the notice for the bundled photography ("Images provided by Unsplash under their Unsplash Licence") and the photographers' names. Behind the gate rather than on Home, because it is a notice for the adult who installed the app; last in the list, because nothing in it is an action and it should not sit between a parent and the controls that are. The Unsplash License asks for no credit at all, so the names are a courtesy — the notice is the part that has to stay.
+- An **Attribution** section sits at the foot of the list: one notice per image source, each naming the category it covers (Unsplash for Construction, NASA for Space), plus the Unsplash photographers' names. Behind the gate rather than on Home, because it is a notice for the adult who installed the app; last in the list, because nothing in it is an action and it should not sit between a parent and the controls that are. The Unsplash License asks for no credit at all, so the names are a courtesy — the notice is the part that has to stay.
 
 ## Themes
 
-Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a name and a set of item labels. Construction carries 14; the rest carry 8. `ThemeDef` holds only ids, resource ids, a list of image drawables and a `labelCount`, which is what keeps `AppViewModel` free of Android: it pages an index, the UI resolves the text. `ThemeResourcesTest` asserts each `labelCount` matches both its label array and its image list, since nothing else in the build ties those files together.
+Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a name and a set of item labels. Construction carries 14, Space 17; the rest carry 8. `ThemeDef` holds only ids, resource ids, a list of image drawables and a `labelCount`, which is what keeps `AppViewModel` free of Android: it pages an index, the UI resolves the text. `ThemeResourcesTest` asserts each `labelCount` matches both its label array and its image list, since nothing else in the build ties those files together.
 
 | Theme | id | Hue | Items | Artwork |
 |---|---|---|---|---|
 | Cars | `cars` | 15 | 8 | placeholder |
-| Construction | `construction` | 45 | 14 | photographs |
+| Construction | `construction` | 45 | 14 | photographs (Unsplash) |
 | Trains | `trains` | 350 | 8 | placeholder |
 | Animals | `animals` | 320 | 8 | placeholder |
 | Birds | `bird` | 225 | 8 | placeholder |
@@ -88,7 +88,7 @@ Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a 
 | Forest | `forest` | 150 | 8 | placeholder |
 | Fruit | `fruit` | 100 | 8 | placeholder |
 | Vegetables | `vegetable` | 125 | 8 | placeholder |
-| Space | `space` | 250 | 8 | placeholder |
+| Space | `space` | 250 | 17 | photographs (NASA) |
 
 Names shown are the English ones; a theme's display name and its 8 labels are `@StringRes`/`@ArrayRes` ids, so both translate. See **Languages** below.
 
@@ -149,13 +149,20 @@ Card names wrap to two lines and ellipsize only past that, so a long name costs 
 
 ### On images
 
-A theme either ships photographs or it does not, and each one decides for itself. **Construction** is the first that does: 14 JPEGs in `res/drawable-nodpi/`, named `img_construction_01.jpg` through `_14.jpg` and listed in that order by `CONSTRUCTION_IMAGES` in `ThemeDef.kt`. They come from [Unsplash](https://unsplash.com) under the [Unsplash License](https://unsplash.com/license), and the app carries the notice and the photographers' names in **Parent Settings → Attribution**.
+A theme either ships photographs or it does not, and each one decides for itself. Two do:
 
-The others still show the placeholder: a short text label (e.g. "Red sports car, side view") on a themed striped card. Those labels are stand-in text for artwork that does not exist yet.
+| Theme | Images | Files | Source |
+|---|---|---|---|
+| Construction | 14 | `img_construction_01.jpg` … `_14.jpg` | [Unsplash](https://unsplash.com), under the [Unsplash License](https://unsplash.com/license) |
+| Space | 17 | `img_space_01.jpg` … `_17.jpg` | [NASA](https://www.nasa.gov/) |
 
-Nothing in the code or the tests names Construction as *the* photographed theme. `ThemeResourcesTest` asserts only that at least one theme has artwork, and the UI tests resolve their fixture with `THEME_DEFS.first { it.imageRes.isNotEmpty() }`, so photographing a second theme is the four steps below and nothing else.
+They live in `res/drawable-nodpi/` and are listed, in display order, by `CONSTRUCTION_IMAGES` and `SPACE_IMAGES` in `ThemeDef.kt`. The two counts differ on purpose — a theme carries however many good images it has — which is why `labelCount` is per theme. **Parent Settings → Attribution** carries a notice per source, each naming the category it covers, plus the Unsplash photographers' names.
 
-Construction still has a `labels_construction` array, but nothing displays it. **A photograph is shown undescribed** — no caption over it, no `contentDescription` behind it. This app is for looking at pictures, its labels were written as artwork stand-ins rather than as prose worth reading aloud, and a screen reader announcing "Yellow digger with a big scooping bucket" adds nothing for the child holding the phone. The array survives as the roster of what the theme holds: one entry per image, in the order `CONSTRUCTION_IMAGES` lists them, which is what `ThemeResourcesTest` counts `labelCount` against, and a note to the next maintainer about which photograph is which.
+The other twelve still show the placeholder: a short text label (e.g. "Red sports car, side view") on a themed striped card. Those labels are stand-in text for artwork that does not exist yet.
+
+Nothing in the code or the tests names which themes are photographed. `ThemeResourcesTest` asserts only that at least one is, and the UI tests resolve their fixture with `THEME_DEFS.first { it.imageRes.isNotEmpty() }`, so photographing another theme is the four steps below and nothing else.
+
+A photographed theme keeps its `labels_<id>` array, but nothing displays it. **A photograph is shown undescribed** — no caption over it, no `contentDescription` behind it. This app is for looking at pictures, its labels were written as artwork stand-ins rather than as prose worth reading aloud, and a screen reader announcing "Yellow digger with a big scooping bucket" adds nothing for the child holding the phone. The array survives as the roster of what the theme holds: one entry per image, in the order `ThemeDef` lists them, which is what `ThemeResourcesTest` counts `labelCount` against, and a note to the next maintainer about which photograph is which.
 
 The practical cost is that nothing in the semantics tree says *which* photograph is on screen. The image therefore carries a test tag naming the drawable it is drawing (`viewerImageTestTag(image)`), which is what the tests match on — what matters about this screen is that the expected image loaded, not what is pictured in it.
 
@@ -167,7 +174,7 @@ The practical cost is that nothing in the semantics tree says *which* photograph
    sips -s format jpeg -s formatOptions 55 --resampleHeightWidthMax 1280 in.jpg --out out.jpg
    ```
 
-   That lands each file around 100–300 KB; the 14 Construction photos are 2.6 MB in total, and every theme done this way would roughly triple the APK.
+   That lands each file around 30–300 KB. Construction's 14 come to 2.6 MB and Space's 17 to 1.9 MB; the release APK is 5.9 MB with both, against 1.4 MB with neither. Skip the resample when a source is already under 1280px — it would only upscale it.
 2. Drop them in `res/drawable-nodpi/` as `img_<id>_NN.jpg`, numbered from `01`. **`-nodpi` matters**: a drawable in a plain `drawable/` folder is treated as mdpi artwork and upscaled by the device's density, which decodes a 1280px JPEG into a bitmap several times that size for nothing. `everyPhotographIsDensityIndependent` fails if one lands anywhere else.
 3. List them in `ThemeDef.kt` and set the theme's `labelCount` from the list's size.
 4. Keep that theme's `labels_<id>` array one entry per image, in the same order. It stops being displayed the moment the theme has artwork, but `labelCount` is still checked against it, and it is the only written record of which photograph sits at which index. Translations of it can be dropped — nothing shows them.
@@ -260,7 +267,7 @@ There is no CI; run `./gradlew lint testDebugUnitTest assembleDebug` locally, an
 
 ## Known limitations
 
-- Thirteen of the fourteen themes still show placeholder text labels rather than pictures; only Construction has photography (see [On images](#on-images) above).
+- Twelve of the fourteen themes still show placeholder text labels rather than pictures; only Construction and Space have photography (see [On images](#on-images) above).
 - The Viewer decodes each photograph with `painterResource`, which is fine for one full-screen image at a time but has no downsampling or preloading of its own. If more themes gain artwork — or the images get much larger than the 1280px they are now — an image loader would be the thing to reach for.
 - Nothing stops a child leaving the app for the launcher. The gate protects **Settings**, not the app's boundary; Android's screen pinning is what would deliver that, and it is not wired up.
 - No confirmation/undo when a parent disables a theme a child was mid-viewing — they're just returned to Home the next time they tap Home.

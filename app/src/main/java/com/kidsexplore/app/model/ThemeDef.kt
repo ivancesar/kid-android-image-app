@@ -44,9 +44,10 @@ data class ThemeDef(
     @param:DrawableRes val iconRes: Int,
     /**
      * The theme's photographs, in the same order as [labelsRes] — item *n*'s
-     * label describes image *n*, which is also what the Viewer reads out for
-     * it. Empty for a theme whose artwork has not been shot yet; those still
-     * render the striped placeholder card.
+     * label describes image *n*, as a note to whoever edits this next. Nothing
+     * displays or announces it: a theme with photographs shows the picture
+     * alone. Empty for a theme whose artwork has not been shot yet; those
+     * still render the striped placeholder card.
      *
      * Photographs, unlike names and labels, are the same in every language, so
      * they are referenced here rather than through a per-locale typed array.
@@ -61,7 +62,8 @@ data class ThemeDef(
  *
  * Fourteen rather than the [LABELS_PER_THEME] eight the placeholder themes
  * carry: the set is however many usable photographs there are, and
- * [ThemeDef.labelCount] is per-theme precisely so it can say so.
+ * [ThemeDef.labelCount] is per-theme precisely so it can say so — see also
+ * [SPACE_IMAGES], which lands on a different number again.
  *
  * Sources are Unsplash, under the Unsplash License; the photographers are
  * credited in Parent Settings (`R.string.attribution_photographers`).
@@ -84,9 +86,37 @@ private val CONSTRUCTION_IMAGES = listOf(
 )
 
 /**
+ * Space, photographed by spacecraft rather than by anyone.
+ *
+ * Public-domain NASA imagery, credited in Parent Settings — see
+ * `R.string.attribution_nasa`. Seventeen, because that is how many were
+ * picked; nothing expects two photographed themes to agree on a count.
+ */
+private val SPACE_IMAGES = listOf(
+    R.drawable.img_space_01,
+    R.drawable.img_space_02,
+    R.drawable.img_space_03,
+    R.drawable.img_space_04,
+    R.drawable.img_space_05,
+    R.drawable.img_space_06,
+    R.drawable.img_space_07,
+    R.drawable.img_space_08,
+    R.drawable.img_space_09,
+    R.drawable.img_space_10,
+    R.drawable.img_space_11,
+    R.drawable.img_space_12,
+    R.drawable.img_space_13,
+    R.drawable.img_space_14,
+    R.drawable.img_space_15,
+    R.drawable.img_space_16,
+    R.drawable.img_space_17,
+)
+
+/**
  * How many items a theme ships while its content is still placeholder labels.
  * A theme with photographs carries as many as it has — see
- * [CONSTRUCTION_IMAGES] — which is why [ThemeDef.labelCount] is per theme.
+ * [CONSTRUCTION_IMAGES] and [SPACE_IMAGES], which disagree — which is why
+ * [ThemeDef.labelCount] is per theme.
  */
 private const val LABELS_PER_THEME = 8
 
@@ -153,6 +183,7 @@ val THEME_DEFS: List<ThemeDef> = listOf(
     // Out there
     ThemeDef(
         id = "space", nameRes = R.string.theme_space, labelsRes = R.array.labels_space,
-        labelCount = LABELS_PER_THEME, hue = 250f, iconRes = R.drawable.ic_theme_space,
+        labelCount = SPACE_IMAGES.size, hue = 250f, iconRes = R.drawable.ic_theme_space,
+        imageRes = SPACE_IMAGES,
     ),
 )
