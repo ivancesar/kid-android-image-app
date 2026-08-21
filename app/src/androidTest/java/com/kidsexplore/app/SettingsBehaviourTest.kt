@@ -1,0 +1,117 @@
+package com.kidsexplore.app
+
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.kidsexplore.app.model.THEME_DEFS
+import com.kidsexplore.app.ui.screens.HomeScreen
+import com.kidsexplore.app.ui.screens.SettingsScreen
+import com.kidsexplore.app.ui.theme.KidsExploreTheme
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/**
+ * The language picker and the empty Home state, neither of which had coverage.
+ *
+ * These render the screens directly with fake callbacks rather than walking in
+ * through the gate: the behaviours worth pinning are local to the screen, and
+ * selecting a language for real recreates the activity, which fights the
+ * Compose test rule.
+ */
+@RunWith(AndroidJUnit4::class)
+class SettingsBehaviourTest {
+
+    @get:Rule
+    val compose = createComposeRule()
+
+    private val resources = InstrumentationRegistry.getInstrumentation().targetContext.resources
+    private fun str(id: Int) = resources.getString(id)
+
+    private fun settings(
+        current: String = AppLocales.SYSTEM,
+        onPick: (String) -> Unit = {},
+    ) {
+        compose.setContent {
+            KidsExploreTheme {
+                SettingsScreen(
+                    disabledThemeIds = emptySet(),
+                    onToggle = {},
+                    onDone = {},
+                    currentLanguage = current,
+                    onPickLanguage = onPick,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun theRowShowsTheSystemChoiceByItsLabelNotAsABlank() {
+        // AppLocales.SYSTEM is the empty string; without languageLabel() the row
+        // would render nothing at all.
+        settings(current = AppLocales.SYSTEM)
+        compose.onNodeWithText(str(R.string.settings_language_system)).assertIsDisplayed()
+    }
+
+    @Test
+    fun theRowShowsAChosenLanguageInItsOwnLanguage() {
+        settings(current = "hr")
+        compose.onNodeWithText("Hrvatski").assertIsDisplayed()
+    }
+
+    @Test
+    fun pickingADifferentLanguageReportsIt() {
+        var picked: String? = null
+        settings(current = AppLocales.SYSTEM, onPick = { picked = it })
+
+        compose.onNodeWithText(str(R.string.settings_language_system)).performClick()
+        compose.onNodeWithText("Hrvatski").performClick()
+
+        assertEquals("hr", picked)
+    }
+
+    @Test
+    fun pickingTheLanguageAlreadyInUseDoesNothing() {
+        // Re-applying would recreate the activity for no reason; the guard is
+        // `if (tag != current)`.
+        var picked: String? = null
+        settings(current = "hr", onPick = { picked = it })
+
+        compose.onNodeWithText("Hrvatski").performClick()
+
+        assertNull("re-picking the current language must not re-apply it", picked)
+    }
+
+    @Test
+    fun anEmptyHomeStillOffersAWayIntoSettings() {
+        // A parent who switches every category off must not be stranded: the
+        // gear is the only route back in, and it is drawn over an empty grid.
+        var opened = false
+        compose.setContent {
+            KidsExploreTheme {
+                HomeScreen(themes = emptyList(), onOpenTheme = {}, onOpenGate = { opened = true })
+            }
+        }
+        compose.onNodeWithText(str(R.string.home_empty_title)).assertIsDisplayed()
+        compose.onNodeWithContentDescription(str(R.string.home_settings_button))
+            .assertIsDisplayed()
+            .performClick()
+        assertEquals(true, opened)
+    }
+
+    @Test
+    fun aPopulatedHomeShowsNoEmptyMessage() {
+        compose.setContent {
+            KidsExploreTheme {
+                HomeScreen(themes = THEME_DEFS, onOpenTheme = {}, onOpenGate = {})
+            }
+        }
+        compose.onNodeWithText(str(R.string.home_empty_title)).assertDoesNotExist()
+    }
+}

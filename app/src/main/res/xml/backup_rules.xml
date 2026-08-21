@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   The Android 11-and-below counterpart to data_extraction_rules.xml, with the
-  same content and the same caveat about the gate lockout riding along.
+  same content and the same caveats: the gate lockout rides along with the
+  theme selection, and the chosen language is deliberately left out — it lives
+  in files/, and a new device should follow its own system language.
 -->
 <full-backup-content>
     <include domain="sharedpref" path="kids_explore_prefs.xml" />

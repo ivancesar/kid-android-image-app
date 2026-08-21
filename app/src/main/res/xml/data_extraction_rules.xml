@@ -9,6 +9,13 @@
   now, so the worst case is a parent waiting 30 seconds after a device
   transfer. Separating the two concerns into their own preference files is the
   fix; it is not worth doing until something else needs to persist.
+
+  The chosen language is deliberately not included. Below Android 13 AppCompat
+  keeps it in files/, not shared_prefs/, so the sharedpref domain does not
+  reach it and a new device starts from that device's own system language —
+  which is the sensible default for a phone that may well be set to a different
+  language than the old one. Verified on an API 30 emulator; on Android 13+ the
+  framework owns the setting entirely.
 -->
 <data-extraction-rules>
     <cloud-backup>

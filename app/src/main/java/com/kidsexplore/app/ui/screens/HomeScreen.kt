@@ -243,9 +243,12 @@ private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
             .clip(RoundedCornerShape(26.dp))
             .background(palette.cardBg)
             .clickable(onClick = onClick, role = Role.Button)
-            // clickable does not merge descendant semantics, so without this
-            // the focusable node has no name and the theme name sits on a
-            // separate, non-focusable child.
+            // clickable does not merge descendant semantics on its own. This
+            // puts the theme name on the control in Compose's merged tree,
+            // which AccessibleNamesTest pins. Note that a uiautomator dump
+            // still shows the name on a nested node rather than on the
+            // clickable one; what TalkBack actually speaks has not been
+            // verified here, and wants a real screen-reader session.
             .semantics(mergeDescendants = true) {},
     ) {
         Box(
