@@ -5,6 +5,7 @@ import com.kidsexplore.app.data.ThemeStore
 import com.kidsexplore.app.model.THEME_DEFS
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -53,7 +54,7 @@ class AppViewModelTest {
 
         assertEquals(UiState.Home, vm.uiState)
         assertEquals(THEME_DEFS.size, vm.visibleThemes.size)
-        assertNull(vm.activeTheme)
+        assertTrue(vm.uiState !is UiState.Viewer)
     }
 
     @Test
@@ -105,7 +106,7 @@ class AppViewModelTest {
         vm.goHome()
 
         assertEquals(UiState.Home, vm.uiState)
-        assertNull(vm.activeTheme)
+        assertTrue(vm.uiState !is UiState.Viewer)
     }
 
     // ------------------------------------------------------------ the gate
@@ -245,7 +246,7 @@ class AppViewModelTest {
         val restarted = newViewModel(store = FakeThemeStore(initialDisabled = setOf("farm")))
 
         assertTrue(restarted.visibleThemes.none { it.id == "farm" })
-        assertTrue(restarted.isThemeEnabled("cars"))
+        assertTrue("cars" !in restarted.disabledThemeIds)
     }
 
     /**
@@ -269,7 +270,7 @@ class AppViewModelTest {
         assertSame("navigation must not reallocate", beforeNavigation, vm.visibleThemes)
 
         vm.toggleThemeEnabled("cars")
-        assertNotEquals("a real change must be picked up", beforeNavigation, vm.visibleThemes)
+        assertNotSame("a real change must reallocate", beforeNavigation, vm.visibleThemes)
         assertTrue(vm.visibleThemes.none { it.id == "cars" })
     }
 

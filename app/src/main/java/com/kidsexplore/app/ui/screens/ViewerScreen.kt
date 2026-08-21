@@ -213,7 +213,7 @@ private fun ImageCard(palette: ThemePalette, currentLabel: String) {
             text = currentLabel,
             fontFamily = FontFamily.Monospace,
             fontSize = 16.sp,
-            color = Color.White,
+            color = palette.labelOnCard,
             textAlign = TextAlign.Center,
             lineHeight = 24.sp,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
@@ -232,6 +232,9 @@ private fun HomeButton(onClick: () -> Unit) {
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
             .clickable(onClick = onClick, role = Role.Button)
+            // clickable does not merge descendants; without this the focusable
+            // node is nameless and "Home" sits on a non-focusable child.
+            .semantics(mergeDescendants = true) {}
             .padding(horizontal = 6.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -255,6 +258,7 @@ private fun NavPillButton(icon: String, label: String, accent: Color, onClick: (
             .clip(RoundedCornerShape(24.dp))
             .background(accent)
             .clickable(onClick = onClick, role = Role.Button)
+            .semantics(mergeDescendants = true) {}
             .padding(horizontal = 14.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,

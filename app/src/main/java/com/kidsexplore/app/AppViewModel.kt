@@ -112,13 +112,6 @@ class AppViewModel(
         THEME_DEFS.filter { it.id !in disabledThemeIds }
     }
 
-    val activeTheme: ThemeDef?
-        get() = (uiState as? UiState.Viewer)?.let { state ->
-            THEME_DEFS.find { it.id == state.themeId }
-        }
-
-    fun isThemeEnabled(id: String): Boolean = id !in disabledThemeIds
-
     fun goHome() {
         transitionTo(UiState.Home)
     }

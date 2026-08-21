@@ -40,6 +40,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -57,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kidsexplore.app.R
 import com.kidsexplore.app.model.ThemeDef
+import com.kidsexplore.app.ui.THEME_LIST_TEST_TAG
 import com.kidsexplore.app.ui.icons.ThemeIconGlyph
 import com.kidsexplore.app.ui.theme.BoldTextStyle
 import com.kidsexplore.app.ui.theme.HeavyTextStyle
@@ -112,7 +114,7 @@ fun HomeScreen(
                 top = headerHeightDp + 16.dp,
                 bottom = 12.dp + bottomInset,
             ),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().testTag(THEME_LIST_TEST_TAG),
         ) {
             items(themes, key = { it.id }) { theme ->
                 ThemeCard(theme = theme, onClick = { onOpenTheme(theme.id) })
@@ -240,7 +242,11 @@ private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
             .aspectRatio(1f)
             .clip(RoundedCornerShape(26.dp))
             .background(palette.cardBg)
-            .clickable(onClick = onClick, role = Role.Button),
+            .clickable(onClick = onClick, role = Role.Button)
+            // clickable does not merge descendant semantics, so without this
+            // the focusable node has no name and the theme name sits on a
+            // separate, non-focusable child.
+            .semantics(mergeDescendants = true) {},
     ) {
         Box(
             modifier = Modifier
@@ -273,13 +279,14 @@ private fun ThemeCard(theme: ThemeDef, onClick: () -> Unit) {
                 }
                 Text(
                     text = stringResource(theme.nameRes),
-                    style = HeavyTextStyle.copy(
-                        shadow = Shadow(color = Color.Black.copy(alpha = 0.12f), offset = Offset(0f, 2f), blurRadius = 1f),
-                    ),
+                    style = HeavyTextStyle,
                     fontSize = 17.sp,
-                    color = Color.White,
+                    color = palette.labelOnCard,
                     textAlign = TextAlign.Center,
-                    maxLines = 1,
+                    // Two lines at large font scales: "Construction" ellipsized
+                    // to "Constructi…" at 2x, and the disc above yields height
+                    // rather than the name losing characters.
+                    maxLines = 2,
                     // Clipped mid-glyph reads as a rendering fault; an ellipsis
                     // reads as a name that didn't fit.
                     overflow = TextOverflow.Ellipsis,

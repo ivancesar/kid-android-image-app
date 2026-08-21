@@ -29,7 +29,7 @@ val BoldTextStyle = TextStyle(
 /**
  * Light only, on purpose.
  *
- * The design is a fixed bright palette — eight saturated card colors on warm
+ * The design is a fixed bright palette — fourteen saturated card colors on warm
  * off-white — and there is no dark counterpart designed for it. Rather than
  * let the system setting pull half the app into colors nobody chose, the
  * scheme is pinned here and `MainActivity` matches the system bar icons to it.

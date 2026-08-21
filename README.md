@@ -112,7 +112,7 @@ The converter inlines the SVGs' CSS classes into path attributes, re-expresses `
 
 It deliberately supports only the subset this icon set uses, and raises on anything else rather than guessing: group-level fills or classes, `style="..."` attributes, `fill-rule`/`clip-rule`, opacity, a non-zero `viewBox` origin, and colours carrying alpha. A silently mis-converted icon looks plausible and ships; a refusal costs one line of support code. Pass `--check` to verify the committed drawables without writing anything.
 
-**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, add `theme_<id>_name` and a `labels_<id>` array to every `values*/strings.xml`, and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>`. The theme id, the SVG filename and the resource names are kept identical on purpose. `ThemeDefsTest` (instrumented, needs a device) asserts the resource names match the id; the `checkIconsInSync` Gradle task (wired into `check`, so it runs in `./gradlew build`) re-runs the converter and fails if any committed drawable disagrees with its source.
+**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, add `theme_<id>_name` and a `labels_<id>` array to every `values*/strings.xml`, and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>`. The theme id, the SVG filename and the resource names are kept identical on purpose. `ThemeResourcesTest` (instrumented, needs a device) asserts the resource names match the id; the `checkIconsInSync` Gradle task (wired into `check`, so it runs in `./gradlew build`) re-runs the converter and fails if any committed drawable disagrees with its source.
 
 ## Languages
 
@@ -124,7 +124,7 @@ Croatian deliberately translates only part of the set. Keys it leaves out fall b
 - `gate_equation` is nothing but `%1$d`/`%2$d` placeholders.
 - The 112 image labels are stand-in text for artwork the app does not ship yet, so translating them would be translating scaffolding.
 
-Six glyphs the app draws as text — the gear, tick, house, dropdown chevron and the two nav arrows — are kept in code rather than resources. They are symbols, not words. The controls carrying them are announced by name rather than by glyph: the gear and the nav pills declare a `contentDescription`, the Home button is labelled by the word beside its glyph, and theme rows are `toggleable` so their checked state is announced too.
+Six glyphs the app draws as text — the gear, tick, house, dropdown chevron and the two nav arrows — are kept in code rather than resources. They are symbols, not words. The controls carrying them are announced by name rather than by glyph: the gear declares a `contentDescription`, and every container-level control — theme card, theme row, language row, Home and the nav pills — sets `semantics(mergeDescendants = true)` so the label on its child becomes the node's own name. `clickable` and `toggleable` do not merge descendants on their own, so without that the focusable node is nameless and TalkBack is left to infer a label from descendant text.
 
 ### Switching language
 
@@ -140,7 +140,7 @@ On Android 13+ the framework owns the storage and registers the choice with the 
 
 1. Copy `res/values/strings.xml` to `res/values-<code>/strings.xml` and translate the values, leaving every `name="..."` alone. Omit any key that should stay as the English default.
 2. Add the code to `res/xml/locales_config.xml` **and** to `AppLocales.SUPPORTED`.
-3. Run the tests. `ThemeDefsTest` checks every shipped language for a non-blank, unique name per theme and for label arrays that still match the default's length — arrays replace rather than merge, so a dropped item would otherwise leave the Viewer paging onto an index that no longer exists. It cannot detect a language that simply isn't translated; fallback makes that indistinguishable from a deliberate omission, which is why `croatianOverridesTheDefaultsRatherThanFallingBackWholesale` pins that separately.
+3. Run the tests. `ThemeResourcesTest` checks every shipped language for a non-blank, unique name per theme and for label arrays that still match the default's length — arrays replace rather than merge, so a dropped item would otherwise leave the Viewer paging onto an index that no longer exists. It cannot detect a language that simply isn't translated; fallback makes that indistinguishable from a deliberate omission, which is why `croatianOverridesTheDefaultsRatherThanFallingBackWholesale` pins that separately.
 
 Card names render on one line and ellipsize rather than wrap (`TextOverflow.Ellipsis`), so keep them short; `Construction` is about the practical limit at the current card width.
 

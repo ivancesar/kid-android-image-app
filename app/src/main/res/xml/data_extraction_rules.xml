@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The only thing worth backing up is which themes a parent has enabled — a
-  handful of ids in one SharedPreferences file. Nothing else is persisted, and
-  nothing here is sensitive.
+  What is worth backing up is which themes a parent has enabled — a handful of
+  ids in one SharedPreferences file. Nothing here is sensitive.
+
+  That file also holds the parental gate's failure count and lockout deadline,
+  and these rules are file-granular, so a restore carries an active lockout to
+  the new device. The ViewModel clamps a restored deadline to one lockout from
+  now, so the worst case is a parent waiting 30 seconds after a device
+  transfer. Separating the two concerns into their own preference files is the
+  fix; it is not worth doing until something else needs to persist.
 -->
 <data-extraction-rules>
     <cloud-backup>

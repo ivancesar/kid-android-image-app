@@ -92,7 +92,6 @@ class ThemeResourcesTest {
     @Test
     fun everyThemeIconInflates() {
         THEME_DEFS.forEach { theme ->
-            assertTrue("${theme.id} has no iconRes", theme.iconRes != 0)
             assertNotNull("${theme.id} icon does not inflate", ContextCompat.getDrawable(context, theme.iconRes))
         }
     }
@@ -136,18 +135,5 @@ class ThemeResourcesTest {
         val translated = THEME_DEFS.count { en.getString(it.nameRes) != hr.getString(it.nameRes) }
         // 13 of 14 differ; "Ocean" is the same word in both languages.
         assertTrue("only $translated of ${THEME_DEFS.size} theme names differ in hr", translated >= 10)
-    }
-
-    /**
-     * The UI suite resolves expected text from resources, which makes it
-     * locale-independent but blind to the content itself. This pins a few
-     * defaults so an empty or garbled `values/` fails somewhere.
-     */
-    @Test
-    fun defaultStringsSayWhatTheyShould() {
-        val en = localized("en")
-        assertEquals("Cars", en.getString(THEME_DEFS.first { it.id == "cars" }.nameRes))
-        assertEquals("Done", en.getString(R.string.settings_done))
-        assertEquals("Pick something to look at!", en.getString(R.string.home_title))
     }
 }

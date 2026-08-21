@@ -80,8 +80,12 @@ def apply(m, x, y):
     return (a*x + c*y + e, b*x + d*y + f)
 
 def num(v):
-    """Trim floats so path data stays compact and readable."""
-    s = '%.3f' % v
+    """Trim floats so path data stays compact and readable.
+
+    Two decimals on a 226.8-unit viewport is finer than any display resolves,
+    and keeps the longest paths under lint's VectorPath threshold.
+    """
+    s = '%.2f' % v
     s = s.rstrip('0').rstrip('.')
     return '0' if s in ('', '-0') else s
 

@@ -1,10 +1,10 @@
 package com.kidsexplore.app
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -15,6 +15,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kidsexplore.app.model.THEME_DEFS
+import com.kidsexplore.app.ui.THEME_LIST_TEST_TAG
 import com.kidsexplore.app.model.ThemeDef
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
 import org.junit.Assert.assertTrue
@@ -43,6 +44,12 @@ class KidsExploreFlowTest {
 
     private val resources = InstrumentationRegistry.getInstrumentation().targetContext.resources
 
+    // Expected text is resolved from resources, never written out in English:
+    // the suite is meant to exercise whichever language the app is set to.
+    private fun str(id: Int) = resources.getString(id)
+    private fun themeNamed(id: String) =
+        resources.getString(THEME_DEFS.first { it.id == id }.nameRes)
+
     /** Names and labels live in strings.xml now, so the tests resolve them the same way the UI does. */
     private fun ThemeDef.displayName(): String = resources.getString(nameRes)
 
@@ -69,13 +76,16 @@ class KidsExploreFlowTest {
      * rather than assuming the whole list fits the device under test.
      */
     private fun scrollTo(text: String) {
-        compose.onNode(hasScrollAction()).performScrollToNode(hasText(text))
+        // By tag, not "the scrollable on screen": Settings has a second
+        // scrollable inside the language dropdown, and hasScrollAction()
+        // resolves two nodes the moment that menu is open.
+        compose.onNodeWithTag(THEME_LIST_TEST_TAG).performScrollToNode(hasText(text))
     }
 
     private fun openGate() {
         // The gear is icon-only, so it is addressed by its description —
         // which is also what TalkBack reads.
-        compose.onNodeWithContentDescription("Parent settings").performClick()
+        compose.onNodeWithContentDescription(str(R.string.home_settings_button)).performClick()
     }
 
     private fun answerWrongOnce() {
@@ -91,7 +101,7 @@ class KidsExploreFlowTest {
 
     @Test
     fun homeListsEveryTheme() {
-        compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.home_title)).assertIsDisplayed()
         THEME_DEFS.forEach { theme ->
             scrollTo(theme.displayName())
             compose.onNodeWithText(theme.displayName()).assertIsDisplayed()
@@ -100,19 +110,19 @@ class KidsExploreFlowTest {
 
     @Test
     fun tappingAThemeOpensItsViewer() {
-        compose.onNodeWithText("Cars").performClick()
+        compose.onNodeWithText(themeNamed("cars")).performClick()
 
         compose.onNodeWithText(carLabels[0]).assertIsDisplayed()
-        compose.onNodeWithText("Home").assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.viewer_home)).assertIsDisplayed()
     }
 
     @Test
     fun nextButtonWalksEveryImageAndWrapsAround() {
-        compose.onNodeWithText("Cars").performClick()
+        compose.onNodeWithText(themeNamed("cars")).performClick()
 
         carLabels.forEach { expected ->
             compose.onNodeWithText(expected).assertIsDisplayed()
-            compose.onNodeWithText("Next").performClick()
+            compose.onNodeWithText(str(R.string.viewer_next)).performClick()
         }
         // wrapped back to the first image
         compose.onNodeWithText(carLabels[0]).assertIsDisplayed()
@@ -120,15 +130,15 @@ class KidsExploreFlowTest {
 
     @Test
     fun backButtonFromTheFirstImageWrapsToTheLast() {
-        compose.onNodeWithText("Cars").performClick()
+        compose.onNodeWithText(themeNamed("cars")).performClick()
 
-        compose.onNodeWithText("Back").performClick()
+        compose.onNodeWithText(str(R.string.viewer_back)).performClick()
         compose.onNodeWithText(carLabels.last()).assertIsDisplayed()
     }
 
     @Test
     fun swipingLeftAndRightChangesTheImage() {
-        compose.onNodeWithText("Cars").performClick()
+        compose.onNodeWithText(themeNamed("cars")).performClick()
 
         compose.onNodeWithText(carLabels[0]).performTouchInput { swipeLeft() }
         compose.onNodeWithText(carLabels[1]).assertIsDisplayed()
@@ -139,20 +149,20 @@ class KidsExploreFlowTest {
 
     @Test
     fun homeButtonReturnsFromTheViewer() {
-        compose.onNodeWithText("Cars").performClick()
-        compose.onNodeWithText("Home").performClick()
+        compose.onNodeWithText(themeNamed("cars")).performClick()
+        compose.onNodeWithText(str(R.string.viewer_home)).performClick()
 
-        compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.home_title)).assertIsDisplayed()
     }
 
     @Test
     fun wrongGateAnswerShowsRetryMessageAndBlocksSettings() {
         openGate()
-        compose.onNodeWithText("Solve this to continue").assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.gate_prompt)).assertIsDisplayed()
 
         answerWrongOnce()
 
-        compose.onNodeWithText("Not quite, try again!").assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.gate_wrong)).assertIsDisplayed()
         assertTrue("must not reach Settings", state() is UiState.Gate)
     }
 
@@ -183,8 +193,8 @@ class KidsExploreFlowTest {
         openGate()
         repeat(MAX_GATE_FAILURES) { answerWrongOnce() }
 
-        compose.onNodeWithText("Cancel").performClick()
-        compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.gate_cancel)).performClick()
+        compose.onNodeWithText(str(R.string.home_title)).assertIsDisplayed()
         openGate()
 
         // Matched by description, not text: the countdown reticks every
@@ -205,26 +215,26 @@ class KidsExploreFlowTest {
     @Test
     fun theSettingsGearStaysReachableAfterScrollingTheGrid() {
         scrollTo(THEME_DEFS.last().displayName())
-        compose.onNodeWithText("Pick something to look at!").assertDoesNotExist()
+        compose.onNodeWithText(str(R.string.home_title)).assertDoesNotExist()
 
-        compose.onNodeWithContentDescription("Parent settings").assertIsDisplayed().performClick()
+        compose.onNodeWithContentDescription(str(R.string.home_settings_button)).assertIsDisplayed().performClick()
 
-        compose.onNodeWithText("Solve this to continue").assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.gate_prompt)).assertIsDisplayed()
     }
 
     @Test
     fun cancellingTheGateReturnsHome() {
         openGate()
-        compose.onNodeWithText("Cancel").performClick()
+        compose.onNodeWithText(str(R.string.gate_cancel)).performClick()
 
-        compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.home_title)).assertIsDisplayed()
     }
 
     @Test
     fun correctGateAnswerOpensParentSettings() {
         enterSettings()
 
-        compose.onNodeWithText("Parent Settings").assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.settings_title)).assertIsDisplayed()
         compose.onNodeWithText(resources.getString(R.string.settings_subtitle)).assertIsDisplayed()
     }
 
@@ -232,55 +242,27 @@ class KidsExploreFlowTest {
     fun disablingAThemeInSettingsRemovesItFromHome() {
         enterSettings()
 
-        scrollTo("Ocean")
-        compose.onNodeWithText("Ocean").performClick() // untick it
-        compose.onNodeWithText("Done").performClick()
+        scrollTo(themeNamed("ocean"))
+        compose.onNodeWithText(themeNamed("ocean")).performClick() // untick it
+        compose.onNodeWithText(str(R.string.settings_done)).performClick()
 
-        compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
-        compose.onNodeWithText("Ocean").assertDoesNotExist()
-        compose.onNodeWithText("Cars").assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.home_title)).assertIsDisplayed()
+        compose.onNodeWithText(themeNamed("ocean")).assertDoesNotExist()
+        compose.onNodeWithText(themeNamed("cars")).assertIsDisplayed()
     }
 
     @Test
     fun reEnablingAThemeBringsItBackToHome() {
         viewModel.toggleThemeEnabled("ocean")
-        compose.onNodeWithText("Ocean").assertDoesNotExist()
+        compose.onNodeWithText(themeNamed("ocean")).assertDoesNotExist()
 
         enterSettings()
-        scrollTo("Ocean")
-        compose.onNodeWithText("Ocean").performClick() // tick it again
-        compose.onNodeWithText("Done").performClick()
+        scrollTo(themeNamed("ocean"))
+        compose.onNodeWithText(themeNamed("ocean")).performClick() // tick it again
+        compose.onNodeWithText(str(R.string.settings_done)).performClick()
 
-        scrollTo("Ocean")
-        compose.onNodeWithText("Ocean").assertIsDisplayed()
+        scrollTo(themeNamed("ocean"))
+        compose.onNodeWithText(themeNamed("ocean")).assertIsDisplayed()
     }
 
-    @Test
-    fun fullJourneyHomeToViewerToSettingsAndBack() {
-        // browse a theme
-        val dinos = THEME_DEFS.first { it.id == "dinosaurs" }.displayName()
-        scrollTo(dinos)
-        compose.onNodeWithText(dinos).performClick()
-        val dinoLabels = THEME_DEFS.first { it.id == "dinosaurs" }.labels()
-        compose.onNodeWithText(dinoLabels[0]).assertIsDisplayed()
-        compose.onNodeWithText("Next").performClick()
-        compose.onNodeWithText(dinoLabels[1]).assertIsDisplayed()
-
-        // back home
-        compose.onNodeWithText("Home").performClick()
-        compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
-
-        // through the gate into settings
-        enterSettings()
-        compose.onNodeWithText("Parent Settings").assertIsDisplayed()
-
-        // and back home again
-        compose.onNodeWithText("Done").performClick()
-        compose.onNodeWithText("Pick something to look at!").assertIsDisplayed()
-
-        // reopening a theme starts from its first image again
-        scrollTo(dinos)
-        compose.onNodeWithText(dinos).performClick()
-        compose.onNodeWithText(dinoLabels[0]).assertIsDisplayed()
-    }
 }

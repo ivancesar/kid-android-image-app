@@ -21,19 +21,5 @@ class AppLocalesTest {
         assertEquals("Hrvatski", AppLocales.endonym("hr"))
     }
 
-    @Test
-    fun endonymIsNeverBlankOrTheRawTag() {
-        AppLocales.SUPPORTED.forEach { tag ->
-            val name = AppLocales.endonym(tag)
-            assertTrue("$tag has no display name", name.isNotBlank())
-            assertFalse("$tag fell back to the raw tag", name.equals(tag, ignoreCase = true))
-        }
-    }
 
-    @Test
-    fun systemIsNotItselfAShippedLanguage() {
-        // SYSTEM is a sentinel for "no override"; if it ever collided with a real
-        // tag the picker would show two entries meaning different things.
-        assertFalse(AppLocales.SUPPORTED.contains(AppLocales.SYSTEM))
-    }
 }

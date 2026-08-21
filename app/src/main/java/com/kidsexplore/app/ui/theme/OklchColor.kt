@@ -65,12 +65,24 @@ data class ThemePalette(
     val cardBg: Color,
     val stripe: Color,
     val cardBorder: Color,
+    /**
+     * Text drawn on [cardBg] or [stripe].
+     *
+     * White reads as the obvious choice on these saturated fills, but it only
+     * reaches 2.2–2.7:1 against them — under WCAG AA's 3:1 floor for large text
+     * on all fourteen hues, and the Viewer's item label is body-sized, which
+     * wants 4.5:1. This tone is derived from the same hue rather than picked by
+     * hand, and clears 4.5:1 on both surfaces (worst case 4.76:1, on the
+     * stripe). It also sits closer to the black line art in the icons.
+     */
+    val labelOnCard: Color,
 )
 
 private fun paletteFor(hue: Float) = ThemePalette(
     cardBg = oklch(0.72f, 0.16f, hue),
     stripe = oklch(0.66f, 0.17f, hue),
     cardBorder = oklch(0.50f, 0.19f, hue),
+    labelOnCard = oklch(0.26f, 0.10f, hue),
 )
 
 // Every hue is a compile-time constant, so the nine pow() calls a palette costs

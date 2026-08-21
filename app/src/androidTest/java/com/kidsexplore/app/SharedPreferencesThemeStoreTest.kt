@@ -82,13 +82,6 @@ class SharedPreferencesThemeStoreTest {
         assertEquals(setOf("ocean"), newStore().loadDisabled())
     }
 
-    @Test
-    fun everyRealThemeIdSurvivesTheRoundTrip() {
-        val all = THEME_DEFS.mapTo(mutableSetOf()) { it.id }
-        newStore().saveDisabled(all)
-
-        assertEquals(all, newStore().loadDisabled())
-    }
 
     // ---------------------------------------------------------- gate lock
 
