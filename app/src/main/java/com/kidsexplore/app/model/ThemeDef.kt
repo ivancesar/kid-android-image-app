@@ -44,9 +44,10 @@ data class ThemeDef(
     @param:DrawableRes val iconRes: Int,
     /**
      * The theme's photographs, in the same order as [labelsRes] — item *n*'s
-     * label describes image *n*, which is also what the Viewer reads out for
-     * it. Empty for a theme whose artwork has not been shot yet; those still
-     * render the striped placeholder card.
+     * label describes image *n*, as a note to whoever edits this next. Nothing
+     * displays or announces it: a theme with photographs shows the picture
+     * alone. Empty for a theme whose artwork has not been shot yet; those
+     * still render the striped placeholder card.
      *
      * Photographs, unlike names and labels, are the same in every language, so
      * they are referenced here rather than through a per-locale typed array.
