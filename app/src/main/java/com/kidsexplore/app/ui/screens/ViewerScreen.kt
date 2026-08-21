@@ -55,7 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kidsexplore.app.R
 import com.kidsexplore.app.model.ThemeDef
-import com.kidsexplore.app.ui.VIEWER_IMAGE_TEST_TAG
+import com.kidsexplore.app.ui.viewerImageTestTag
 import com.kidsexplore.app.ui.theme.NeutralColors
 import com.kidsexplore.app.ui.theme.ThemePalette
 import com.kidsexplore.app.ui.theme.palette
@@ -267,7 +267,8 @@ private fun PhotoCard(palette: ThemePalette, @DrawableRes image: Int) {
             // Undescribed by decision, not by oversight. Nothing else here
             // names the picture either, so there is no live region to declare
             // and no Role.Image to carry — `Image` sets that role only
-            // alongside a description. The tag is the tests' only handle.
+            // alongside a description. The tag below is the tests' only handle,
+            // and the only thing that still says which photograph this is.
             contentDescription = null,
             // Crop, not Fit: the frame's padding leaves an opening a few
             // pixels off the photo's own ratio, and cropping that away is
@@ -276,7 +277,7 @@ private fun PhotoCard(palette: ThemePalette, @DrawableRes image: Int) {
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(24.dp - CardFrameWidth))
-                .testTag(VIEWER_IMAGE_TEST_TAG),
+                .testTag(viewerImageTestTag(image)),
         )
     }
 }

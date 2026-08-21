@@ -16,7 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.ui.THEME_LIST_TEST_TAG
-import com.kidsexplore.app.ui.VIEWER_IMAGE_TEST_TAG
+import com.kidsexplore.app.ui.viewerImageTestTag
 import com.kidsexplore.app.model.ThemeDef
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
 import org.junit.Assert.assertEquals
@@ -154,24 +154,24 @@ class KidsExploreFlowTest {
      * fourteen and wrap — the count differs from every other theme's eight,
      * and it is `labelCount` the ViewModel wraps on.
      *
-     * The photographs carry no description, so nothing on screen says which
-     * one is showing; the assertion is that a picture is up and that the index
-     * behind it advances and comes back to 0. Which image belongs to which
-     * index is `ThemeResourcesTest`'s job.
+     * The photographs carry no description, so the test tag naming the
+     * drawable is the only thing that says which one is up. What matters here
+     * is exactly that: the expected image loaded at the expected step, not
+     * what is pictured in it.
      */
     @Test
     fun nextButtonWalksEveryPhotographAndWrapsAround() {
         val construction = THEME_DEFS.first { it.id == "construction" }
         compose.onNodeWithText(themeNamed("construction")).performClick()
 
-        repeat(construction.labelCount) { i ->
-            compose.onNodeWithTag(VIEWER_IMAGE_TEST_TAG).assertIsDisplayed()
-            assertEquals(i, (state() as UiState.Viewer).imageIndex)
+        construction.imageRes.forEachIndexed { i, image ->
+            compose.onNodeWithTag(viewerImageTestTag(image)).assertIsDisplayed()
+            assertEquals("step $i", i, (state() as UiState.Viewer).imageIndex)
             compose.onNodeWithText(str(R.string.viewer_next)).performClick()
         }
         // wrapped back to the first photograph
-        assertEquals(0, (state() as UiState.Viewer).imageIndex)
-        compose.onNodeWithTag(VIEWER_IMAGE_TEST_TAG).assertIsDisplayed()
+        compose.onNodeWithTag(viewerImageTestTag(construction.imageRes.first()))
+            .assertIsDisplayed()
     }
 
     @Test

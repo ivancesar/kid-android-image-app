@@ -21,7 +21,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.model.ThemeDef
-import com.kidsexplore.app.ui.VIEWER_IMAGE_TEST_TAG
+import com.kidsexplore.app.ui.viewerImageTestTag
 import com.kidsexplore.app.ui.screens.ViewerScreen
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
 import org.junit.Assert.assertEquals
@@ -246,9 +246,25 @@ class ViewerLayoutTest {
     fun aPhotographShowsNoLabelInAnyForm() {
         setConstruction(narrow)
 
-        compose.onNodeWithTag(VIEWER_IMAGE_TEST_TAG).assertIsDisplayed()
+        compose.onNodeWithTag(viewerImageTestTag(construction.imageRes[0])).assertIsDisplayed()
         compose.onNodeWithText(constructionLabels[0]).assertDoesNotExist()
         compose.onNodeWithContentDescription(constructionLabels[0]).assertDoesNotExist()
+    }
+
+    /**
+     * The Viewer must draw the photograph it was handed, not merely *a*
+     * photograph. Nothing on screen distinguishes them, so an off-by-one in
+     * the caller would look identical to a working screen without this.
+     */
+    @Test
+    fun theViewerDrawsThePhotographItWasGiven() {
+        val index = 6
+        setConstruction(narrow, index = index)
+
+        compose.onNodeWithTag(viewerImageTestTag(construction.imageRes[index]))
+            .assertIsDisplayed()
+        compose.onNodeWithTag(viewerImageTestTag(construction.imageRes[0]))
+            .assertDoesNotExist()
     }
 
     /** The wide layout has to hold for a photograph exactly as it does for the card. */
@@ -258,7 +274,7 @@ class ViewerLayoutTest {
 
         val back = compose.onNodeWithText(str(R.string.viewer_back)).getUnclippedBoundsInRoot()
         val next = compose.onNodeWithText(str(R.string.viewer_next)).getUnclippedBoundsInRoot()
-        val image = compose.onNodeWithTag(VIEWER_IMAGE_TEST_TAG).getUnclippedBoundsInRoot()
+        val image = compose.onNodeWithTag(viewerImageTestTag(construction.imageRes[0])).getUnclippedBoundsInRoot()
 
         assert(back.right <= image.left) { "Back ($back) overlaps the photo ($image)" }
         assert(next.left >= image.right) { "Next ($next) overlaps the photo ($image)" }
@@ -273,7 +289,7 @@ class ViewerLayoutTest {
         var next = 0
         setConstruction(narrow, onNext = { next++ })
 
-        compose.onNodeWithTag(VIEWER_IMAGE_TEST_TAG).performTouchInput { swipeLeft() }
+        compose.onNodeWithTag(viewerImageTestTag(construction.imageRes[0])).performTouchInput { swipeLeft() }
 
         compose.runOnIdle { assertEquals(1, next) }
     }
