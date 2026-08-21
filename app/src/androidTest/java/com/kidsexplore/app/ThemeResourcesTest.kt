@@ -246,6 +246,7 @@ class ThemeResourcesTest {
             R.string.settings_done, R.string.settings_language,
             R.string.settings_language_system, R.string.settings_attribution,
             R.string.attribution_images, R.string.attribution_photographers_line,
+            R.string.attribution_nasa,
         )
         mustTranslate.forEach { id ->
             val name = resources.getResourceEntryName(id)
@@ -277,12 +278,18 @@ class ThemeResourcesTest {
         assertEquals("Cars", en.getString(THEME_DEFS.first { it.id == "cars" }.nameRes))
         assertEquals("Done", en.getString(R.string.settings_done))
         assertEquals("Pick something to look at!", en.getString(R.string.home_title))
-        // The notice the app owes its image source; worth pinning by literal
-        // rather than leaving to a resolve-from-resources assertion that would
-        // pass on any wording at all.
+        // The notices the app owes its image sources, pinned by literal rather
+        // than left to a resolve-from-resources assertion that would pass on
+        // any wording at all. Each names the category it covers: a blanket
+        // line was true only while one theme had pictures, and a notice that
+        // credits the wrong source for a category is worse than none.
         assertEquals(
-            "Images provided by Unsplash under their Unsplash Licence",
+            "Construction images provided by Unsplash under their Unsplash Licence",
             en.getString(R.string.attribution_images),
+        )
+        assertEquals(
+            "Space images are courtesy of NASA",
+            en.getString(R.string.attribution_nasa),
         )
     }
 }

@@ -69,6 +69,7 @@
 
     <!-- Attribution -->
     <string name="settings_attribution">Zasluge</string>
-    <string name="attribution_images">Slike ustupio Unsplash pod svojom Unsplash licencom</string>
+    <string name="attribution_images">Slike u kategoriji Gradnja ustupio je Unsplash pod svojom Unsplash licencom</string>
     <string name="attribution_photographers_line">Fotografije: %1$s</string>
+    <string name="attribution_nasa">Slike u kategoriji Svemir ustupila je NASA</string>
 </resources>

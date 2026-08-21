@@ -179,8 +179,11 @@ fun SettingsScreen(
  * Last in the list for the same reason — nothing here is an action, so it
  * should not sit between a parent and the controls that are.
  *
- * The Unsplash License asks for no credit at all, so the second line is a
- * courtesy; the first is the notice itself, and is the part that has to stay.
+ * One line per source, each naming the category it covers: a single blanket
+ * line stopped being true the moment a second theme got its pictures
+ * somewhere else. The Unsplash License asks for no credit and NASA's
+ * material is not copyrighted at all, so the photographers' names are a
+ * courtesy; the notices are the part that has to stay.
  */
 @Composable
 private fun Attribution() {
@@ -213,6 +216,16 @@ private fun Attribution() {
                 R.string.attribution_photographers_line,
                 stringResource(R.string.attribution_photographers),
             ),
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            color = NeutralColors.cancelText,
+        )
+        Text(
+            // A separate line rather than another clause on the Unsplash one:
+            // the two sources cover different categories and carry different
+            // terms, and NASA's material is not licensed so much as simply not
+            // copyrighted.
+            text = stringResource(R.string.attribution_nasa),
             fontSize = 12.sp,
             lineHeight = 16.sp,
             color = NeutralColors.cancelText,

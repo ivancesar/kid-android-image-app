@@ -104,15 +104,24 @@
     </string-array>
 
     <string name="theme_space">Space</string>
+    <!--
+      Like Construction's, these are a roster rather than content: Space has
+      photographs, so nothing displays them. One entry per image, in the order
+      ThemeDef.SPACE_IMAGES lists them.
+    -->
     <string-array name="labels_space">
-        <item>Rocket launching into sky</item>
-        <item>Astronaut floating in space</item>
-        <item>Planet Saturn with its rings</item>
-        <item>Full moon close-up</item>
-        <item>Space shuttle on launch pad</item>
-        <item>Cartoon alien spaceship</item>
-        <item>Stars and a bright galaxy</item>
-        <item>Sun with orange flares</item>
+        <item>Earth from space, blue oceans under white clouds</item>
+        <item>Earth rising over the Moon\'s grey craters</item>
+        <item>The Moon glowing red during an eclipse</item>
+        <item>An eclipse in stages above a field of sunflowers</item>
+        <item>Jupiter\'s swirling orange and white cloud bands</item>
+        <item>Saturn\'s rings lit from behind by the Sun</item>
+        <item>The colourful remains of a star that exploded</item>
+        <item>The Pillars of Creation, towers of dust and gas</item>
+        <item>Bright new stars above a glowing dust cloud</item>
+        <item>A huge red cloud of gas dotted with stars</item>
+        <item>A spiral galaxy with a bright glowing centre</item>
+        <item>Two spiral galaxies swirling past each other</item>
     </string-array>
 
     <string name="theme_trains">Trains</string>
@@ -223,14 +232,20 @@
         <item>Bell peppers in three colors</item>
     </string-array>
     <!--
-      Attribution. The Unsplash License does not require credit, but the
-      photographers get it anyway; the notice itself is what the app owes the
-      source. The names are a proper noun list, so they are not translatable;
-      they are substituted into a line that is, so the separator and the word
-      order stay with the language rather than being glued on in Kotlin.
+      Attribution. One line per source, each naming the category it covers —
+      a single blanket line stopped being true the moment a second theme got
+      its pictures somewhere else.
+
+      The Unsplash License does not require credit and NASA's material is not
+      copyrighted at all, but the photographers get named anyway; the notices
+      themselves are what the app owes its sources. The names are a proper noun
+      list, so they are not translatable; they are substituted into a line that
+      is, so the separator and the word order stay with the language rather
+      than being glued on in Kotlin.
     -->
     <string name="settings_attribution">Attribution</string>
-    <string name="attribution_images">Images provided by Unsplash under their Unsplash Licence</string>
+    <string name="attribution_images">Construction images provided by Unsplash under their Unsplash Licence</string>
     <string name="attribution_photographers_line">Photographs by: %1$s</string>
+    <string name="attribution_nasa">Space images are courtesy of NASA</string>
     <string name="attribution_photographers" translatable="false">Abdul Zreika, Anatol Rurac, Bernd Dittrich, Chandler Cruttenden, David Griffiths, Jamar Penny, Jason Jarrach, Maria Lupan, Michael Kora, Michal Vrba, Nihar Reddy Jangam, Wioletta Płonkowska</string>
 </resources>
