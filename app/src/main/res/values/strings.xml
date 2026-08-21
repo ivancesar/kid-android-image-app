@@ -250,7 +250,7 @@
     -->
     <string name="settings_attribution">Attribution</string>
     <string name="attribution_images">Construction images provided by Unsplash under their Unsplash Licence</string>
-    <string name="attribution_photographers_line">Photographs by: %1$s</string>
+    <string name="attribution_photographers_line">Unsplash photographs by: %1$s</string>
     <string name="attribution_nasa">Space images are courtesy of NASA</string>
     <string name="attribution_photographers" translatable="false">Abdul Zreika, Anatol Rurac, Bernd Dittrich, Chandler Cruttenden, David Griffiths, Jamar Penny, Jason Jarrach, Maria Lupan, Michael Kora, Michal Vrba, Nihar Reddy Jangam, Wioletta Płonkowska</string>
 </resources>
