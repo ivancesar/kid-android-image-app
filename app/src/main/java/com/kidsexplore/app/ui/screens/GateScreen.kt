@@ -110,8 +110,13 @@ fun GateScreen(
             // Compose disallows (infinite height constraint).
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = 280.dp),
+                    // widthIn BEFORE fillMaxWidth. The other order is inert:
+                    // fillMaxWidth passes fixed constraints down, and widthIn
+                    // then clamps its 280dp into [W, W] and discards it — which
+                    // in landscape gave four ~440dp answer buttons spanning the
+                    // display.
+                    .widthIn(max = 280.dp)
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 question.values.chunked(2).forEach { rowValues ->
@@ -204,10 +209,13 @@ fun GateScreen(
  * Wall-clock to match the deadline the ViewModel persists; it already caps that
  * deadline at one lockout from now, so a backwards clock change cannot make
  * this count down from something absurd.
+ *
+ * [nowWallMs] defaults to the real clock but is a parameter so the round-up —
+ * a stated requirement, "shows 1, never 0" — can be tested without waiting.
  */
-private fun secondsUntil(deadlineWallMs: Long): Int {
+internal fun secondsUntil(deadlineWallMs: Long, nowWallMs: Long = System.currentTimeMillis()): Int {
     if (deadlineWallMs <= 0L) return 0
-    val remaining = deadlineWallMs - System.currentTimeMillis()
+    val remaining = deadlineWallMs - nowWallMs
     if (remaining <= 0L) return 0
     return ((remaining + 999L) / 1000L).toInt()
 }

@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kidsexplore.app.AppLocales
 import com.kidsexplore.app.R
+import com.kidsexplore.app.ui.THEME_LIST_TEST_TAG
 import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.ui.theme.NeutralColors
 import com.kidsexplore.app.ui.theme.palette
@@ -74,7 +76,7 @@ fun SettingsScreen(
             color = NeutralColors.labelDark,
         )
         LazyColumn(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).testTag(THEME_LIST_TEST_TAG),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             item(key = "language") {

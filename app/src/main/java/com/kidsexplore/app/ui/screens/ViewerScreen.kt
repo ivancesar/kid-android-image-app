@@ -213,7 +213,7 @@ private fun ImageCard(palette: ThemePalette, currentLabel: String) {
             text = currentLabel,
             fontFamily = FontFamily.Monospace,
             fontSize = 16.sp,
-            color = Color.White,
+            color = palette.labelOnCard,
             textAlign = TextAlign.Center,
             lineHeight = 24.sp,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },

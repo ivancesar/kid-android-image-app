@@ -92,7 +92,6 @@ class ThemeResourcesTest {
     @Test
     fun everyThemeIconInflates() {
         THEME_DEFS.forEach { theme ->
-            assertTrue("${theme.id} has no iconRes", theme.iconRes != 0)
             assertNotNull("${theme.id} icon does not inflate", ContextCompat.getDrawable(context, theme.iconRes))
         }
     }
@@ -124,24 +123,58 @@ class ThemeResourcesTest {
     /**
      * Fallback is silent, so an empty or missing `values-hr` would leave every
      * other assertion passing while the app shipped in English only.
+     *
+     * The policy is written down in the header of `values-hr/strings.xml`:
+     * three keys are deliberately left to fall back, everything else is
+     * translated. This asserts that policy rather than a count, so it does not
+     * break on a rename and does not pass if four translations quietly vanish.
      */
     @Test
-    fun croatianOverridesTheDefaultsRatherThanFallingBackWholesale() {
+    fun croatianTranslatesEverythingExceptTheKeysItDeliberatelyLeaves() {
         val en = localized("en")
         val hr = localized("hr")
-        assertTrue(
-            "settings_title is identical in en and hr - is values-hr present?",
-            en.getString(R.string.settings_title) != hr.getString(R.string.settings_title),
+
+        // Product name and a string that is nothing but placeholders.
+        listOf(R.string.app_name, R.string.home_brand, R.string.gate_question).forEach { id ->
+            val name = resources.getResourceEntryName(id)
+            assertEquals(
+                "$name is meant to fall back to the default, unchanged",
+                en.getString(id),
+                hr.getString(id),
+            )
+        }
+
+        // Everything a parent or child actually reads must differ.
+        val mustTranslate = listOf(
+            R.string.home_title, R.string.viewer_home, R.string.viewer_back,
+            R.string.viewer_next, R.string.gate_eyebrow, R.string.gate_prompt,
+            R.string.gate_wrong, R.string.gate_cancel, R.string.settings_title,
+            R.string.settings_subtitle, R.string.settings_categories,
+            R.string.settings_done, R.string.settings_language,
+            R.string.settings_language_system,
         )
-        val translated = THEME_DEFS.count { en.getString(it.nameRes) != hr.getString(it.nameRes) }
-        // 13 of 14 differ; "Ocean" is the same word in both languages.
-        assertTrue("only $translated of ${THEME_DEFS.size} theme names differ in hr", translated >= 10)
+        mustTranslate.forEach { id ->
+            val name = resources.getResourceEntryName(id)
+            assertTrue(
+                "$name is identical in en and hr - is it missing from values-hr?",
+                en.getString(id) != hr.getString(id),
+            )
+        }
+
+        // Theme names too, except Ocean, which is the same word in both.
+        THEME_DEFS.filterNot { it.id == "ocean" }.forEach { theme ->
+            assertTrue(
+                "theme_${theme.id} is identical in en and hr",
+                en.getString(theme.nameRes) != hr.getString(theme.nameRes),
+            )
+        }
     }
 
     /**
-     * The UI suite resolves expected text from resources, which makes it
-     * locale-independent but blind to the content itself. This pins a few
-     * defaults so an empty or garbled `values/` fails somewhere.
+     * The UI suite resolves every expected string from resources, which makes
+     * it locale-independent and, by the same token, blind to the content: an
+     * empty or garbled `values/` would pass it. This is the anchor — a few
+     * defaults pinned by literal so that cannot happen silently.
      */
     @Test
     fun defaultStringsSayWhatTheyShould() {

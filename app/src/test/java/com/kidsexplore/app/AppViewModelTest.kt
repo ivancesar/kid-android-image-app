@@ -5,7 +5,7 @@ import com.kidsexplore.app.data.ThemeStore
 import com.kidsexplore.app.model.THEME_DEFS
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -53,7 +53,6 @@ class AppViewModelTest {
 
         assertEquals(UiState.Home, vm.uiState)
         assertEquals(THEME_DEFS.size, vm.visibleThemes.size)
-        assertNull(vm.activeTheme)
     }
 
     @Test
@@ -105,7 +104,24 @@ class AppViewModelTest {
         vm.goHome()
 
         assertEquals(UiState.Home, vm.uiState)
-        assertNull(vm.activeTheme)
+    }
+
+    /**
+     * Reopening a theme starts from its first image again, rather than where
+     * the child left it. This was only covered by the end-to-end UI journey
+     * that was deleted as redundant; it is a ViewModel fact, so it belongs
+     * here, where it costs nothing to assert.
+     */
+    @Test
+    fun reopeningAThemeStartsFromItsFirstImageAgain() {
+        val vm = newViewModel()
+        vm.openTheme("space")
+        vm.next()
+        assertEquals(UiState.Viewer("space", 1), vm.uiState)
+
+        vm.goHome()
+        vm.openTheme("space")
+        assertEquals(UiState.Viewer("space", 0), vm.uiState)
     }
 
     // ------------------------------------------------------------ the gate
@@ -245,7 +261,7 @@ class AppViewModelTest {
         val restarted = newViewModel(store = FakeThemeStore(initialDisabled = setOf("farm")))
 
         assertTrue(restarted.visibleThemes.none { it.id == "farm" })
-        assertTrue(restarted.isThemeEnabled("cars"))
+        assertTrue("cars" !in restarted.disabledThemeIds)
     }
 
     /**
@@ -269,7 +285,7 @@ class AppViewModelTest {
         assertSame("navigation must not reallocate", beforeNavigation, vm.visibleThemes)
 
         vm.toggleThemeEnabled("cars")
-        assertNotEquals("a real change must be picked up", beforeNavigation, vm.visibleThemes)
+        assertNotSame("a real change must reallocate", beforeNavigation, vm.visibleThemes)
         assertTrue(vm.visibleThemes.none { it.id == "cars" })
     }
 

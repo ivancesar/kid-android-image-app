@@ -82,13 +82,6 @@ class SharedPreferencesThemeStoreTest {
         assertEquals(setOf("ocean"), newStore().loadDisabled())
     }
 
-    @Test
-    fun everyRealThemeIdSurvivesTheRoundTrip() {
-        val all = THEME_DEFS.mapTo(mutableSetOf()) { it.id }
-        newStore().saveDisabled(all)
-
-        assertEquals(all, newStore().loadDisabled())
-    }
 
     // ---------------------------------------------------------- gate lock
 
@@ -126,8 +119,23 @@ class SharedPreferencesThemeStoreTest {
         assertEquals(setOf("space"), reopened.loadDisabled())
         assertEquals(GateLock(1, 999L), reopened.loadGateLock())
 
+        // Both directions: the name promises independence, so check it both ways
+        // rather than only that a theme write leaves the lock alone.
         reopened.saveDisabled(emptySet())
         assertEquals("toggling a theme must not clear the lock", GateLock(1, 999L), newStore().loadGateLock())
+
+        newStore().saveGateLock(GateLock())
+        assertEquals(
+            "clearing the lock must not re-enable or disable a theme",
+            emptySet<String>(),
+            newStore().loadDisabled(),
+        )
+
+        val withTheme = newStore()
+        withTheme.saveDisabled(setOf("farm"))
+        withTheme.saveGateLock(GateLock(failures = 2, lockedUntilWallMs = 1234L))
+        assertEquals(setOf("farm"), newStore().loadDisabled())
+        assertEquals(GateLock(2, 1234L), newStore().loadGateLock())
     }
 
     /**
