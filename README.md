@@ -46,7 +46,7 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - The same labelled "◀ Back" / "▶ Next" pill buttons are used at every size, so the controls look and behave identically regardless of how the device is held. The arrows and the swipe direction mirror in an RTL locale, where the sequence advances right-to-left. Which arrangement is used depends on the window's width, not its orientation — the breakpoint is 600dp:
   - **Narrow (under 600dp)**: the card fills the remaining space above a button row, with Back/Next side by side underneath it.
   - **Wide (600dp and up)**: Back/Next flank the card in a single row — the card sits between them rather than under them — and the row fills the full screen height (down to, but not under, the status bar), so the image gets as much vertical room as the display allows. The Home button floats over the top-left corner of the image instead of sitting in its own header row, since there's no header row to spare the height for.
-- Either way, Back/Next cycle through the theme's items, wrapping around at both ends. Construction has 14 and Space 12; every other theme has 8. The placeholder card announces its label to a screen reader as a live region; a photograph announces nothing (see [On images](#on-images)).
+- Either way, Back/Next cycle through the theme's items, wrapping around at both ends. Construction has 14 and Space 16; every other theme has 8. The placeholder card announces its label to a screen reader as a live region; a photograph announces nothing (see [On images](#on-images)).
 - The card also responds to a horizontal swipe — swipe left for next, right for back — as an alternative to the buttons, in both orientations.
 
 ### Parental Gate ("Grown-ups only")
@@ -71,7 +71,7 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 
 ## Themes
 
-Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a name and a set of item labels. Construction carries 14, Space 12; the rest carry 8. `ThemeDef` holds only ids, resource ids, a list of image drawables and a `labelCount`, which is what keeps `AppViewModel` free of Android: it pages an index, the UI resolves the text. `ThemeResourcesTest` asserts each `labelCount` matches both its label array and its image list, since nothing else in the build ties those files together.
+Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a name and a set of item labels. Construction carries 14, Space 16; the rest carry 8. `ThemeDef` holds only ids, resource ids, a list of image drawables and a `labelCount`, which is what keeps `AppViewModel` free of Android: it pages an index, the UI resolves the text. `ThemeResourcesTest` asserts each `labelCount` matches both its label array and its image list, since nothing else in the build ties those files together.
 
 | Theme | id | Hue | Items | Artwork |
 |---|---|---|---|---|
@@ -88,7 +88,7 @@ Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a 
 | Forest | `forest` | 150 | 8 | placeholder |
 | Fruit | `fruit` | 100 | 8 | placeholder |
 | Vegetables | `vegetable` | 125 | 8 | placeholder |
-| Space | `space` | 250 | 12 | photographs (NASA) |
+| Space | `space` | 250 | 16 | photographs (NASA) |
 
 Names shown are the English ones; a theme's display name and its 8 labels are `@StringRes`/`@ArrayRes` ids, so both translate. See **Languages** below.
 
@@ -154,7 +154,7 @@ A theme either ships photographs or it does not, and each one decides for itself
 | Theme | Images | Files | Source |
 |---|---|---|---|
 | Construction | 14 | `img_construction_01.jpg` … `_14.jpg` | [Unsplash](https://unsplash.com), under the [Unsplash License](https://unsplash.com/license) |
-| Space | 12 | `img_space_01.jpg` … `_12.jpg` | [NASA](https://www.nasa.gov/), public domain |
+| Space | 16 | `img_space_01.jpg` … `_16.jpg` | [NASA](https://www.nasa.gov/), public domain |
 
 They live in `res/drawable-nodpi/` and are listed, in display order, by `CONSTRUCTION_IMAGES` and `SPACE_IMAGES` in `ThemeDef.kt`. The two counts differ on purpose — a theme carries however many good images it has — which is why `labelCount` is per theme. **Parent Settings → Attribution** carries a notice per source, each naming the category it covers, plus the Unsplash photographers' names.
 
@@ -174,7 +174,7 @@ The practical cost is that nothing in the semantics tree says *which* photograph
    sips -s format jpeg -s formatOptions 55 --resampleHeightWidthMax 1280 in.jpg --out out.jpg
    ```
 
-   That lands each file around 30–300 KB. Construction's 14 come to 2.6 MB and Space's 12 to 1.5 MB; the release APK is 5.5 MB with both, against 1.4 MB with neither. Skip the resample when a source is already under 1280px — it would only upscale it.
+   That lands each file around 30–300 KB. Construction's 14 come to 2.6 MB and Space's 16 to 1.8 MB; the release APK is 5.8 MB with both, against 1.4 MB with neither. Skip the resample when a source is already under 1280px — it would only upscale it.
 2. Drop them in `res/drawable-nodpi/` as `img_<id>_NN.jpg`, numbered from `01`. **`-nodpi` matters**: a drawable in a plain `drawable/` folder is treated as mdpi artwork and upscaled by the device's density, which decodes a 1280px JPEG into a bitmap several times that size for nothing. `everyPhotographIsDensityIndependent` fails if one lands anywhere else.
 3. List them in `ThemeDef.kt` and set the theme's `labelCount` from the list's size.
 4. Keep that theme's `labels_<id>` array one entry per image, in the same order. It stops being displayed the moment the theme has artwork, but `labelCount` is still checked against it, and it is the only written record of which photograph sits at which index. Translations of it can be dropped — nothing shows them.

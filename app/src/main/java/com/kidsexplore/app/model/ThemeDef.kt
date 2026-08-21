@@ -88,8 +88,8 @@ private val CONSTRUCTION_IMAGES = listOf(
  * Space, photographed by spacecraft rather than by anyone.
  *
  * Public-domain NASA imagery, credited in Parent Settings — see
- * `R.string.attribution_nasa`. Twelve, because that is how many were picked;
- * nothing expects two photographed themes to agree on a count.
+ * `R.string.attribution_nasa`. Sixteen, because that is how many were
+ * picked; nothing expects two photographed themes to agree on a count.
  */
 private val SPACE_IMAGES = listOf(
     R.drawable.img_space_01,
@@ -104,6 +104,10 @@ private val SPACE_IMAGES = listOf(
     R.drawable.img_space_10,
     R.drawable.img_space_11,
     R.drawable.img_space_12,
+    R.drawable.img_space_13,
+    R.drawable.img_space_14,
+    R.drawable.img_space_15,
+    R.drawable.img_space_16,
 )
 
 /**
