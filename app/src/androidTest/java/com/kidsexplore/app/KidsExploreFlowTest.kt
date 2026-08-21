@@ -150,27 +150,32 @@ class KidsExploreFlowTest {
     }
 
     /**
-     * Construction is the theme with real photography. Paging has to reach all
-     * fourteen and wrap — the count differs from every other theme's eight,
-     * and it is `labelCount` the ViewModel wraps on.
+     * Paging a theme that ships photographs has to reach every one and wrap.
+     * The count is per theme — the photographed one has fourteen where the
+     * placeholder themes have eight — and it is `labelCount` the ViewModel
+     * wraps on.
      *
      * The photographs carry no description, so the test tag naming the
      * drawable is the only thing that says which one is up. What matters here
      * is exactly that: the expected image loaded at the expected step, not
      * what is pictured in it.
+     *
+     * The theme is resolved by having artwork rather than named, so a second
+     * photographed theme needs no edit here.
      */
     @Test
     fun nextButtonWalksEveryPhotographAndWrapsAround() {
-        val construction = THEME_DEFS.first { it.id == "construction" }
-        compose.onNodeWithText(themeNamed("construction")).performClick()
+        val photoTheme = THEME_DEFS.first { it.imageRes.isNotEmpty() }
+        scrollTo(photoTheme.displayName())
+        compose.onNodeWithText(photoTheme.displayName()).performClick()
 
-        construction.imageRes.forEachIndexed { i, image ->
+        photoTheme.imageRes.forEachIndexed { i, image ->
             compose.onNodeWithTag(viewerImageTestTag(image)).assertIsDisplayed()
             assertEquals("step $i", i, (state() as UiState.Viewer).imageIndex)
             compose.onNodeWithText(str(R.string.viewer_next)).performClick()
         }
         // wrapped back to the first photograph
-        compose.onNodeWithTag(viewerImageTestTag(construction.imageRes.first()))
+        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes.first()))
             .assertIsDisplayed()
     }
 

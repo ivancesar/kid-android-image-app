@@ -54,10 +54,18 @@ class ViewerLayoutTest {
     private val cars = THEME_DEFS.first { it.id == "cars" }
     private val carLabels by lazy { resources.getStringArray(cars.labelsRes).toList() }
 
-    /** The theme that ships photographs, where the card is an image, not text. */
-    private val construction = THEME_DEFS.first { it.id == "construction" }
-    private val constructionLabels by lazy {
-        resources.getStringArray(construction.labelsRes).toList()
+    /**
+     * A theme that ships photographs, where the card is an image and not text.
+     *
+     * Resolved by having artwork rather than named, so a second photographed
+     * theme needs no edit here and these keep passing if the set of
+     * photographed themes changes underneath them.
+     * `atLeastOneThemeShipsPhotographs` is what makes an empty roster fail
+     * loudly rather than as a confusing `NoSuchElementException` in here.
+     */
+    private val photoTheme = THEME_DEFS.first { it.imageRes.isNotEmpty() }
+    private val photoLabels by lazy {
+        resources.getStringArray(photoTheme.labelsRes).toList()
     }
 
     /** Comfortably below the 600dp breakpoint — a phone held upright. */
@@ -227,13 +235,13 @@ class ViewerLayoutTest {
 
     // -------------------------------------------------------- photographs
 
-    private fun setConstruction(size: DpSize, index: Int = 0, onNext: () -> Unit = {}) =
+    private fun setPhotoTheme(size: DpSize, index: Int = 0, onNext: () -> Unit = {}) =
         setViewer(
             size,
             onNext = onNext,
-            theme = construction,
-            label = constructionLabels[index],
-            image = construction.imageRes[index],
+            theme = photoTheme,
+            label = photoLabels[index],
+            image = photoTheme.imageRes[index],
         )
 
     /**
@@ -244,11 +252,11 @@ class ViewerLayoutTest {
      */
     @Test
     fun aPhotographShowsNoLabelInAnyForm() {
-        setConstruction(narrow)
+        setPhotoTheme(narrow)
 
-        compose.onNodeWithTag(viewerImageTestTag(construction.imageRes[0])).assertIsDisplayed()
-        compose.onNodeWithText(constructionLabels[0]).assertDoesNotExist()
-        compose.onNodeWithContentDescription(constructionLabels[0]).assertDoesNotExist()
+        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[0])).assertIsDisplayed()
+        compose.onNodeWithText(photoLabels[0]).assertDoesNotExist()
+        compose.onNodeWithContentDescription(photoLabels[0]).assertDoesNotExist()
     }
 
     /**
@@ -259,22 +267,22 @@ class ViewerLayoutTest {
     @Test
     fun theViewerDrawsThePhotographItWasGiven() {
         val index = 6
-        setConstruction(narrow, index = index)
+        setPhotoTheme(narrow, index = index)
 
-        compose.onNodeWithTag(viewerImageTestTag(construction.imageRes[index]))
+        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[index]))
             .assertIsDisplayed()
-        compose.onNodeWithTag(viewerImageTestTag(construction.imageRes[0]))
+        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[0]))
             .assertDoesNotExist()
     }
 
     /** The wide layout has to hold for a photograph exactly as it does for the card. */
     @Test
     fun wideWindowPutsTheButtonsBesideAPhotographToo() {
-        setConstruction(wide)
+        setPhotoTheme(wide)
 
         val back = compose.onNodeWithText(str(R.string.viewer_back)).getUnclippedBoundsInRoot()
         val next = compose.onNodeWithText(str(R.string.viewer_next)).getUnclippedBoundsInRoot()
-        val image = compose.onNodeWithTag(viewerImageTestTag(construction.imageRes[0])).getUnclippedBoundsInRoot()
+        val image = compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[0])).getUnclippedBoundsInRoot()
 
         assert(back.right <= image.left) { "Back ($back) overlaps the photo ($image)" }
         assert(next.left >= image.right) { "Next ($next) overlaps the photo ($image)" }
@@ -287,9 +295,9 @@ class ViewerLayoutTest {
     @Test
     fun swipingAPhotographStillPages() {
         var next = 0
-        setConstruction(narrow, onNext = { next++ })
+        setPhotoTheme(narrow, onNext = { next++ })
 
-        compose.onNodeWithTag(viewerImageTestTag(construction.imageRes[0])).performTouchInput { swipeLeft() }
+        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[0])).performTouchInput { swipeLeft() }
 
         compose.runOnIdle { assertEquals(1, next) }
     }

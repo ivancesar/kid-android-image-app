@@ -149,9 +149,11 @@ Card names wrap to two lines and ellipsize only past that, so a long name costs 
 
 ### On images
 
-**Construction** is the one theme with real photography: 14 JPEGs in `res/drawable-nodpi/`, named `img_construction_01.jpg` through `_14.jpg` and listed in that order by `CONSTRUCTION_IMAGES` in `ThemeDef.kt`. They come from [Unsplash](https://unsplash.com) under the [Unsplash License](https://unsplash.com/license), and the app carries the notice and the photographers' names in **Parent Settings → Attribution**.
+A theme either ships photographs or it does not, and each one decides for itself. **Construction** is the first that does: 14 JPEGs in `res/drawable-nodpi/`, named `img_construction_01.jpg` through `_14.jpg` and listed in that order by `CONSTRUCTION_IMAGES` in `ThemeDef.kt`. They come from [Unsplash](https://unsplash.com) under the [Unsplash License](https://unsplash.com/license), and the app carries the notice and the photographers' names in **Parent Settings → Attribution**.
 
-Every other theme still shows the placeholder: a short text label (e.g. "Red sports car, side view") on a themed striped card. Those labels are stand-in text for artwork that does not exist yet.
+The others still show the placeholder: a short text label (e.g. "Red sports car, side view") on a themed striped card. Those labels are stand-in text for artwork that does not exist yet.
+
+Nothing in the code or the tests names Construction as *the* photographed theme. `ThemeResourcesTest` asserts only that at least one theme has artwork, and the UI tests resolve their fixture with `THEME_DEFS.first { it.imageRes.isNotEmpty() }`, so photographing a second theme is the four steps below and nothing else.
 
 Construction still has a `labels_construction` array, but nothing displays it. **A photograph is shown undescribed** — no caption over it, no `contentDescription` behind it. This app is for looking at pictures, its labels were written as artwork stand-ins rather than as prose worth reading aloud, and a screen reader announcing "Yellow digger with a big scooping bucket" adds nothing for the child holding the phone. The array survives as the roster of what the theme holds: one entry per image, in the order `CONSTRUCTION_IMAGES` lists them, which is what `ThemeResourcesTest` counts `labelCount` against, and a note to the next maintainer about which photograph is which.
 
@@ -246,7 +248,7 @@ Reports land in `app/build/reports/tests/testDebugUnitTest/index.html` and `app/
 | `ViewerLayoutTest` | `androidTest` | The Viewer's layout at both sides of the 600dp breakpoint, using `DeviceConfigurationOverride(ForcedSize(...))` so a window wider than the test device still renders on screen. Asserts the buttons actually sit beside the image when wide and below it when narrow, rather than only that a branch was taken — and that both the button order and the swipe direction mirror under an RTL override. Covers both card kinds: that a photograph shows its label in no form at all, that it does not swallow the swipe, and that the wide layout holds for it too. |
 | `SettingsBehaviourTest` | `androidTest` | The language dropdown, the empty Home state, and the attribution notice at the foot of the settings list. |
 | `SharedPreferencesThemeStoreTest` | `androidTest` | The real store against real preferences: themes and the gate lock round-tripping through a *second* store instance, the two keys not treading on each other, ids for removed themes being pruned on read, and a lockout surviving a relaunch through actual SharedPreferences rather than a fake. |
-| `ThemeResourcesTest` | `androidTest` | Holds `ThemeDef`, `strings.xml` and the bundled photographs together: every theme's `labelCount` matches the length of its string array *and* the length of its image list, names and labels are non-blank, ids and names are unique, and every photograph is named after its theme and position, decodes, and lives in `drawable-nodpi`. |
+| `ThemeResourcesTest` | `androidTest` | Holds `ThemeDef`, `strings.xml` and the bundled photographs together: every theme's `labelCount` matches the length of its string array *and* the length of its image list, names and labels are non-blank, ids and names are unique, at least one theme has artwork, and every photograph is named after its theme and position, decodes, and lives in `drawable-nodpi`. |
 
 To run a single instrumented class:
 

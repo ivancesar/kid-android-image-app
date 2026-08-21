@@ -158,12 +158,23 @@ class ThemeResourcesTest {
         }
     }
 
-    /** Construction is the theme that has artwork; nothing else does yet. */
+    /**
+     * Some theme has artwork.
+     *
+     * This used to name Construction as the only one, which was true when it
+     * was the only one and became a chore the moment a second theme was being
+     * photographed. What is worth pinning is not the roster but that the
+     * roster is not empty: the Viewer's photograph path, and every test that
+     * exercises it, resolves its fixture with
+     * `first { it.imageRes.isNotEmpty() }`, and all of it would go quietly
+     * vacuous if the last theme lost its images. Which theme, and how many,
+     * is a content decision the other assertions here already police.
+     */
     @Test
-    fun constructionIsTheThemeThatShipsPhotographs() {
-        assertEquals(
-            listOf("construction"),
-            THEME_DEFS.filter { it.imageRes.isNotEmpty() }.map { it.id },
+    fun atLeastOneThemeShipsPhotographs() {
+        assertTrue(
+            "no theme ships photographs - the Viewer's image path is untested",
+            THEME_DEFS.any { it.imageRes.isNotEmpty() },
         )
     }
 
