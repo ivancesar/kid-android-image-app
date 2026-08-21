@@ -7,6 +7,7 @@ import androidx.compose.ui.test.then
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kidsexplore.app.model.THEME_DEFS
+import com.kidsexplore.app.model.ThemeDef
 import com.kidsexplore.app.ui.screens.ViewerScreen
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
 import org.junit.Assert.assertEquals
@@ -50,6 +52,12 @@ class ViewerLayoutTest {
     private val cars = THEME_DEFS.first { it.id == "cars" }
     private val carLabels by lazy { resources.getStringArray(cars.labelsRes).toList() }
 
+    /** The theme that ships photographs, where the card is an image, not text. */
+    private val construction = THEME_DEFS.first { it.id == "construction" }
+    private val constructionLabels by lazy {
+        resources.getStringArray(construction.labelsRes).toList()
+    }
+
     /** Comfortably below the 600dp breakpoint — a phone held upright. */
     private val narrow = DpSize(400.dp, 800.dp)
 
@@ -62,6 +70,9 @@ class ViewerLayoutTest {
         onNext: () -> Unit = {},
         onPrev: () -> Unit = {},
         onHome: () -> Unit = {},
+        theme: ThemeDef = cars,
+        label: String = carLabels[0],
+        image: Int? = null,
     ) {
         compose.setContent {
             KidsExploreTheme {
@@ -74,11 +85,12 @@ class ViewerLayoutTest {
                         DeviceConfigurationOverride.LayoutDirectionOverride(direction)
                 ) {
                     ViewerScreen(
-                        theme = cars,
-                        currentLabel = carLabels[0],
+                        theme = theme,
+                        currentLabel = label,
                         onHome = onHome,
                         onNext = onNext,
                         onPrev = onPrev,
+                        currentImage = image,
                     )
                 }
             }
@@ -209,5 +221,58 @@ class ViewerLayoutTest {
             assertEquals("swiping left in LTR advances", 1, next)
             assertEquals(0, prev)
         }
+    }
+
+    // -------------------------------------------------------- photographs
+
+    private fun setConstruction(size: DpSize, index: Int = 0, onNext: () -> Unit = {}) =
+        setViewer(
+            size,
+            onNext = onNext,
+            theme = construction,
+            label = constructionLabels[index],
+            image = construction.imageRes[index],
+        )
+
+    /**
+     * The label stops being something a child reads and becomes the
+     * photograph's description — the picture is the content now, and drawing
+     * a caption over it would be drawing the answer over the question.
+     */
+    @Test
+    fun aPhotographCarriesItsLabelAsADescriptionRatherThanAsText() {
+        setConstruction(narrow)
+
+        compose.onNodeWithText(constructionLabels[0]).assertDoesNotExist()
+        compose.onNodeWithContentDescription(constructionLabels[0]).assertIsDisplayed()
+    }
+
+    /** The wide layout has to hold for a photograph exactly as it does for the card. */
+    @Test
+    fun wideWindowPutsTheButtonsBesideAPhotographToo() {
+        setConstruction(wide)
+
+        val back = compose.onNodeWithText(str(R.string.viewer_back)).getUnclippedBoundsInRoot()
+        val next = compose.onNodeWithText(str(R.string.viewer_next)).getUnclippedBoundsInRoot()
+        val image = compose.onNodeWithContentDescription(constructionLabels[0])
+            .getUnclippedBoundsInRoot()
+
+        assert(back.right <= image.left) { "Back ($back) overlaps the photo ($image)" }
+        assert(next.left >= image.right) { "Next ($next) overlaps the photo ($image)" }
+    }
+
+    /**
+     * The swipe modifier sits on the Box around the card, so a photograph
+     * filling that Box edge to edge must not swallow the gesture.
+     */
+    @Test
+    fun swipingAPhotographStillPages() {
+        var next = 0
+        setConstruction(narrow, onNext = { next++ })
+
+        compose.onNodeWithContentDescription(constructionLabels[0])
+            .performTouchInput { swipeLeft() }
+
+        compose.runOnIdle { assertEquals(1, next) }
     }
 }

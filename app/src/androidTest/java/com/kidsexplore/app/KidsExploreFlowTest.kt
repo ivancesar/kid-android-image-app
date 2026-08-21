@@ -147,6 +147,25 @@ class KidsExploreFlowTest {
         compose.onNodeWithText(carLabels[0]).assertIsDisplayed()
     }
 
+    /**
+     * Construction is the theme with real photography, so its Viewer shows an
+     * image whose description is the item's label rather than the label as
+     * text. Paging has to reach all fourteen and wrap — the count differs from
+     * every other theme's eight, and it is `labelCount` the ViewModel wraps on.
+     */
+    @Test
+    fun nextButtonWalksEveryPhotographAndWrapsAround() {
+        val construction = THEME_DEFS.first { it.id == "construction" }
+        val labels = construction.labels()
+        compose.onNodeWithText(themeNamed("construction")).performClick()
+
+        labels.forEach { expected ->
+            compose.onNodeWithContentDescription(expected).assertIsDisplayed()
+            compose.onNodeWithText(str(R.string.viewer_next)).performClick()
+        }
+        compose.onNodeWithContentDescription(labels[0]).assertIsDisplayed()
+    }
+
     @Test
     fun homeButtonReturnsFromTheViewer() {
         compose.onNodeWithText(themeNamed("cars")).performClick()

@@ -84,6 +84,11 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
                 onHome = viewModel::goHome,
                 onNext = viewModel::next,
                 onPrev = viewModel::prev,
+                // getOrNull, not [], for the same reason the labels are
+                // coerced: a theme whose photographs and labelCount drifted
+                // apart should fall back to the placeholder card, not crash.
+                // ThemeResourcesTest is what makes that drift loud.
+                currentImage = theme.imageRes.getOrNull(state.imageIndex),
             )
         }
 

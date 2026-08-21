@@ -42,9 +42,52 @@ data class ThemeDef(
      * identical so adding a theme is dropping in an SVG and adding an entry.
      */
     @param:DrawableRes val iconRes: Int,
+    /**
+     * The theme's photographs, in the same order as [labelsRes] — item *n*'s
+     * label describes image *n*, which is also what the Viewer reads out for
+     * it. Empty for a theme whose artwork has not been shot yet; those still
+     * render the striped placeholder card.
+     *
+     * Photographs, unlike names and labels, are the same in every language, so
+     * they are referenced here rather than through a per-locale typed array.
+     * A non-empty list must be exactly [labelCount] long; `ThemeResourcesTest`
+     * asserts that, for the same reason it asserts the label array's length.
+     */
+    val imageRes: List<Int> = emptyList(),
 )
 
-/** Every theme ships this many items; [ThemeDef.labelCount] records it per theme. */
+/**
+ * Construction, the first theme with real photography.
+ *
+ * Fourteen rather than the [LABELS_PER_THEME] eight the placeholder themes
+ * carry: the set is however many usable photographs there are, and
+ * [ThemeDef.labelCount] is per-theme precisely so it can say so.
+ *
+ * Sources are Unsplash, under the Unsplash License; the photographers are
+ * credited in Parent Settings (`R.string.attribution_photographers`).
+ */
+private val CONSTRUCTION_IMAGES = listOf(
+    R.drawable.img_construction_01,
+    R.drawable.img_construction_02,
+    R.drawable.img_construction_03,
+    R.drawable.img_construction_04,
+    R.drawable.img_construction_05,
+    R.drawable.img_construction_06,
+    R.drawable.img_construction_07,
+    R.drawable.img_construction_08,
+    R.drawable.img_construction_09,
+    R.drawable.img_construction_10,
+    R.drawable.img_construction_11,
+    R.drawable.img_construction_12,
+    R.drawable.img_construction_13,
+    R.drawable.img_construction_14,
+)
+
+/**
+ * How many items a theme ships while its content is still placeholder labels.
+ * A theme with photographs carries as many as it has — see
+ * [CONSTRUCTION_IMAGES] — which is why [ThemeDef.labelCount] is per theme.
+ */
 private const val LABELS_PER_THEME = 8
 
 val THEME_DEFS: List<ThemeDef> = listOf(
@@ -55,7 +98,8 @@ val THEME_DEFS: List<ThemeDef> = listOf(
     ),
     ThemeDef(
         id = "construction", nameRes = R.string.theme_construction, labelsRes = R.array.labels_construction,
-        labelCount = LABELS_PER_THEME, hue = 45f, iconRes = R.drawable.ic_theme_construction,
+        labelCount = CONSTRUCTION_IMAGES.size, hue = 45f, iconRes = R.drawable.ic_theme_construction,
+        imageRes = CONSTRUCTION_IMAGES,
     ),
     ThemeDef(
         id = "trains", nameRes = R.string.theme_trains, labelsRes = R.array.labels_trains,

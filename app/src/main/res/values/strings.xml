@@ -54,15 +54,28 @@
     </string-array>
 
     <string name="theme_construction">Construction</string>
+    <!--
+      Construction is the one theme with real photographs, so these are not
+      stand-in text: each item describes the picture at the same position in
+      ThemeDef.CONSTRUCTION_IMAGES, and is what TalkBack reads out for it.
+      Reordering the array without reordering the images silently mislabels
+      every photo, and nothing in the build can catch that.
+    -->
     <string-array name="labels_construction">
-        <item>Yellow bulldozer pushing dirt</item>
-        <item>Crane lifting a steel beam</item>
-        <item>Excavator digging a hole</item>
-        <item>Cement mixer truck</item>
-        <item>Dump truck full of dirt</item>
-        <item>Road roller flattening asphalt</item>
-        <item>Yellow forklift with pallet</item>
-        <item>Backhoe loader digging</item>
+        <item>Yellow digger with a big scooping bucket</item>
+        <item>Yellow digger parked under a cloudy blue sky</item>
+        <item>Digger tipping dirt into a dump truck</item>
+        <item>Big dump truck waiting beside a digger</item>
+        <item>Yellow road roller squashing the gravel flat</item>
+        <item>Orange road roller and a yellow road grader</item>
+        <item>Red loader with tracks and a wide front bucket</item>
+        <item>Tall yellow tower crane above the rooftops</item>
+        <item>A digger and a bulldozer building a new road</item>
+        <item>Red digger scooping earth beside a big building</item>
+        <item>Yellow digger working next to the railway tracks</item>
+        <item>Diggers lined up in the muddy ground</item>
+        <item>Road roller and paving machine working at night</item>
+        <item>Orange digger on top of a hill at sunset</item>
     </string-array>
 
     <string name="theme_animals">Animals</string>
@@ -208,4 +221,14 @@
         <item>Potatoes in a wooden crate</item>
         <item>Bell peppers in three colors</item>
     </string-array>
+    <!--
+      Attribution. The Unsplash License does not require credit, but the
+      photographers get it anyway; the notice itself is what the app owes the
+      source. The names are a proper noun list, so they are not translatable —
+      only the two lines around them are.
+    -->
+    <string name="settings_attribution">Attribution</string>
+    <string name="attribution_images">Images provided by Unsplash under their Unsplash Licence</string>
+    <string name="attribution_photographers_label">Photographs by</string>
+    <string name="attribution_photographers" translatable="false">Abdul Zreika, Anatol Rurac, Bernd Dittrich, Chandler Cruttenden, David Griffiths, Jamar Penny, Jason Jarrach, Maria Lupan, Michael Kora, Michal Vrba, Nihar Reddy Jangam, Wioletta Płonkowska</string>
 </resources>
