@@ -1,8 +1,10 @@
 package com.kidsexplore.app
 
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.filterToOne
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -86,14 +88,16 @@ class SettingsBehaviourTest {
         var picked: String? = null
         settings(current = "hr", onPick = { picked = it })
 
-        // The row and the menu item both read "Hrvatski", so the first click
-        // only opens the menu. Clicking the row again would re-open it and
-        // never reach SettingsScreen's `if (tag != current)` guard — address
-        // the menu entry specifically.
+        // The row and the menu entry both read "Hrvatski", so the first click
+        // only opens the menu; clicking the row again would re-open it and
+        // never reach SettingsScreen's `if (tag != current)` guard. Selected by
+        // being inside the popup rather than by index — traversal order between
+        // the composition and the popup is not guaranteed, and an index that
+        // flipped would quietly make this test vacuous again.
         compose.onNodeWithText("Hrvatski").performClick()
-        val entries = compose.onAllNodesWithText("Hrvatski")
-        entries.assertCountEquals(2)
-        entries[1].performClick()
+        compose.onAllNodesWithText("Hrvatski")
+            .filterToOne(hasAnyAncestor(isPopup()))
+            .performClick()
 
         assertNull("re-picking the current language must not re-apply it", picked)
     }

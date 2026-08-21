@@ -69,9 +69,10 @@ data class ThemePalette(
      * Text drawn on [cardBg] or [stripe].
      *
      * White reads as the obvious choice on these saturated fills, but it only
-     * reaches 2.2–2.7:1 against [cardBg] (2.7–3.4:1 against the lighter
-     * [stripe]) — under WCAG AA's 3:1 floor for large text on all fourteen
-     * hues, and the Viewer's item label is body-sized, which wants 4.5:1. This
+     * reaches 2.2–2.7:1 against [cardBg] — under WCAG AA's 3:1 floor for large
+     * text on all fourteen hues — and 2.7–3.4:1 against the lighter [stripe],
+     * which clears 3:1 on some hues but never the 4.5:1 the Viewer's
+     * body-sized item label actually needs. This
      * tone is derived from the same hue rather than picked by hand, and clears
      * 4.5:1 on both surfaces (worst case 4.73:1, against the stripe). It also
      * sits closer to the black line art in the icons.

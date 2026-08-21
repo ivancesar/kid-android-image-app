@@ -106,6 +106,24 @@ class AppViewModelTest {
         assertEquals(UiState.Home, vm.uiState)
     }
 
+    /**
+     * Reopening a theme starts from its first image again, rather than where
+     * the child left it. This was only covered by the end-to-end UI journey
+     * that was deleted as redundant; it is a ViewModel fact, so it belongs
+     * here, where it costs nothing to assert.
+     */
+    @Test
+    fun reopeningAThemeStartsFromItsFirstImageAgain() {
+        val vm = newViewModel()
+        vm.openTheme("space")
+        vm.next()
+        assertEquals(UiState.Viewer("space", 1), vm.uiState)
+
+        vm.goHome()
+        vm.openTheme("space")
+        assertEquals(UiState.Viewer("space", 0), vm.uiState)
+    }
+
     // ------------------------------------------------------------ the gate
 
     @Test
