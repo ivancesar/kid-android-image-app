@@ -38,6 +38,20 @@ class AppLocalesTest {
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
     }
 
+    /**
+     * The test above pins en and hr by literal. This is what catches a third
+     * language whose tag is malformed: [AppLocales.endonym] would hand back the
+     * raw tag, and the picker would offer "de-XYZ" as a language name.
+     */
+    @Test
+    fun everySupportedTagResolvesToARealDisplayName() {
+        AppLocales.SUPPORTED.forEach { tag ->
+            val name = AppLocales.endonym(tag)
+            assertTrue("$tag has no display name", name.isNotBlank())
+            assertFalse("$tag fell back to the raw tag", name.equals(tag, ignoreCase = true))
+        }
+    }
+
     @Test
     fun everyOfferedChoiceSurvivesTheRoundTrip() {
         (listOf(AppLocales.SYSTEM) + AppLocales.SUPPORTED).forEach { tag ->

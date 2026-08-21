@@ -169,4 +169,18 @@ class ThemeResourcesTest {
             )
         }
     }
+
+    /**
+     * The UI suite resolves every expected string from resources, which makes
+     * it locale-independent and, by the same token, blind to the content: an
+     * empty or garbled `values/` would pass it. This is the anchor — a few
+     * defaults pinned by literal so that cannot happen silently.
+     */
+    @Test
+    fun defaultStringsSayWhatTheyShould() {
+        val en = localized("en")
+        assertEquals("Cars", en.getString(THEME_DEFS.first { it.id == "cars" }.nameRes))
+        assertEquals("Done", en.getString(R.string.settings_done))
+        assertEquals("Pick something to look at!", en.getString(R.string.home_title))
+    }
 }

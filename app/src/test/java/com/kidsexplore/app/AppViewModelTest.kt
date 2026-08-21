@@ -6,7 +6,6 @@ import com.kidsexplore.app.model.THEME_DEFS
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotSame
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -54,7 +53,6 @@ class AppViewModelTest {
 
         assertEquals(UiState.Home, vm.uiState)
         assertEquals(THEME_DEFS.size, vm.visibleThemes.size)
-        assertTrue(vm.uiState !is UiState.Viewer)
     }
 
     @Test
@@ -106,7 +104,6 @@ class AppViewModelTest {
         vm.goHome()
 
         assertEquals(UiState.Home, vm.uiState)
-        assertTrue(vm.uiState !is UiState.Viewer)
     }
 
     // ------------------------------------------------------------ the gate

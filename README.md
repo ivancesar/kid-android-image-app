@@ -124,7 +124,7 @@ Croatian deliberately translates only part of the set. Keys it leaves out fall b
 - `gate_equation` is nothing but `%1$d`/`%2$d` placeholders.
 - The 112 image labels are stand-in text for artwork the app does not ship yet, so translating them would be translating scaffolding.
 
-Six glyphs the app draws as text — the gear, tick, house, dropdown chevron and the two nav arrows — are kept in code rather than resources. They are symbols, not words. The controls carrying them are announced by name rather than by glyph: the gear declares a `contentDescription`, and every container-level control — theme card, theme row, language row, Home and the nav pills — sets `semantics(mergeDescendants = true)` so the label on its child becomes the node's own name. `clickable` and `toggleable` do not merge descendants on their own, so without that the focusable node is nameless and TalkBack is left to infer a label from descendant text.
+Six glyphs the app draws as text — the gear, tick, house, dropdown chevron and the two nav arrows — are kept in code rather than resources. They are symbols, not words. The controls carrying them are announced by name rather than by glyph. The gear is icon-only and declares a `contentDescription`; every other container-level control — theme card, theme row, language row, Home and the nav pills — takes its name from the label inside it, which `clickable` and `toggleable` merge into the control's own semantics node (`AbstractClickableNode.shouldMergeDescendantSemantics` is `final` and `true`). `AccessibleNamesTest` asserts each control ends up with a name and a click action.
 
 ### Switching language
 
@@ -142,7 +142,7 @@ On Android 13+ the framework owns the storage and registers the choice with the 
 2. Add the code to `res/xml/locales_config.xml` **and** to `AppLocales.SUPPORTED`.
 3. Run the tests. `ThemeResourcesTest` checks every shipped language for a non-blank, unique name per theme and for label arrays that still match the default's length — arrays replace rather than merge, so a dropped item would otherwise leave the Viewer paging onto an index that no longer exists. It cannot detect a language that simply isn't translated; fallback makes that indistinguishable from a deliberate omission, which is why `croatianOverridesTheDefaultsRatherThanFallingBackWholesale` pins that separately.
 
-Card names render on one line and ellipsize rather than wrap (`TextOverflow.Ellipsis`), so keep them short; `Construction` is about the practical limit at the current card width.
+Card names wrap to two lines and ellipsize only past that, so a long name costs the icon some height rather than losing characters — `Construction` was clipped to `Constructi…` at 2x font scale when it was one line.
 
 ### On images
 

@@ -20,7 +20,10 @@ import kotlin.math.pow
  */
 class CardContrastTest {
 
-    /** WCAG relative luminance. Compose colours are already linear-ish sRGB floats. */
+    /**
+     * WCAG relative luminance. [oklch] gamma-encodes on the way out, so these
+     * components are non-linear sRGB and have to be linearised first.
+     */
     private fun luminance(c: Color): Double {
         fun channel(v: Float): Double {
             val d = v.toDouble()

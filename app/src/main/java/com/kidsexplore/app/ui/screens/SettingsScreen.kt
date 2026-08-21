@@ -123,10 +123,6 @@ fun SettingsScreen(
                             role = Role.Checkbox,
                             onValueChange = { onToggle(theme.id) },
                         )
-                        // toggleable announces the checked state but does not
-                        // merge descendants, so the row would otherwise be an
-                        // unnamed checkbox with the theme name beside it.
-                        .semantics(mergeDescendants = true) {}
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -204,7 +200,7 @@ private fun LanguagePicker(current: String, onPick: (String) -> Unit) {
                     .clip(RoundedCornerShape(16.dp))
                     .background(NeutralColors.rowBgEnabled)
                     .clickable { expanded = true }
-                    .semantics(mergeDescendants = true) { role = Role.DropdownList }
+                    .semantics { role = Role.DropdownList }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp),

@@ -1,7 +1,9 @@
 package com.kidsexplore.app
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -71,6 +73,7 @@ class SettingsBehaviourTest {
         settings(current = AppLocales.SYSTEM, onPick = { picked = it })
 
         compose.onNodeWithText(str(R.string.settings_language_system)).performClick()
+        // Only the menu carries "Hrvatski" here — the row shows the system label.
         compose.onNodeWithText("Hrvatski").performClick()
 
         assertEquals("hr", picked)
@@ -83,7 +86,14 @@ class SettingsBehaviourTest {
         var picked: String? = null
         settings(current = "hr", onPick = { picked = it })
 
+        // The row and the menu item both read "Hrvatski", so the first click
+        // only opens the menu. Clicking the row again would re-open it and
+        // never reach SettingsScreen's `if (tag != current)` guard — address
+        // the menu entry specifically.
         compose.onNodeWithText("Hrvatski").performClick()
+        val entries = compose.onAllNodesWithText("Hrvatski")
+        entries.assertCountEquals(2)
+        entries[1].performClick()
 
         assertNull("re-picking the current language must not re-apply it", picked)
     }

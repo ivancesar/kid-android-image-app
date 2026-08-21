@@ -18,10 +18,11 @@ import org.junit.runner.RunWith
 /**
  * Every control a screen reader can focus must carry its own name.
  *
- * `clickable` and `toggleable` do not merge descendant semantics, so a control
- * whose label lives in a child composable exposes a focusable node with no name
- * at all. TalkBack often recovers by reading descendant text, but that is a
- * heuristic — these assert the name is actually on the node.
+ * `clickable` and `toggleable` merge descendant semantics for us, so a control
+ * whose label sits in a child composable is named already. These do not guard
+ * that mechanism — they guard the cases it does not cover: a control whose
+ * label is removed, hidden behind `clearAndSetSemantics`, or icon-only and
+ * relying on an explicit `contentDescription`, as the gear does.
  */
 @RunWith(AndroidJUnit4::class)
 class AccessibleNamesTest {
