@@ -16,8 +16,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.ui.THEME_LIST_TEST_TAG
+import com.kidsexplore.app.ui.viewerImageTestTag
 import com.kidsexplore.app.model.ThemeDef
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -145,6 +147,36 @@ class KidsExploreFlowTest {
 
         compose.onNodeWithText(carLabels[1]).performTouchInput { swipeRight() }
         compose.onNodeWithText(carLabels[0]).assertIsDisplayed()
+    }
+
+    /**
+     * Paging a theme that ships photographs has to reach every one and wrap.
+     * The count is per theme — the photographed one has fourteen where the
+     * placeholder themes have eight — and it is `labelCount` the ViewModel
+     * wraps on.
+     *
+     * The photographs carry no description, so the test tag naming the
+     * drawable is the only thing that says which one is up. What matters here
+     * is exactly that: the expected image loaded at the expected step, not
+     * what is pictured in it.
+     *
+     * The theme is resolved by having artwork rather than named, so a second
+     * photographed theme needs no edit here.
+     */
+    @Test
+    fun nextButtonWalksEveryPhotographAndWrapsAround() {
+        val photoTheme = THEME_DEFS.first { it.imageRes.isNotEmpty() }
+        scrollTo(photoTheme.displayName())
+        compose.onNodeWithText(photoTheme.displayName()).performClick()
+
+        photoTheme.imageRes.forEachIndexed { i, image ->
+            compose.onNodeWithTag(viewerImageTestTag(image)).assertIsDisplayed()
+            assertEquals("step $i", i, (state() as UiState.Viewer).imageIndex)
+            compose.onNodeWithText(str(R.string.viewer_next)).performClick()
+        }
+        // wrapped back to the first photograph
+        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes.first()))
+            .assertIsDisplayed()
     }
 
     @Test

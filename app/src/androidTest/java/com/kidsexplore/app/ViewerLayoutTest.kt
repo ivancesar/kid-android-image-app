@@ -7,6 +7,8 @@ import androidx.compose.ui.test.then
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
@@ -18,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kidsexplore.app.model.THEME_DEFS
+import com.kidsexplore.app.model.ThemeDef
+import com.kidsexplore.app.ui.viewerImageTestTag
 import com.kidsexplore.app.ui.screens.ViewerScreen
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
 import org.junit.Assert.assertEquals
@@ -50,6 +54,20 @@ class ViewerLayoutTest {
     private val cars = THEME_DEFS.first { it.id == "cars" }
     private val carLabels by lazy { resources.getStringArray(cars.labelsRes).toList() }
 
+    /**
+     * A theme that ships photographs, where the card is an image and not text.
+     *
+     * Resolved by having artwork rather than named, so a second photographed
+     * theme needs no edit here and these keep passing if the set of
+     * photographed themes changes underneath them.
+     * `atLeastOneThemeShipsPhotographs` is what makes an empty roster fail
+     * loudly rather than as a confusing `NoSuchElementException` in here.
+     */
+    private val photoTheme = THEME_DEFS.first { it.imageRes.isNotEmpty() }
+    private val photoLabels by lazy {
+        resources.getStringArray(photoTheme.labelsRes).toList()
+    }
+
     /** Comfortably below the 600dp breakpoint — a phone held upright. */
     private val narrow = DpSize(400.dp, 800.dp)
 
@@ -62,6 +80,9 @@ class ViewerLayoutTest {
         onNext: () -> Unit = {},
         onPrev: () -> Unit = {},
         onHome: () -> Unit = {},
+        theme: ThemeDef = cars,
+        label: String = carLabels[0],
+        image: Int? = null,
     ) {
         compose.setContent {
             KidsExploreTheme {
@@ -74,11 +95,12 @@ class ViewerLayoutTest {
                         DeviceConfigurationOverride.LayoutDirectionOverride(direction)
                 ) {
                     ViewerScreen(
-                        theme = cars,
-                        currentLabel = carLabels[0],
+                        theme = theme,
+                        currentLabel = label,
                         onHome = onHome,
                         onNext = onNext,
                         onPrev = onPrev,
+                        currentImage = image,
                     )
                 }
             }
@@ -209,5 +231,74 @@ class ViewerLayoutTest {
             assertEquals("swiping left in LTR advances", 1, next)
             assertEquals(0, prev)
         }
+    }
+
+    // -------------------------------------------------------- photographs
+
+    private fun setPhotoTheme(size: DpSize, index: Int = 0, onNext: () -> Unit = {}) =
+        setViewer(
+            size,
+            onNext = onNext,
+            theme = photoTheme,
+            label = photoLabels[index],
+            image = photoTheme.imageRes[index],
+        )
+
+    /**
+     * A theme with artwork shows the picture and nothing else: no caption
+     * drawn over it, and no description behind it. The label it was given in
+     * `strings.xml` is a maintainer's roster of which photograph is which, not
+     * something the app puts in front of anyone.
+     */
+    @Test
+    fun aPhotographShowsNoLabelInAnyForm() {
+        setPhotoTheme(narrow)
+
+        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[0])).assertIsDisplayed()
+        compose.onNodeWithText(photoLabels[0]).assertDoesNotExist()
+        compose.onNodeWithContentDescription(photoLabels[0]).assertDoesNotExist()
+    }
+
+    /**
+     * The Viewer must draw the photograph it was handed, not merely *a*
+     * photograph. Nothing on screen distinguishes them, so an off-by-one in
+     * the caller would look identical to a working screen without this.
+     */
+    @Test
+    fun theViewerDrawsThePhotographItWasGiven() {
+        val index = 6
+        setPhotoTheme(narrow, index = index)
+
+        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[index]))
+            .assertIsDisplayed()
+        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[0]))
+            .assertDoesNotExist()
+    }
+
+    /** The wide layout has to hold for a photograph exactly as it does for the card. */
+    @Test
+    fun wideWindowPutsTheButtonsBesideAPhotographToo() {
+        setPhotoTheme(wide)
+
+        val back = compose.onNodeWithText(str(R.string.viewer_back)).getUnclippedBoundsInRoot()
+        val next = compose.onNodeWithText(str(R.string.viewer_next)).getUnclippedBoundsInRoot()
+        val image = compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[0])).getUnclippedBoundsInRoot()
+
+        assert(back.right <= image.left) { "Back ($back) overlaps the photo ($image)" }
+        assert(next.left >= image.right) { "Next ($next) overlaps the photo ($image)" }
+    }
+
+    /**
+     * The swipe modifier sits on the Box around the card, so a photograph
+     * filling that Box edge to edge must not swallow the gesture.
+     */
+    @Test
+    fun swipingAPhotographStillPages() {
+        var next = 0
+        setPhotoTheme(narrow, onNext = { next++ })
+
+        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[0])).performTouchInput { swipeLeft() }
+
+        compose.runOnIdle { assertEquals(1, next) }
     }
 }

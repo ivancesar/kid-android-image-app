@@ -1,9 +1,12 @@
 package com.kidsexplore.app.ui.screens
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -29,11 +32,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -48,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kidsexplore.app.R
 import com.kidsexplore.app.model.ThemeDef
+import com.kidsexplore.app.ui.viewerImageTestTag
 import com.kidsexplore.app.ui.theme.NeutralColors
 import com.kidsexplore.app.ui.theme.ThemePalette
 import com.kidsexplore.app.ui.theme.palette
@@ -70,6 +78,9 @@ private const val RIGHT_GLYPH = "▶"
  */
 private val WideLayoutMinWidth = 600.dp
 
+/** How much of the theme's striped card shows around a photograph. */
+private val CardFrameWidth = 8.dp
+
 @Composable
 fun ViewerScreen(
     theme: ThemeDef,
@@ -78,6 +89,12 @@ fun ViewerScreen(
     onNext: () -> Unit,
     onPrev: () -> Unit,
     modifier: Modifier = Modifier,
+    /**
+     * The photograph for the item on screen, or null for a theme that has
+     * none yet — those keep the striped placeholder card. Defaulted so the
+     * layout tests can drive the screen without picking a theme with artwork.
+     */
+    @DrawableRes currentImage: Int? = null,
 ) {
     val palette = theme.palette()
 
@@ -143,7 +160,7 @@ fun ViewerScreen(
                         .then(swipeModifier),
                     contentAlignment = Alignment.Center,
                 ) {
-                    ImageCard(palette = palette, currentLabel = currentLabel)
+                    ImageCard(palette = palette, currentLabel = currentLabel, image = currentImage)
                 }
 
                 Row(
@@ -178,7 +195,7 @@ fun ViewerScreen(
                         .padding(horizontal = 14.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    ImageCard(palette = palette, currentLabel = currentLabel)
+                    ImageCard(palette = palette, currentLabel = currentLabel, image = currentImage)
                 }
                 NavPillButton(nextGlyph, stringResource(R.string.viewer_next), palette.cardBorder, onNext)
             }
@@ -195,8 +212,79 @@ fun ViewerScreen(
     }
 }
 
+/**
+ * The whole content of the screen: a photograph where the theme has one, and
+ * the striped placeholder card carrying the item's label where it does not.
+ *
+ * Only the placeholder speaks. Its label is the entire content of that card,
+ * so it is announced and marked a live region — Back/Next/swipe replace it
+ * without moving focus, and TalkBack would otherwise say nothing as a child
+ * pages through the set. A photograph is left undescribed on purpose: this is
+ * an app for looking at pictures, and its item labels were written as artwork
+ * stand-ins rather than as descriptions worth reading aloud.
+ */
 @Composable
-private fun ImageCard(palette: ThemePalette, currentLabel: String) {
+private fun ImageCard(palette: ThemePalette, currentLabel: String, @DrawableRes image: Int?) {
+    if (image != null) {
+        PhotoCard(palette = palette, image = image)
+    } else {
+        PlaceholderCard(palette = palette, label = currentLabel)
+    }
+}
+
+/**
+ * A photograph, in a card cut to the photograph's own shape.
+ *
+ * The set mixes landscape and portrait shots, so a card that filled the space
+ * and fitted the photo inside it left a tall phone showing more stripe than
+ * picture. Sizing the card from the image's aspect ratio instead gives the
+ * largest rectangle of that shape the space allows: no letterboxing, and the
+ * picture grows to fill a tablet rather than sitting at whatever size it
+ * happens to have been shot at.
+ *
+ * The theme's stripes survive as a thin frame around it — the Viewer is
+ * otherwise all dark grey, and the frame is what still says which category a
+ * child is in.
+ */
+@Composable
+private fun PhotoCard(palette: ThemePalette, @DrawableRes image: Int) {
+    val painter = painterResource(image)
+    val size = painter.intrinsicSize
+    // A painter with no intrinsic size cannot be shaped to fit; fill the space
+    // instead of dividing by an unspecified height.
+    val ratio = if (size.isSpecified && size.height > 0f) size.width / size.height else null
+
+    Box(
+        modifier = Modifier
+            .then(if (ratio != null) Modifier.aspectRatio(ratio) else Modifier.fillMaxSize())
+            .clip(RoundedCornerShape(24.dp))
+            .background(palette.cardBg)
+            .diagonalStripes(palette.stripe)
+            .padding(CardFrameWidth),
+    ) {
+        Image(
+            painter = painter,
+            // Undescribed by decision, not by oversight. Nothing else here
+            // names the picture either, so there is no live region to declare
+            // and no Role.Image to carry — `Image` sets that role only
+            // alongside a description. The tag below is the tests' only handle,
+            // and the only thing that still says which photograph this is.
+            contentDescription = null,
+            // Crop, not Fit: the frame's padding leaves an opening a few
+            // pixels off the photo's own ratio, and cropping that away is
+            // invisible where a second round of letterboxing would not be.
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(24.dp - CardFrameWidth))
+                .testTag(viewerImageTestTag(image)),
+        )
+    }
+}
+
+/** The label on a striped card, for a theme whose photographs do not exist yet. */
+@Composable
+private fun PlaceholderCard(palette: ThemePalette, label: String) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -206,11 +294,8 @@ private fun ImageCard(palette: ThemePalette, currentLabel: String) {
             .padding(20.dp),
         contentAlignment = Alignment.Center,
     ) {
-        // The entire content of the screen. Back/Next/swipe replace it without
-        // moving focus, so without a live region TalkBack says nothing at all
-        // when a child pages through the set.
         Text(
-            text = currentLabel,
+            text = label,
             fontFamily = FontFamily.Monospace,
             fontSize = 16.sp,
             color = palette.labelOnCard,

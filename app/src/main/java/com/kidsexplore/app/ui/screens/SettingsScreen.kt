@@ -150,6 +150,10 @@ fun SettingsScreen(
                     )
                 }
             }
+
+            item(key = "attribution") {
+                Attribution()
+            }
         }
         Text(
             text = stringResource(R.string.settings_done),
@@ -163,6 +167,55 @@ fun SettingsScreen(
                 .background(NeutralColors.doneButtonBg)
                 .clickable(onClick = onDone, role = Role.Button)
                 .padding(16.dp),
+        )
+    }
+}
+
+/**
+ * Where the photographs come from, at the foot of the settings list.
+ *
+ * Behind the gate rather than on Home: it is a notice for the adult who
+ * installed the app, and a child paging through diggers has no use for it.
+ * Last in the list for the same reason — nothing here is an action, so it
+ * should not sit between a parent and the controls that are.
+ *
+ * The Unsplash License asks for no credit at all, so the second line is a
+ * courtesy; the first is the notice itself, and is the part that has to stay.
+ */
+@Composable
+private fun Attribution() {
+    Column(
+        modifier = Modifier.padding(top = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.settings_attribution),
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 13.sp,
+            color = NeutralColors.subtitleText,
+        )
+        Text(
+            text = stringResource(R.string.attribution_images),
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            color = NeutralColors.cancelText,
+        )
+        Text(
+            // One sentence rather than a heading and a list: TalkBack reads it
+            // as a sentence either way, and a list of twelve names is a wall
+            // of rows a parent has to swipe through to reach the end of the
+            // screen.
+            //
+            // A format string, not concatenation: the separator and the word
+            // order belong to the language, and gluing them together here puts
+            // both out of a translator's reach.
+            text = stringResource(
+                R.string.attribution_photographers_line,
+                stringResource(R.string.attribution_photographers),
+            ),
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            color = NeutralColors.cancelText,
         )
     }
 }

@@ -41,11 +41,12 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 
 - Dark full-bleed background.
 - A small square "Home" button returns to Home — that's the entire header here, no theme name shown, to keep the focus on the image.
-- A large rounded placeholder card, with a diagonal two-tone stripe pattern in the theme's colors, showing the current item's label in monospace text, centered.
+- The picture itself, in a card framed by a diagonal two-tone stripe pattern in the theme's colors. The card is cut to the photograph's own aspect ratio — the largest rectangle of that shape the space allows — so a portrait and a landscape shot each fill what they can without letterboxing, and both grow to fill a tablet. The stripes survive as a thin frame, which is the only thing on this otherwise dark screen that says which category a child is in.
+- A theme with no photography yet keeps the original placeholder: the same striped card, filling the space, with the item's label in monospace text, centered. See [On images](#on-images) below.
 - The same labelled "◀ Back" / "▶ Next" pill buttons are used at every size, so the controls look and behave identically regardless of how the device is held. The arrows and the swipe direction mirror in an RTL locale, where the sequence advances right-to-left. Which arrangement is used depends on the window's width, not its orientation — the breakpoint is 600dp:
   - **Narrow (under 600dp)**: the card fills the remaining space above a button row, with Back/Next side by side underneath it.
   - **Wide (600dp and up)**: Back/Next flank the card in a single row — the card sits between them rather than under them — and the row fills the full screen height (down to, but not under, the status bar), so the image gets as much vertical room as the display allows. The Home button floats over the top-left corner of the image instead of sitting in its own header row, since there's no header row to spare the height for.
-- Either way, Back/Next cycle through the theme's 8 items, wrapping around at both ends.
+- Either way, Back/Next cycle through the theme's items, wrapping around at both ends. Construction has 14; every other theme has 8. The placeholder card announces its label to a screen reader as a live region; a photograph announces nothing (see [On images](#on-images)).
 - The card also responds to a horizontal swipe — swipe left for next, right for back — as an alternative to the buttons, in both orientations.
 
 ### Parental Gate ("Grown-ups only")
@@ -66,27 +67,28 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - "Done" returns to Home, where the grid now reflects the updated theme selection.
 - A language dropdown sits above the theme list — "Same as phone settings" plus each shipped language named in its own language. Selecting one applies immediately.
 - "Language" and "Categories" section headings separate the two, so the language row does not read as the first entry in the category list. "Choose which themes your child can see." sits under the Categories heading as that section's explanation, rather than under the screen title where it described only half the screen.
+- An **Attribution** section sits at the foot of the list: the notice for the bundled photography ("Images provided by Unsplash under their Unsplash Licence") and the photographers' names. Behind the gate rather than on Home, because it is a notice for the adult who installed the app; last in the list, because nothing in it is an action and it should not sit between a parent and the controls that are. The Unsplash License asks for no credit at all, so the names are a courtesy — the notice is the part that has to stay.
 
 ## Themes
 
-Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a name and 8 item labels. `ThemeDef` holds only ids, resource ids and a `labelCount`, which is what keeps `AppViewModel` free of Android: it pages an index, the UI resolves the text. `ThemeResourcesTest` asserts each `labelCount` matches its array, since nothing else in the build ties the two files together.
+Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a name and a set of item labels. Construction carries 14; the rest carry 8. `ThemeDef` holds only ids, resource ids, a list of image drawables and a `labelCount`, which is what keeps `AppViewModel` free of Android: it pages an index, the UI resolves the text. `ThemeResourcesTest` asserts each `labelCount` matches both its label array and its image list, since nothing else in the build ties those files together.
 
-| Theme | id | Hue |
-|---|---|---|
-| Cars | `cars` | 15 |
-| Construction | `construction` | 45 |
-| Trains | `trains` | 350 |
-| Animals | `animals` | 320 |
-| Birds | `bird` | 225 |
-| Insects | `insects` | 200 |
-| Ocean | `ocean` | 175 |
-| Farm | `farm` | 75 |
-| Dinosaurs | `dinosaurs` | 285 |
-| Flowers | `flowers` | 296 |
-| Forest | `forest` | 150 |
-| Fruit | `fruit` | 100 |
-| Vegetables | `vegetable` | 125 |
-| Space | `space` | 250 |
+| Theme | id | Hue | Items | Artwork |
+|---|---|---|---|---|
+| Cars | `cars` | 15 | 8 | placeholder |
+| Construction | `construction` | 45 | 14 | photographs |
+| Trains | `trains` | 350 | 8 | placeholder |
+| Animals | `animals` | 320 | 8 | placeholder |
+| Birds | `bird` | 225 | 8 | placeholder |
+| Insects | `insects` | 200 | 8 | placeholder |
+| Ocean | `ocean` | 175 | 8 | placeholder |
+| Farm | `farm` | 75 | 8 | placeholder |
+| Dinosaurs | `dinosaurs` | 285 | 8 | placeholder |
+| Flowers | `flowers` | 296 | 8 | placeholder |
+| Forest | `forest` | 150 | 8 | placeholder |
+| Fruit | `fruit` | 100 | 8 | placeholder |
+| Vegetables | `vegetable` | 125 | 8 | placeholder |
+| Space | `space` | 250 | 8 | placeholder |
 
 Names shown are the English ones; a theme's display name and its 8 labels are `@StringRes`/`@ArrayRes` ids, so both translate. See **Languages** below.
 
@@ -112,7 +114,7 @@ The converter inlines the SVGs' CSS classes into path attributes, re-expresses `
 
 It deliberately supports only the subset this icon set uses, and raises on anything else rather than guessing: group-level fills or classes, `style="..."` attributes, `fill-rule`/`clip-rule`, opacity, a non-zero `viewBox` origin, and colours carrying alpha. A silently mis-converted icon looks plausible and ships; a refusal costs one line of support code. Pass `--check` to verify the committed drawables without writing anything.
 
-**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, add `theme_<id>_name` and a `labels_<id>` array to every `values*/strings.xml`, and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>`. The theme id, the SVG filename and the resource names are kept identical on purpose. `ThemeResourcesTest` (instrumented, needs a device) asserts the resource names match the id; the `checkIconsInSync` Gradle task (wired into `check`, so it runs in `./gradlew build`) re-runs the converter and fails if any committed drawable disagrees with its source.
+**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, add `theme_<id>_name` and a `labels_<id>` array to every `values*/strings.xml`, and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>`. Photographs are optional and separate — see [On images](#on-images). The theme id, the SVG filename and the resource names are kept identical on purpose. `ThemeResourcesTest` (instrumented, needs a device) asserts the resource names match the id; the `checkIconsInSync` Gradle task (wired into `check`, so it runs in `./gradlew build`) re-runs the converter and fails if any committed drawable disagrees with its source.
 
 ## Languages
 
@@ -122,7 +124,8 @@ Croatian deliberately translates only part of the set. Keys it leaves out fall b
 
 - `app_name` and `home_brand` are the product name.
 - `gate_equation` is nothing but `%1$d`/`%2$d` placeholders.
-- The 112 image labels are stand-in text for artwork the app does not ship yet, so translating them would be translating scaffolding.
+- `attribution_photographers` is a list of names.
+- No image label reaches a screen in Croatian. A theme with photographs shows the picture and nothing else, and the rest are stand-in text for artwork the app does not ship yet — translating either would be translating scaffolding.
 
 Six glyphs the app draws as text — the gear, tick, house, dropdown chevron and the two nav arrows — are kept in code rather than resources. They are symbols, not words. The controls carrying them are announced by name rather than by glyph. The gear is icon-only and declares a `contentDescription`; every other container-level control — theme card, theme row, language row, Home and the nav pills — takes its name from the label inside it, which `clickable` and `toggleable` merge into the control's own semantics node (`AbstractClickableNode.shouldMergeDescendantSemantics` is `final` and `true`). `AccessibleNamesTest` covers four of them — the theme card, the gear, a theme row and the language row — asserting each ends up with a name and a click action.
 
@@ -146,7 +149,28 @@ Card names wrap to two lines and ellipsize only past that, so a long name costs 
 
 ### On images
 
-The Viewer never shows real photos — there are none bundled with the app. Each "image" is a short text label (e.g. "Red sports car, side view") rendered on a themed striped placeholder card. This is intentional: it avoids bundling or fetching any copyrighted or externally-sourced photos. Swapping in real photography per item would be the natural next step if this app were to ship.
+A theme either ships photographs or it does not, and each one decides for itself. **Construction** is the first that does: 14 JPEGs in `res/drawable-nodpi/`, named `img_construction_01.jpg` through `_14.jpg` and listed in that order by `CONSTRUCTION_IMAGES` in `ThemeDef.kt`. They come from [Unsplash](https://unsplash.com) under the [Unsplash License](https://unsplash.com/license), and the app carries the notice and the photographers' names in **Parent Settings → Attribution**.
+
+The others still show the placeholder: a short text label (e.g. "Red sports car, side view") on a themed striped card. Those labels are stand-in text for artwork that does not exist yet.
+
+Nothing in the code or the tests names Construction as *the* photographed theme. `ThemeResourcesTest` asserts only that at least one theme has artwork, and the UI tests resolve their fixture with `THEME_DEFS.first { it.imageRes.isNotEmpty() }`, so photographing a second theme is the four steps below and nothing else.
+
+Construction still has a `labels_construction` array, but nothing displays it. **A photograph is shown undescribed** — no caption over it, no `contentDescription` behind it. This app is for looking at pictures, its labels were written as artwork stand-ins rather than as prose worth reading aloud, and a screen reader announcing "Yellow digger with a big scooping bucket" adds nothing for the child holding the phone. The array survives as the roster of what the theme holds: one entry per image, in the order `CONSTRUCTION_IMAGES` lists them, which is what `ThemeResourcesTest` counts `labelCount` against, and a note to the next maintainer about which photograph is which.
+
+The practical cost is that nothing in the semantics tree says *which* photograph is on screen. The image therefore carries a test tag naming the drawable it is drawing (`viewerImageTestTag(image)`), which is what the tests match on — what matters about this screen is that the expected image loaded, not what is pictured in it.
+
+**To give a theme photographs:**
+
+1. Downscale the sources to 1280px on the long edge and re-encode them. On macOS, with no ImageMagick needed:
+
+   ```bash
+   sips -s format jpeg -s formatOptions 55 --resampleHeightWidthMax 1280 in.jpg --out out.jpg
+   ```
+
+   That lands each file around 100–300 KB; the 14 Construction photos are 2.6 MB in total, and every theme done this way would roughly triple the APK.
+2. Drop them in `res/drawable-nodpi/` as `img_<id>_NN.jpg`, numbered from `01`. **`-nodpi` matters**: a drawable in a plain `drawable/` folder is treated as mdpi artwork and upscaled by the device's density, which decodes a 1280px JPEG into a bitmap several times that size for nothing. `everyPhotographIsDensityIndependent` fails if one lands anywhere else.
+3. List them in `ThemeDef.kt` and set the theme's `labelCount` from the list's size.
+4. Keep that theme's `labels_<id>` array one entry per image, in the same order. It stops being displayed the moment the theme has artwork, but `labelCount` is still checked against it, and it is the only written record of which photograph sits at which index. Translations of it can be dropped — nothing shows them.
 
 ## Tech stack
 
@@ -182,6 +206,7 @@ app/src/main/java/com/kidsexplore/app/
         ├── GateScreen.kt
         └── SettingsScreen.kt
 
+res/drawable-nodpi/              # bundled photographs, img_<theme>_NN.jpg
 res/values/strings.xml           # all user-visible text (English)
 res/values-hr/strings.xml        # Croatian overrides; missing keys fall back
 res/xml/locales_config.xml       # languages the app ships
@@ -219,10 +244,11 @@ Reports land in `app/build/reports/tests/testDebugUnitTest/index.html` and `app/
 |---|---|---|
 | `AppViewModelTest` | `test` (JVM) | The whole state machine: transitions, paging and wrap-around, unknown theme ids, gate question generation over 500 seeds, the lockout (driven by a hand-advanced clock rather than a 30-second wait), theme toggling, `visibleThemes` caching, and restore-from-process-death including out-of-range indices. `AppViewModel` takes its store, its `Random` and its clock as parameters, so none of this touches Android. |
 | `GateLockPersistenceTest` | `test` (JVM) | The gate's durability, which is the one thing protecting Settings: that the lockout **and** the failure count survive the app being closed and relaunched, that the lockout still expires on its own, that a correct answer clears it, that a backwards device clock cannot strand a parent, and that the question rotates on every wrong answer. A relaunch is modelled the way Android behaves — same store, fresh `SavedStateHandle`. |
-| `KidsExploreFlowTest` | `androidTest` | The end-to-end journey through the real screens: Home → Viewer (paging by button and by swipe) → Home → gate (wrong answer, lockout, cancel, correct answer) → Settings (toggle a theme) → Home, asserting the grid updates. |
-| `ViewerLayoutTest` | `androidTest` | The Viewer's layout at both sides of the 600dp breakpoint, using `DeviceConfigurationOverride(ForcedSize(...))` so a window wider than the test device still renders on screen. Asserts the buttons actually sit beside the image when wide and below it when narrow, rather than only that a branch was taken — and that both the button order and the swipe direction mirror under an RTL override. |
+| `KidsExploreFlowTest` | `androidTest` | The end-to-end journey through the real screens: Home → Viewer (paging by button and by swipe, through both a placeholder theme's 8 labels and Construction's 14 photographs) → Home → gate (wrong answer, lockout, cancel, correct answer) → Settings (toggle a theme) → Home, asserting the grid updates. Photographs carry no description, so the paging walk matches each step against the drawable it should be showing, by the test tag naming it. |
+| `ViewerLayoutTest` | `androidTest` | The Viewer's layout at both sides of the 600dp breakpoint, using `DeviceConfigurationOverride(ForcedSize(...))` so a window wider than the test device still renders on screen. Asserts the buttons actually sit beside the image when wide and below it when narrow, rather than only that a branch was taken — and that both the button order and the swipe direction mirror under an RTL override. Covers both card kinds: that a photograph shows its label in no form at all, that it does not swallow the swipe, and that the wide layout holds for it too. |
+| `SettingsBehaviourTest` | `androidTest` | The language dropdown, the empty Home state, and the attribution notice at the foot of the settings list. |
 | `SharedPreferencesThemeStoreTest` | `androidTest` | The real store against real preferences: themes and the gate lock round-tripping through a *second* store instance, the two keys not treading on each other, ids for removed themes being pruned on read, and a lockout surviving a relaunch through actual SharedPreferences rather than a fake. |
-| `ThemeResourcesTest` | `androidTest` | Holds `ThemeDef` and `strings.xml` together: every theme's `labelCount` matches the length of its string array, names and labels are non-blank, and ids and names are unique. |
+| `ThemeResourcesTest` | `androidTest` | Holds `ThemeDef`, `strings.xml` and the bundled photographs together: every theme's `labelCount` matches the length of its string array *and* the length of its image list, names and labels are non-blank, ids and names are unique, at least one theme has artwork, and every photograph is named after its theme and position, decodes, and lives in `drawable-nodpi`. |
 
 To run a single instrumented class:
 
@@ -234,9 +260,9 @@ There is no CI; run `./gradlew lint testDebugUnitTest assembleDebug` locally, an
 
 ## Known limitations
 
-- Placeholder text labels stand in for real images (see [On images](#on-images) above).
+- Thirteen of the fourteen themes still show placeholder text labels rather than pictures; only Construction has photography (see [On images](#on-images) above).
+- The Viewer decodes each photograph with `painterResource`, which is fine for one full-screen image at a time but has no downsampling or preloading of its own. If more themes gain artwork — or the images get much larger than the 1280px they are now — an image loader would be the thing to reach for.
 - Nothing stops a child leaving the app for the launcher. The gate protects **Settings**, not the app's boundary; Android's screen pinning is what would deliver that, and it is not wired up.
 - No confirmation/undo when a parent disables a theme a child was mid-viewing — they're just returned to Home the next time they tap Home.
 - Font is the system sans-serif at heavy weights, approximating the source design's Nunito 800/900; no font file is bundled.
-- Only English strings are shipped. The text is all in `strings.xml` now, so a translation is a matter of adding `values-<locale>/`; the Viewer's controls already mirror for RTL.
 - Light theme only, by design: the palette is a fixed bright one with no dark counterpart, so the colour scheme is pinned rather than following the system setting.

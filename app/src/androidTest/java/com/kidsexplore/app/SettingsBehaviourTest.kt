@@ -8,10 +8,14 @@ import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kidsexplore.app.model.THEME_DEFS
+import com.kidsexplore.app.ui.THEME_LIST_TEST_TAG
 import com.kidsexplore.app.ui.screens.HomeScreen
 import com.kidsexplore.app.ui.screens.SettingsScreen
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
@@ -117,6 +121,23 @@ class SettingsBehaviourTest {
             .assertIsDisplayed()
             .performClick()
         assertEquals(true, opened)
+    }
+
+    /**
+     * The app bundles Unsplash photography, so it carries the notice for it.
+     * It sits at the foot of a lazy list, past fourteen category rows, so it
+     * has to be scrolled to — asserting on it without scrolling would pass on
+     * a tall enough test device and fail on a phone.
+     */
+    @Test
+    fun settingsCarriesTheImageAttributionNotice() {
+        settings()
+
+        val notice = str(R.string.attribution_images)
+        compose.onNodeWithTag(THEME_LIST_TEST_TAG).performScrollToNode(hasText(notice))
+
+        compose.onNodeWithText(str(R.string.settings_attribution)).assertIsDisplayed()
+        compose.onNodeWithText(notice).assertIsDisplayed()
     }
 
     @Test

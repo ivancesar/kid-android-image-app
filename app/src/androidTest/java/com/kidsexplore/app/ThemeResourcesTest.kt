@@ -2,6 +2,7 @@ package com.kidsexplore.app
 
 import android.content.Context
 import android.content.res.Configuration
+import android.util.TypedValue
 import androidx.core.content.ContextCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -89,6 +90,94 @@ class ThemeResourcesTest {
         }
     }
 
+    /**
+     * A theme with photographs must have exactly as many as it has labels.
+     * The Viewer pairs them by index — item *n*'s label is what TalkBack reads
+     * out for image *n* — so a short list would silently drop back to the
+     * placeholder card partway through the set, and a long one would leave
+     * photographs a child can never reach.
+     */
+    @Test
+    fun everyThemeWithPhotographsHasOnePerLabel() {
+        THEME_DEFS.filter { it.imageRes.isNotEmpty() }.forEach { theme ->
+            assertEquals(
+                "theme '${theme.id}' declares labelCount=${theme.labelCount} " +
+                    "but ships ${theme.imageRes.size} photographs",
+                theme.labelCount,
+                theme.imageRes.size,
+            )
+        }
+    }
+
+    /**
+     * `img_<id>_NN`, one-based and zero-padded, in the order the Viewer pages
+     * them. Named after the theme for the same reason its icon and its string
+     * resources are, and numbered so a mismatch between the list in
+     * `ThemeDef.kt` and the files on disk is visible by reading either one.
+     */
+    @Test
+    fun everyPhotographIsNamedAfterItsThemeAndPosition() {
+        THEME_DEFS.filter { it.imageRes.isNotEmpty() }.forEach { theme ->
+            theme.imageRes.forEachIndexed { i, id ->
+                assertEquals(
+                    String.format(Locale.ROOT, "img_%s_%02d", theme.id, i + 1),
+                    resources.getResourceEntryName(id),
+                )
+            }
+        }
+    }
+
+    /**
+     * Photographs are configuration-independent, so they belong in
+     * `drawable-nodpi`: anywhere else and the framework treats them as mdpi
+     * artwork and upscales them by the device's density, decoding a 1280px
+     * JPEG into a bitmap several times that size for no gain in what is on
+     * screen.
+     */
+    @Test
+    fun everyPhotographIsDensityIndependent() {
+        THEME_DEFS.flatMap { it.imageRes }.forEach { id ->
+            val value = TypedValue()
+            resources.getValue(id, value, true)
+            val path = value.string.toString()
+            assertTrue(
+                "${resources.getResourceEntryName(id)} resolves to $path, " +
+                    "which is not a nodpi resource",
+                path.contains("drawable-nodpi"),
+            )
+        }
+    }
+
+    @Test
+    fun everyPhotographDecodes() {
+        THEME_DEFS.flatMap { it.imageRes }.forEach { id ->
+            assertNotNull(
+                "${resources.getResourceEntryName(id)} does not decode",
+                ContextCompat.getDrawable(context, id),
+            )
+        }
+    }
+
+    /**
+     * Some theme has artwork.
+     *
+     * This used to name Construction as the only one, which was true when it
+     * was the only one and became a chore the moment a second theme was being
+     * photographed. What is worth pinning is not the roster but that the
+     * roster is not empty: the Viewer's photograph path, and every test that
+     * exercises it, resolves its fixture with
+     * `first { it.imageRes.isNotEmpty() }`, and all of it would go quietly
+     * vacuous if the last theme lost its images. Which theme, and how many,
+     * is a content decision the other assertions here already police.
+     */
+    @Test
+    fun atLeastOneThemeShipsPhotographs() {
+        assertTrue(
+            "no theme ships photographs - the Viewer's image path is untested",
+            THEME_DEFS.any { it.imageRes.isNotEmpty() },
+        )
+    }
+
     @Test
     fun everyThemeIconInflates() {
         THEME_DEFS.forEach { theme ->
@@ -134,8 +223,12 @@ class ThemeResourcesTest {
         val en = localized("en")
         val hr = localized("hr")
 
-        // Product name and a string that is nothing but placeholders.
-        listOf(R.string.app_name, R.string.home_brand, R.string.gate_question).forEach { id ->
+        // Product name, a string that is nothing but placeholders, and a list
+        // of photographers' names.
+        listOf(
+            R.string.app_name, R.string.home_brand, R.string.gate_question,
+            R.string.attribution_photographers,
+        ).forEach { id ->
             val name = resources.getResourceEntryName(id)
             assertEquals(
                 "$name is meant to fall back to the default, unchanged",
@@ -151,7 +244,8 @@ class ThemeResourcesTest {
             R.string.gate_wrong, R.string.gate_cancel, R.string.settings_title,
             R.string.settings_subtitle, R.string.settings_categories,
             R.string.settings_done, R.string.settings_language,
-            R.string.settings_language_system,
+            R.string.settings_language_system, R.string.settings_attribution,
+            R.string.attribution_images, R.string.attribution_photographers_line,
         )
         mustTranslate.forEach { id ->
             val name = resources.getResourceEntryName(id)
@@ -168,6 +262,7 @@ class ThemeResourcesTest {
                 en.getString(theme.nameRes) != hr.getString(theme.nameRes),
             )
         }
+
     }
 
     /**
@@ -182,5 +277,12 @@ class ThemeResourcesTest {
         assertEquals("Cars", en.getString(THEME_DEFS.first { it.id == "cars" }.nameRes))
         assertEquals("Done", en.getString(R.string.settings_done))
         assertEquals("Pick something to look at!", en.getString(R.string.home_title))
+        // The notice the app owes its image source; worth pinning by literal
+        // rather than leaving to a resolve-from-resources assertion that would
+        // pass on any wording at all.
+        assertEquals(
+            "Images provided by Unsplash under their Unsplash Licence",
+            en.getString(R.string.attribution_images),
+        )
     }
 }
