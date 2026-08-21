@@ -252,18 +252,6 @@ class ThemeResourcesTest {
             )
         }
 
-        // Labels are left to fall back only while they stand in for artwork
-        // that does not exist. Construction's describe real photographs, so
-        // they are content a Croatian child is actually read.
-        val construction = THEME_DEFS.first { it.id == "construction" }
-        en.getStringArray(construction.labelsRes)
-            .zip(hr.getStringArray(construction.labelsRes))
-            .forEachIndexed { i, (english, croatian) ->
-                assertTrue(
-                    "labels_construction item $i is identical in en and hr ('$english')",
-                    english != croatian,
-                )
-            }
     }
 
     /**

@@ -3,16 +3,13 @@
   Croatian. Keys absent here fall back to values/strings.xml on purpose:
   app_name and home_brand are the product name, gate_question is nothing but
   placeholders, attribution_photographers is a list of names, and the image
-  labels of every theme except Construction are stand-in text for artwork the
+  labels never reach a Croatian user: a theme with photographs shows the
+  picture and nothing else, and the rest are stand-in text for artwork the
   app does not ship yet.
 
-  labels_construction is the exception: those items describe real photographs
-  now, so they are what a Croatian child is actually read out.
-
-  home_settings_button, home_empty_title, home_empty_body, the attribution
-  strings and labels_construction arrived on main after the translation pass
-  and were translated here rather than by the translator - worth a native
-  check.
+  home_settings_button, home_empty_title, home_empty_body and the attribution
+  strings arrived on main after the translation pass and were translated here
+  rather than by the translator - worth a native check.
 -->
 <resources>
 
@@ -74,27 +71,4 @@
     <string name="settings_attribution">Zasluge</string>
     <string name="attribution_images">Slike ustupio Unsplash pod svojom Unsplash licencom</string>
     <string name="attribution_photographers_line">Fotografije: %1$s</string>
-
-    <!--
-      Construction's fourteen items, in the same order as the photographs in
-      ThemeDef.CONSTRUCTION_IMAGES. Every other theme's labels are left to fall
-      back to English while they are still placeholder text for artwork that
-      does not exist.
-    -->
-    <string-array name="labels_construction">
-        <item>Žuti bager s velikom lopatom</item>
-        <item>Žuti bager parkiran pod oblačnim plavim nebom</item>
-        <item>Bager istresa zemlju u kamion kiper</item>
-        <item>Veliki kamion kiper čeka pokraj bagera</item>
-        <item>Žuti valjak ravna šljunak</item>
-        <item>Narančasti valjak i žuti grejder</item>
-        <item>Crveni utovarivač na gusjenicama sa širokom lopatom</item>
-        <item>Visoka žuta toranjska dizalica iznad krovova</item>
-        <item>Bager i buldožer grade novu cestu</item>
-        <item>Crveni bager kopa zemlju pokraj velike zgrade</item>
-        <item>Žuti bager radi uz željezničku prugu</item>
-        <item>Bageri poredani u blatu</item>
-        <item>Valjak i asfalter rade noću</item>
-        <item>Narančasti bager na vrhu brežuljka u zalazak sunca</item>
-    </string-array>
 </resources>

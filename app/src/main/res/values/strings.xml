@@ -55,11 +55,12 @@
 
     <string name="theme_construction">Construction</string>
     <!--
-      Construction is the one theme with real photographs, so these are not
-      stand-in text: each item describes the picture at the same position in
-      ThemeDef.CONSTRUCTION_IMAGES, and is what TalkBack reads out for it.
-      Reordering the array without reordering the images silently mislabels
-      every photo, and nothing in the build can catch that.
+      Construction has photographs, so unlike every other theme's these labels
+      never reach a screen: the Viewer shows the picture and nothing else, and
+      does not describe it. They stay as the roster of what the theme holds -
+      one entry per image, in the order ThemeDef.CONSTRUCTION_IMAGES lists them,
+      which is what ThemeResourcesTest counts labelCount against. Treat them as
+      a note to the next maintainer about which photograph is which.
     -->
     <string-array name="labels_construction">
         <item>Yellow digger with a big scooping bucket</item>

@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -54,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kidsexplore.app.R
 import com.kidsexplore.app.model.ThemeDef
+import com.kidsexplore.app.ui.VIEWER_IMAGE_TEST_TAG
 import com.kidsexplore.app.ui.theme.NeutralColors
 import com.kidsexplore.app.ui.theme.ThemePalette
 import com.kidsexplore.app.ui.theme.palette
@@ -214,14 +216,17 @@ fun ViewerScreen(
  * The whole content of the screen: a photograph where the theme has one, and
  * the striped placeholder card carrying the item's label where it does not.
  *
- * Either way the label is what TalkBack announces, and it is a live region:
- * Back/Next/swipe replace the content without moving focus, so without one
- * TalkBack says nothing at all as a child pages through the set.
+ * Only the placeholder speaks. Its label is the entire content of that card,
+ * so it is announced and marked a live region — Back/Next/swipe replace it
+ * without moving focus, and TalkBack would otherwise say nothing as a child
+ * pages through the set. A photograph is left undescribed on purpose: this is
+ * an app for looking at pictures, and its item labels were written as artwork
+ * stand-ins rather than as descriptions worth reading aloud.
  */
 @Composable
 private fun ImageCard(palette: ThemePalette, currentLabel: String, @DrawableRes image: Int?) {
     if (image != null) {
-        PhotoCard(palette = palette, label = currentLabel, image = image)
+        PhotoCard(palette = palette, image = image)
     } else {
         PlaceholderCard(palette = palette, label = currentLabel)
     }
@@ -242,7 +247,7 @@ private fun ImageCard(palette: ThemePalette, currentLabel: String, @DrawableRes 
  * child is in.
  */
 @Composable
-private fun PhotoCard(palette: ThemePalette, label: String, @DrawableRes image: Int) {
+private fun PhotoCard(palette: ThemePalette, @DrawableRes image: Int) {
     val painter = painterResource(image)
     val size = painter.intrinsicSize
     // A painter with no intrinsic size cannot be shaped to fit; fill the space
@@ -259,12 +264,11 @@ private fun PhotoCard(palette: ThemePalette, label: String, @DrawableRes image: 
     ) {
         Image(
             painter = painter,
-            // Through the parameter, not a semantics block of our own: Image
-            // sets Role.Image in the same branch it sets the description, so
-            // passing null here and declaring the description ourselves would
-            // announce the label without ever saying it labels a picture. The
-            // live region is a different property and composes with it.
-            contentDescription = label,
+            // Undescribed by decision, not by oversight. Nothing else here
+            // names the picture either, so there is no live region to declare
+            // and no Role.Image to carry — `Image` sets that role only
+            // alongside a description. The tag is the tests' only handle.
+            contentDescription = null,
             // Crop, not Fit: the frame's padding leaves an opening a few
             // pixels off the photo's own ratio, and cropping that away is
             // invisible where a second round of letterboxing would not be.
@@ -272,7 +276,7 @@ private fun PhotoCard(palette: ThemePalette, label: String, @DrawableRes image: 
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(24.dp - CardFrameWidth))
-                .semantics { liveRegion = LiveRegionMode.Polite },
+                .testTag(VIEWER_IMAGE_TEST_TAG),
         )
     }
 }

@@ -4,14 +4,11 @@ import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.LayoutDirection as LayoutDirectionOverride
 import androidx.compose.ui.test.then
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
@@ -24,6 +21,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.model.ThemeDef
+import com.kidsexplore.app.ui.VIEWER_IMAGE_TEST_TAG
 import com.kidsexplore.app.ui.screens.ViewerScreen
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
 import org.junit.Assert.assertEquals
@@ -239,32 +237,18 @@ class ViewerLayoutTest {
         )
 
     /**
-     * The label stops being something a child reads and becomes the
-     * photograph's description — the picture is the content now, and drawing
-     * a caption over it would be drawing the answer over the question.
+     * A theme with artwork shows the picture and nothing else: no caption
+     * drawn over it, and no description behind it. The label it was given in
+     * `strings.xml` is a maintainer's roster of which photograph is which, not
+     * something the app puts in front of anyone.
      */
     @Test
-    fun aPhotographCarriesItsLabelAsADescriptionRatherThanAsText() {
+    fun aPhotographShowsNoLabelInAnyForm() {
         setConstruction(narrow)
 
+        compose.onNodeWithTag(VIEWER_IMAGE_TEST_TAG).assertIsDisplayed()
         compose.onNodeWithText(constructionLabels[0]).assertDoesNotExist()
-        compose.onNodeWithContentDescription(constructionLabels[0]).assertIsDisplayed()
-    }
-
-    /**
-     * `Image` sets `Role.Image` in the same branch it sets the description, so
-     * passing `contentDescription = null` and declaring the description in a
-     * `semantics` block instead drops the role without any visible symptom.
-     * TalkBack then announces the label without ever saying it labels a
-     * picture. Nothing else in the suite would notice, which is why this is
-     * asserted rather than assumed.
-     */
-    @Test
-    fun aPhotographAnnouncesItselfAsAnImage() {
-        setConstruction(narrow)
-
-        compose.onNodeWithContentDescription(constructionLabels[0])
-            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Image))
+        compose.onNodeWithContentDescription(constructionLabels[0]).assertDoesNotExist()
     }
 
     /** The wide layout has to hold for a photograph exactly as it does for the card. */
@@ -274,8 +258,7 @@ class ViewerLayoutTest {
 
         val back = compose.onNodeWithText(str(R.string.viewer_back)).getUnclippedBoundsInRoot()
         val next = compose.onNodeWithText(str(R.string.viewer_next)).getUnclippedBoundsInRoot()
-        val image = compose.onNodeWithContentDescription(constructionLabels[0])
-            .getUnclippedBoundsInRoot()
+        val image = compose.onNodeWithTag(VIEWER_IMAGE_TEST_TAG).getUnclippedBoundsInRoot()
 
         assert(back.right <= image.left) { "Back ($back) overlaps the photo ($image)" }
         assert(next.left >= image.right) { "Next ($next) overlaps the photo ($image)" }
@@ -290,8 +273,7 @@ class ViewerLayoutTest {
         var next = 0
         setConstruction(narrow, onNext = { next++ })
 
-        compose.onNodeWithContentDescription(constructionLabels[0])
-            .performTouchInput { swipeLeft() }
+        compose.onNodeWithTag(VIEWER_IMAGE_TEST_TAG).performTouchInput { swipeLeft() }
 
         compose.runOnIdle { assertEquals(1, next) }
     }
