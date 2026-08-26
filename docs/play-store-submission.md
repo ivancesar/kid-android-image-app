@@ -23,15 +23,27 @@ being true with it.
 
 ---
 
-## 1. Before anything else: the one placeholder
+## 1. Before anything else: make the policy reachable
 
-| Placeholder | Where it appears | Replace with |
-| --- | --- | --- |
-| `https://example.com/kids-explore/privacy-policy` | `PRIVACY_POLICY_URL` in `app/src/main/java/com/kidsexplore/app/ui/screens/SettingsScreen.kt`; the Play Console listing; nothing else | The real hosted URL of `docs/privacy-policy.html` |
+`PRIVACY_POLICY_URL` in `app/src/main/java/com/kidsexplore/app/ui/screens/SettingsScreen.kt`
+is set to:
 
-With GitHub Pages serving `docs/` from the default branch, that URL will be
-`https://ivancesar.github.io/kid-android-image-app/privacy-policy.html` — confirm
-it actually loads before pasting it into the Console, because Play checks it.
+    https://ivancesar.github.io/kid-android-image-app/privacy-policy.html
+
+That address does not resolve yet. Two things make it live, both in the
+repository's settings on github.com, and both are decisions for the repository
+owner rather than steps a build can take:
+
+1. **Make the repository public.** It is private today. A policy Play cannot
+   fetch is the same as no policy.
+2. **Enable GitHub Pages**, serving `/docs` from the `main` branch. The file is
+   deliberately self-contained — no external stylesheet, font or script — so
+   Pages serves it as-is with no build step.
+
+Then open the address in a browser and confirm it renders before pasting it into
+the Play Console listing. Play checks it, and the in-app link in Parent Settings
+points at the same place — a child-directed app is expected to offer the policy
+from inside the app, and a dead link there is worse than none.
 
 Policy questions go to the repository's issue tracker rather than an email
 address. Play separately requires a developer contact email on the Console

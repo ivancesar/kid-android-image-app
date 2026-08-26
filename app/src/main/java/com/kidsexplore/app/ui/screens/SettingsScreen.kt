@@ -197,14 +197,18 @@ fun SettingsScreen(
 /**
  * Where the hosted privacy policy lives.
  *
- * TODO: replace with the real public URL before uploading to Play. The same
- * address goes in the Play Console listing, and the two have to agree — Play
- * checks that the policy is reachable, and a child-directed app is expected to
- * offer it from inside the app as well, which is what [PrivacyPolicyLink] is.
- * The document itself is `docs/privacy-policy.html` in this repository, which
- * GitHub Pages will serve as-is.
+ * This is where `docs/privacy-policy.html` lands once the repository is public
+ * and GitHub Pages is serving `docs/` from the default branch. Until both of
+ * those are done the address 404s, so it must be checked in a browser before
+ * any upload to Play: the same address goes in the Console listing, Play
+ * verifies the policy is reachable, and a child-directed app is expected to
+ * offer it from inside the app too — which is what [PrivacyPolicyLink] is.
+ *
+ * Hardcoded rather than a placeholder because a wrong-but-eventually-right URL
+ * is easier to notice than an `example.com` one that reads as intentional.
  */
-private const val PRIVACY_POLICY_URL = "https://example.com/kids-explore/privacy-policy"
+private const val PRIVACY_POLICY_URL =
+    "https://ivancesar.github.io/kid-android-image-app/privacy-policy.html"
 
 /**
  * A way out to the privacy policy, behind the parental gate.
