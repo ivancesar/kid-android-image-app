@@ -1,6 +1,7 @@
 # Privacy Policy — Kids Explore
 
 **Application:** Kids Explore (`com.kidsexplore.app`)
+
 **Last updated:** 26 August 2026
 
 <!--

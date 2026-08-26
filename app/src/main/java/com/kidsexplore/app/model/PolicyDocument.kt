@@ -9,7 +9,7 @@ package com.kidsexplore.app.model
  * Markdown, and Markdown is the one thing this file does.
  *
  * Deliberately not a Markdown library. The document is one known file in this
- * repository, written by us, and the only constructs it uses are the six below.
+ * repository, written by us, and it uses a handful of constructs and no more.
  * A general parser would be a dependency, a size increase and a much larger
  * surface to be wrong about, in an app whose entire pitch is that it carries
  * nothing it does not need.
@@ -33,7 +33,8 @@ sealed interface PolicyBlock {
  *
  * Bold is the only inline styling the document uses that is worth keeping: it
  * carries meaning here ("**No advertisements.**" opens a bullet whose point is
- * that phrase), where italics and code spans never appear.
+ * that phrase). Italics never appear, and code spans are flattened to their
+ * contents rather than styled — see [parseInline].
  */
 data class PolicySpan(val text: String, val bold: Boolean)
 
@@ -46,6 +47,13 @@ private val LINK = Regex("""\[([^\]]+)]\(([^)]+)\)""")
 private val AUTOLINK = Regex("""<(https?://[^>]+)>""")
 
 private val BOLD = Regex("""\*\*(.+?)\*\*""")
+
+/**
+ * `` `code` `` — the document uses backticks for permission names and package
+ * ids. There is no monospace face bundled, so the backticks would be the only
+ * thing a reader saw of the styling; the content reads fine as plain text.
+ */
+private val CODE = Regex("""`([^`]+)`""")
 
 /**
  * Parse the policy Markdown into blocks.
@@ -120,10 +128,13 @@ fun parsePolicy(markdown: String): List<PolicyBlock> {
  * so an underlined address a reader cannot follow would be a worse lie than
  * plain text. The two addresses the document genuinely wants a reader to have
  * (Google's policy, and the issue tracker) are written out in full in the
- * source, so they survive as text.
+ * source, so they survive as text. Code spans lose their backticks for the same
+ * reason: no monospace face is bundled, so the markers would be all a reader
+ * got of the styling.
  */
 internal fun parseInline(text: String): List<PolicySpan> {
-    val flattened = AUTOLINK.replace(LINK.replace(text) { it.groupValues[1] }) { it.groupValues[1] }
+    val linked = AUTOLINK.replace(LINK.replace(text) { it.groupValues[1] }) { it.groupValues[1] }
+    val flattened = CODE.replace(linked) { it.groupValues[1] }
     val spans = mutableListOf<PolicySpan>()
     var cursor = 0
     for (match in BOLD.findAll(flattened)) {

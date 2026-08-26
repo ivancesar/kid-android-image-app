@@ -84,6 +84,18 @@ class PolicyDocumentTest {
         assertTrue("** leaked", spans.none { "*" in it.text })
     }
 
+    @Test
+    fun codeSpansLoseTheirBackticks() {
+        assertEquals(
+            "the app declares no INTERNET permission",
+            parseInline("the app declares no `INTERNET` permission").joinToString("") { it.text },
+        )
+        assertTrue(
+            "backtick reached a reader",
+            parseInline("`com.kidsexplore.app`").none { "`" in it.text },
+        )
+    }
+
     /**
      * Links keep their label and lose their address, because the app opens
      * nothing — an underlined address a reader cannot follow would be worse
