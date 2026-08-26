@@ -1,5 +1,8 @@
 package com.kidsexplore.app.ui.screens
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -55,6 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import com.kidsexplore.app.AppLocales
 import com.kidsexplore.app.R
 import com.kidsexplore.app.ui.THEME_LIST_TEST_TAG
@@ -69,6 +74,7 @@ fun SettingsScreen(
     onDone: () -> Unit,
     currentLanguage: String,
     onPickLanguage: (String) -> Unit,
+    onOpenPolicy: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -162,6 +168,13 @@ fun SettingsScreen(
                 }
             }
 
+            // Above Attribution because it is an action and Attribution is
+            // not, and below the categories because it is not the thing a
+            // parent came in here to do.
+            item(key = "privacy") {
+                PrivacyPolicyLink(onOpen = onOpenPolicy)
+            }
+
             item(key = "attribution") {
                 Attribution()
             }
@@ -180,6 +193,44 @@ fun SettingsScreen(
                 .padding(16.dp),
         )
     }
+}
+
+/**
+ * The way into the privacy policy, behind the parental gate.
+ *
+ * Opens the policy inside the app rather than in a browser. Play's Families
+ * policy wants the document reachable from within the app and equally does not
+ * want a child one tap from the open web; rendering it here satisfies the first
+ * without going anywhere near the second, and it cannot break the way a link to
+ * a hosted page can. Still placed in Settings, so a child does not meet it.
+ *
+ * Set as a link rather than as a button because it opens a document rather than
+ * changing anything, which is what every control above it does.
+ */
+@Composable
+private fun PrivacyPolicyLink(onOpen: () -> Unit) {
+    Text(
+        text = stringResource(R.string.settings_privacy_policy),
+        fontSize = 13.sp,
+        fontWeight = FontWeight.ExtraBold,
+        color = NeutralColors.subtitleText,
+        textDecoration = TextDecoration.Underline,
+        modifier = Modifier
+            .padding(top = 20.dp)
+            // Same order as PhotographerCredits' control and ViewerScreen's
+            // HomeButton: heightIn before clickable is what makes the clickable
+            // node itself 48dp tall rather than only the box drawn around it.
+            .heightIn(min = 48.dp)
+            .clickable(
+                role = Role.Button,
+                // Named because this is the one control here that replaces the
+                // whole screen; "Privacy policy" alone sounds like a heading.
+                onClickLabel = stringResource(R.string.settings_privacy_policy_open),
+                onClick = onOpen,
+            )
+            .padding(horizontal = 4.dp)
+            .wrapContentHeight(),
+    )
 }
 
 /**

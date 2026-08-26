@@ -17,13 +17,10 @@ import java.util.Locale
 /**
  * Holds `ThemeDef` and `strings.xml` together.
  *
- * The names and labels moved into resources so they can be translated, which
- * split one fact across two files: the ViewModel wraps an index around
- * [com.kidsexplore.app.model.ThemeDef.labelCount] and cannot see the string
- * array it is really indexing. If a translator or a later edit adds a ninth
- * `<item>` — or drops one — nothing else in the build would notice, and the
- * Viewer would quietly stop reaching the last image (or land out of range and
- * be silently coerced back). This is the check that makes that loud.
+ * The theme names moved into resources so they can be translated, which split
+ * one fact across two files: `ThemeDef` names a string it cannot resolve, and
+ * only a device can say whether that string exists, is blank, or has quietly
+ * gone missing from a translation. This is the check that makes that loud.
  */
 @RunWith(AndroidJUnit4::class)
 class ThemeResourcesTest {
@@ -38,28 +35,12 @@ class ThemeResourcesTest {
         ).resources
 
     @Test
-    fun everyThemeLabelCountMatchesItsStringArray() {
-        THEME_DEFS.forEach { theme ->
-            val labels = resources.getStringArray(theme.labelsRes)
-            assertEquals(
-                "theme '${theme.id}' declares labelCount=${theme.labelCount} " +
-                    "but its array holds ${labels.size}",
-                theme.labelCount,
-                labels.size,
-            )
-        }
-    }
-
-    @Test
-    fun everyThemeResolvesANameAndNonBlankLabels() {
+    fun everyThemeResolvesAName() {
         THEME_DEFS.forEach { theme ->
             assertTrue(
                 "theme '${theme.id}' has a blank name",
                 resources.getString(theme.nameRes).isNotBlank(),
             )
-            resources.getStringArray(theme.labelsRes).forEachIndexed { i, label ->
-                assertTrue("theme '${theme.id}' label $i is blank", label.isNotBlank())
-            }
         }
     }
 
@@ -86,7 +67,6 @@ class ThemeResourcesTest {
         THEME_DEFS.forEach { theme ->
             assertEquals("ic_theme_${theme.id}", resources.getResourceEntryName(theme.iconRes))
             assertEquals("theme_${theme.id}", resources.getResourceEntryName(theme.nameRes))
-            assertEquals("labels_${theme.id}", resources.getResourceEntryName(theme.labelsRes))
         }
     }
 
@@ -147,12 +127,12 @@ class ThemeResourcesTest {
     }
 
     /**
-     * The checks above run in the default locale. Arrays replace rather than
-     * merge, so a translation that drops an item would leave the Viewer paging
-     * onto an index that no longer exists — in that language only.
+     * The checks above run in the default locale. A translation that dropped a
+     * theme name, or gave two themes the same one, would leave Settings
+     * ambiguous and Home mislabelled — in that language only.
      */
     @Test
-    fun everyShippedLanguageKeepsTheSameNamesAndLabelCounts() {
+    fun everyShippedLanguageKeepsTheSameNames() {
         AppLocales.SUPPORTED.forEach { tag ->
             val res = localized(tag)
             val names = mutableSetOf<String>()
@@ -160,12 +140,6 @@ class ThemeResourcesTest {
                 val name = res.getString(theme.nameRes)
                 assertTrue("[$tag] ${theme.id} name is blank", name.isNotBlank())
                 assertTrue("[$tag] duplicate theme name '$name'", names.add(name))
-
-                val labels = res.getStringArray(theme.labelsRes)
-                assertEquals("[$tag] ${theme.id} label count", theme.labelCount, labels.size)
-                labels.forEachIndexed { i, l ->
-                    assertTrue("[$tag] ${theme.id} label $i is blank", l.isNotBlank())
-                }
             }
         }
     }

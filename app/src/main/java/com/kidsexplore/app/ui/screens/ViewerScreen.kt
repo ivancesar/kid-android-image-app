@@ -42,14 +42,9 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -84,17 +79,12 @@ private val CardFrameWidth = 8.dp
 @Composable
 fun ViewerScreen(
     theme: ThemeDef,
-    currentLabel: String,
     onHome: () -> Unit,
     onNext: () -> Unit,
     onPrev: () -> Unit,
+    /** The photograph for the item on screen — the whole content of the screen. */
+    @DrawableRes currentImage: Int,
     modifier: Modifier = Modifier,
-    /**
-     * The photograph for the item on screen, or null for a theme that has
-     * none yet — those keep the striped placeholder card. Defaulted so the
-     * layout tests can drive the screen without picking a theme with artwork.
-     */
-    @DrawableRes currentImage: Int? = null,
 ) {
     val palette = theme.palette()
 
@@ -160,7 +150,7 @@ fun ViewerScreen(
                         .then(swipeModifier),
                     contentAlignment = Alignment.Center,
                 ) {
-                    ImageCard(palette = palette, currentLabel = currentLabel, image = currentImage)
+                    PhotoCard(palette = palette, image = currentImage)
                 }
 
                 Row(
@@ -195,7 +185,7 @@ fun ViewerScreen(
                         .padding(horizontal = 14.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    ImageCard(palette = palette, currentLabel = currentLabel, image = currentImage)
+                    PhotoCard(palette = palette, image = currentImage)
                 }
                 NavPillButton(nextGlyph, stringResource(R.string.viewer_next), palette.cardBorder, onNext)
             }
@@ -209,26 +199,6 @@ fun ViewerScreen(
                 HomeButton(onClick = onHome)
             }
         }
-    }
-}
-
-/**
- * The whole content of the screen: a photograph where the theme has one, and
- * the striped placeholder card carrying the item's label where it does not.
- *
- * Only the placeholder speaks. Its label is the entire content of that card,
- * so it is announced and marked a live region — Back/Next/swipe replace it
- * without moving focus, and TalkBack would otherwise say nothing as a child
- * pages through the set. A photograph is left undescribed on purpose: this is
- * an app for looking at pictures, and its item labels were written as artwork
- * stand-ins rather than as descriptions worth reading aloud.
- */
-@Composable
-private fun ImageCard(palette: ThemePalette, currentLabel: String, @DrawableRes image: Int?) {
-    if (image != null) {
-        PhotoCard(palette = palette, image = image)
-    } else {
-        PlaceholderCard(palette = palette, label = currentLabel)
     }
 }
 
@@ -278,30 +248,6 @@ private fun PhotoCard(palette: ThemePalette, @DrawableRes image: Int) {
                 .fillMaxSize()
                 .clip(RoundedCornerShape(24.dp - CardFrameWidth))
                 .testTag(viewerImageTestTag(image)),
-        )
-    }
-}
-
-/** The label on a striped card, for a theme whose photographs do not exist yet. */
-@Composable
-private fun PlaceholderCard(palette: ThemePalette, label: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clip(RoundedCornerShape(24.dp))
-            .background(palette.cardBg)
-            .diagonalStripes(palette.stripe)
-            .padding(20.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 16.sp,
-            color = palette.labelOnCard,
-            textAlign = TextAlign.Center,
-            lineHeight = 24.sp,
-            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         )
     }
 }

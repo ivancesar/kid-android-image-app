@@ -120,7 +120,7 @@ def rect_path(x, y, w, h, rx, ry, m):
         pts(m, x, y + ry),
         pts(m, x, y + ry - oy, x + rx - ox, y, x + rx, y)))
 
-NAMED = {'black': '#000000', 'white': '#ffffff'}
+NAMED = {'black': '#000000'}
 
 def color(c):
     c = NAMED.get(c.strip().lower(), c).strip().lower()
@@ -262,7 +262,7 @@ def main():
         if check:
             import tempfile
             tmp = os.path.join(tempfile.mkdtemp(), os.path.basename(dst))
-            n = convert(os.path.join(src_dir, f), tmp, f)
+            convert(os.path.join(src_dir, f), tmp, f)
             same = os.path.exists(dst) and open(tmp).read() == open(dst).read()
             print('%-18s %s' % (f, 'ok' if same else 'STALE'))
             if not same:

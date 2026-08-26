@@ -6,8 +6,8 @@ import com.kidsexplore.app.model.THEME_DEFS
 
 internal const val PREFS_NAME = "kids_explore_prefs"
 internal const val PREFS_DISABLED_THEMES_KEY = "disabled_theme_ids"
-internal const val PREFS_GATE_FAILURES_KEY = "gate_failures"
-internal const val PREFS_GATE_LOCKED_UNTIL_KEY = "gate_locked_until_wall_ms"
+private const val PREFS_GATE_FAILURES_KEY = "gate_failures"
+private const val PREFS_GATE_LOCKED_UNTIL_KEY = "gate_locked_until_wall_ms"
 
 /**
  * The parental gate's failure count and lockout deadline.

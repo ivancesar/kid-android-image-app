@@ -61,6 +61,7 @@ class SettingsBehaviourTest {
                         onDone = {},
                         currentLanguage = current,
                         onPickLanguage = onPick,
+                        onOpenPolicy = {},
                     )
                 }
                 // ForcedSize rather than the device's own: anything asserting

@@ -41,6 +41,15 @@ sealed interface UiState {
     ) : UiState
 
     data object Settings : UiState
+
+    /**
+     * The privacy policy, reached from Settings and returning to it.
+     *
+     * Its own state rather than a flag on [Settings]: Back has to mean "back to
+     * Settings" here and "back to Home" there, and a boolean inside Settings
+     * would make that a property of a screen rather than a screen of its own.
+     */
+    data object Policy : UiState
 }
 
 /** Wrong answers allowed before the gate stops accepting taps for a while. */
@@ -129,7 +138,7 @@ class AppViewModel(
 
     private fun stepImage(delta: Int) {
         val state = uiState as? UiState.Viewer ?: return
-        val count = THEME_DEFS.find { it.id == state.themeId }?.labelCount ?: return
+        val count = THEME_DEFS.find { it.id == state.themeId }?.imageRes?.size ?: return
         // Modulo twice: Kotlin's % takes the sign of the dividend, so stepping
         // back from 0 gives -1 rather than the last index. Adding count before
         // the second % is what wraps it around.
@@ -212,6 +221,15 @@ class AppViewModel(
         return GateQuestion(a, b, correct, (wrongs + correct).shuffled(random))
     }
 
+    fun openPolicy() {
+        transitionTo(UiState.Policy)
+    }
+
+    /** Back to Settings, not Home: the parent came from there and is not done. */
+    fun closePolicy() {
+        transitionTo(UiState.Settings)
+    }
+
     private fun transitionTo(next: UiState) {
         uiState = next
         persistState(next)
@@ -219,8 +237,9 @@ class AppViewModel(
 
     private fun persistState(state: UiState) {
         // Only Home and Viewer are restorable. Coming back from process death
-        // into Settings would hand a child the parent screen without the gate,
-        // and a half-answered gate is not worth preserving.
+        // into Settings — or into the policy, which is only reachable through
+        // it — would hand a child the parent side without the gate, and a
+        // half-answered gate is not worth preserving.
         when (state) {
             is UiState.Viewer -> {
                 savedState[KEY_SCREEN] = SCREEN_VIEWER
@@ -244,7 +263,7 @@ class AppViewModel(
         if (savedState.get<String>(KEY_SCREEN) != SCREEN_VIEWER) return UiState.Home
         val themeId = savedState.get<String>(KEY_VIEWER_THEME) ?: return UiState.Home
         val theme = THEME_DEFS.find { it.id == themeId } ?: return UiState.Home
-        val index = (savedState.get<Int>(KEY_VIEWER_INDEX) ?: 0).coerceIn(0, theme.labelCount - 1)
+        val index = (savedState.get<Int>(KEY_VIEWER_INDEX) ?: 0).coerceIn(theme.imageRes.indices)
         return UiState.Viewer(themeId = themeId, imageIndex = index)
     }
 

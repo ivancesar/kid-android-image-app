@@ -76,7 +76,7 @@ class AppViewModelTest {
     fun nextWalksEveryImageAndWrapsToTheStart() {
         val vm = newViewModel()
         vm.openTheme("cars")
-        val count = THEME_DEFS.first { it.id == "cars" }.labelCount
+        val count = THEME_DEFS.first { it.id == "cars" }.imageRes.size
 
         repeat(count) { i ->
             assertEquals("image at index $i", i, (vm.uiState as UiState.Viewer).imageIndex)
@@ -89,7 +89,7 @@ class AppViewModelTest {
     fun prevFromTheFirstImageWrapsToTheLast() {
         val vm = newViewModel()
         vm.openTheme("dinosaurs")
-        val count = THEME_DEFS.first { it.id == "dinosaurs" }.labelCount
+        val count = THEME_DEFS.first { it.id == "dinosaurs" }.imageRes.size
 
         vm.prev()
         assertEquals(count - 1, (vm.uiState as UiState.Viewer).imageIndex)
@@ -337,7 +337,7 @@ class AppViewModelTest {
         assertEquals(UiState.Home, after.uiState)
     }
 
-    /** MainActivity indexes straight into labels, so a stale index must not survive. */
+    /** MainActivity indexes straight into imageRes, so a stale index must not survive. */
     @Test
     fun anOutOfRangeRestoredIndexIsCoercedIntoRange() {
         val handle = SavedStateHandle(
@@ -350,7 +350,7 @@ class AppViewModelTest {
 
         val vm = newViewModel(savedState = handle)
 
-        val count = THEME_DEFS.first { it.id == "cars" }.labelCount
+        val count = THEME_DEFS.first { it.id == "cars" }.imageRes.size
         assertEquals(UiState.Viewer("cars", count - 1), vm.uiState)
     }
 

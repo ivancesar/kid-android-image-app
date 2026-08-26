@@ -1,9 +1,54 @@
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+
+/**
+ * Release signing, read from outside the repository.
+ *
+ * Play rejects an unsigned bundle at upload, so `bundleRelease` has to be able
+ * to sign — but a keystore and its passwords are the one thing that must never
+ * be committed, and hardcoding them here would put them in every clone and in
+ * every diff forever. So the four values come from `keystore.properties` at the
+ * repository root (gitignored, see `.gitignore`), falling back to environment
+ * variables so CI can supply them without ever writing a secret to disk.
+ *
+ * All four are optional. When any is missing the release signing config is not
+ * created at all and `release` stays unsigned, which is what keeps a fresh
+ * clone, a debug build and `./gradlew build` on CI working for someone who has
+ * no keystore and no business having one.
+ */
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+/**
+ * One signing setting: the file wins over the environment, so a developer with
+ * a local keystore is not surprised by a stale exported variable. Blank counts
+ * as absent — a half-filled template file should degrade to "no signing", not
+ * fail the build with an empty password.
+ */
+fun signingSetting(key: String, environmentVariable: String): String? =
+    keystoreProperties.getProperty(key)?.takeIf { it.isNotBlank() }
+        ?: System.getenv(environmentVariable)?.takeIf { it.isNotBlank() }
+
+val releaseStorePath = signingSetting("storeFile", "KIDS_EXPLORE_STORE_FILE")
+val releaseStorePassword = signingSetting("storePassword", "KIDS_EXPLORE_STORE_PASSWORD")
+val releaseKeyAlias = signingSetting("keyAlias", "KIDS_EXPLORE_KEY_ALIAS")
+val releaseKeyPassword = signingSetting("keyPassword", "KIDS_EXPLORE_KEY_PASSWORD")
+
+/** The name is referenced twice below; it is not worth misspelling once. */
+val releaseSigningConfigName = "release"
 
 android {
     namespace = "com.kidsexplore.app"
@@ -33,6 +78,56 @@ android {
         localeFilters += listOf("en", "hr")
     }
 
+    /**
+     * How Play splits the uploaded bundle back into what it serves a device.
+     *
+     * Language splitting is off, and this is the block someone will one day be
+     * tempted to delete as clutter — so, at length: with it on, Play installs
+     * only the resources matching the device's system language, and the other
+     * language arrives later as an on-demand split. The in-app picker sets the
+     * language with `AppCompatDelegate.setApplicationLocales()`, which changes
+     * the app's locale but does not ask Play for a split it has not installed.
+     * A parent on an English phone who picks Hrvatski would therefore get
+     * English straight back, because the Croatian resources are simply not on
+     * the device.
+     *
+     * The saving this gives up is one extra language of short UI strings.
+     * `androidResources.localeFilters` above has already thrown away the ~100
+     * locales AppCompat ships, which is where the real weight was.
+     *
+     * None of this reproduces locally: every build made here contains both
+     * languages, so the bug exists only in what Play serves. That is the whole
+     * reason it is written down rather than left to be rediscovered.
+     */
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
+
+    signingConfigs {
+        // Copied into locals first so the null check below actually narrows the
+        // type inside the nested lambda — a script-level property would not.
+        val storePath = releaseStorePath
+        val storePass = releaseStorePassword
+        val alias = releaseKeyAlias
+        val keyPass = releaseKeyPassword
+        // Created only when every value is present — see the block comment at
+        // the top of this file for why an absent keystore is a supported state
+        // rather than an error.
+        if (storePath != null && storePass != null && alias != null && keyPass != null) {
+            create(releaseSigningConfigName) {
+                // `rootProject.file` leaves an absolute path alone and resolves
+                // a relative one against the repository root, so the property
+                // can say either.
+                storeFile = rootProject.file(storePath)
+                storePassword = storePass
+                keyAlias = alias
+                keyPassword = keyPass
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -41,8 +136,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // No signingConfig here on purpose — release signing needs a
-            // keystore, which is a deployment decision, not a build one.
+            // `?.let` rather than a plain assignment: with no keystore
+            // configured there is no config to point at, and the build type is
+            // left exactly as it was before — unsigned, and still buildable.
+            signingConfigs.findByName(releaseSigningConfigName)?.let { signingConfig = it }
         }
     }
 }
@@ -122,18 +219,65 @@ val checkIconsInSync = tasks.register<Exec>("checkIconsInSync") {
 tasks.named("check") { dependsOn(checkIconsInSync) }
 
 /**
- * `ThemeRosterTest.everyThemeShipsOnePhotographPerLabel` reads
- * `values/strings.xml` off disk, because counting `<item>`s against
- * `ThemeDef.imageRes` is the roster check worth gating a plain `./gradlew
- * build` on and `Resources` would drag it onto a device.
+ * Stages `docs/privacy-policy.md` as an app asset, so `PolicyScreen` renders the
+ * very document `docs/` publishes.
  *
- * Gradle cannot see a file a test opens itself. Removing a label changes no
- * resource id, so `R.jar` and the test classpath stay byte-identical, the task
- * is up to date, and the check silently does not run on the one edit it exists
- * to catch. Declaring it as an input is what makes that edit re-run the test.
+ * A task with declared input and output rather than a copy done at configuration
+ * time: this way editing the policy re-runs it, and not editing it does not.
  */
-tasks.withType<Test>().configureEach {
-    inputs.file(layout.projectDirectory.file("src/main/res/values/strings.xml"))
-        .withPropertyName("defaultStrings")
-        .withPathSensitivity(PathSensitivity.RELATIVE)
+abstract class StagePrivacyPolicy : DefaultTask() {
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val policy: RegularFileProperty
+
+    @get:OutputDirectory
+    abstract val stagedAssets: DirectoryProperty
+
+    @TaskAction
+    fun stage() {
+        val target = stagedAssets.get().asFile
+        target.mkdirs()
+        policy.get().asFile.copyTo(target.resolve("privacy-policy.md"), overwrite = true)
+    }
+}
+
+/**
+ * Registered through the variant API rather than `sourceSets`, which AGP no
+ * longer lets a provider into — and this way the asset directory carries its
+ * producing task with it, so no build ever races the copy.
+ */
+androidComponents {
+    onVariants { variant ->
+        val stage = tasks.register<StagePrivacyPolicy>(
+            "stagePrivacyPolicy${variant.name.replaceFirstChar { it.uppercase() }}",
+        ) {
+            description = "Stages docs/privacy-policy.md as an app asset."
+            policy.set(rootProject.layout.projectDirectory.file("docs/privacy-policy.md"))
+        }
+        variant.sources.assets?.addGeneratedSourceDirectory(stage, StagePrivacyPolicy::stagedAssets)
+    }
+}
+
+/**
+ * `bundleRelease` refuses to produce an unsigned bundle.
+ *
+ * Everywhere else, missing signing degrades quietly and on purpose: a fresh
+ * clone has no keystore and must still build. But an unsigned AAB is named
+ * `app-release.aab`, exactly like a signed one — where `assembleRelease` at
+ * least names its output `app-release-unsigned.apk` — so the one command whose
+ * output goes to Play is also the one that gives no sign of the problem. A
+ * mistyped CI secret would archive a normal-looking artifact and the news would
+ * arrive from Play's rejection instead of from here.
+ */
+tasks.matching { it.name == "bundleRelease" }.configureEach {
+    doFirst {
+        check(android.buildTypes.getByName("release").signingConfig != null) {
+            "bundleRelease would produce an UNSIGNED bundle, which Play rejects. " +
+                "Create keystore.properties at the repository root, or export " +
+                "KIDS_EXPLORE_STORE_FILE / _STORE_PASSWORD / _KEY_ALIAS / _KEY_PASSWORD. " +
+                "See docs/play-store-submission.md section 2. " +
+                "(assembleRelease still builds unsigned, if that is what you want.)"
+        }
+    }
 }

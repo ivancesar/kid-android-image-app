@@ -4,9 +4,11 @@ A native Android app for kids to safely browse a curated set of picture categori
 
 Built with Kotlin + Jetpack Compose. Ported from a Claude Design prototype (`Kids Image Browser.dc.html`).
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N6V325T57X)
+
 ## Overview
 
-The app is a single activity with four screens, driven by one piece of state (`Screen.HOME | VIEWER | GATE | SETTINGS`):
+The app is a single activity with four screens, driven by one piece of state (`UiState.Home | Viewer | Gate | Settings`):
 
 ```
 Home ──tap theme──▶ Viewer ──Home──▶ Home
@@ -33,7 +35,7 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - Header: "KIDS EXPLORE" label, a settings gear button (top right) that opens the **parental gate**, and the "Pick something to look at!" title.
 - The header fades out once the grid is scrolled away from the top, and fades back in when scrolled back — it floats over the grid rather than sharing layout space with it, so its own size never affects the grid's, which would otherwise cause the list to bounce as it hid/showed itself.
 - The gear is pinned rather than part of the fading header: it is the app's only route into parent settings, and it used to disappear the moment the grid scrolled.
-- A grid of theme cards — one per enabled theme, with as many columns as fit the available width (2 in portrait, more in landscape or on a wider screen) rather than a fixed count. Each card shows a themed icon on a near-white circle, the theme name, and a color pair (fill + a darker bottom accent stripe) derived from the theme's hue. The circle takes all the height the name leaves it, so the icon is as large as the card allows and the card colour reads as a frame around it.
+- A grid of theme cards — one per enabled theme, with as many columns as fit the available width rather than a fixed count: `GridCells.Adaptive(minSize = 160.dp)`, 14dp between columns, 22dp of content padding either side. Two columns therefore need 378dp of window — `(width − 44 + 14) / (160 + 14) ≥ 2` — which a 393dp or 411dp phone clears and a 360dp one, which most budget Android still is, does not. So the portrait grid is two columns on a mid-range phone and a single column on a small one; landscape and tablets get more. Each card shows a themed icon on a near-white circle, the theme name, and a color pair (fill + a darker bottom accent stripe) derived from the theme's hue. The circle takes all the height the name leaves it, so the icon is as large as the card allows and the card colour reads as a frame around it.
 - Only themes enabled in **Settings** appear here; disabling a theme removes it from this grid immediately. If a parent switches every theme off, the grid is replaced by a short message pointing back at parent settings.
 - Tapping a card opens the **Viewer** for that theme.
 
@@ -42,11 +44,11 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - Dark full-bleed background.
 - A small square "Home" button returns to Home — that's the entire header here, no theme name shown, to keep the focus on the image.
 - The picture itself, in a card framed by a diagonal two-tone stripe pattern in the theme's colors. The card is cut to the photograph's own aspect ratio — the largest rectangle of that shape the space allows — so a portrait and a landscape shot each fill what they can without letterboxing, and both grow to fill a tablet. The stripes survive as a thin frame, which is the only thing on this otherwise dark screen that says which category a child is in.
-- A theme with no photography keeps the original placeholder: the same striped card, filling the space, with the item's label in monospace text, centered. Every theme ships pictures now, so nothing on Home reaches it — see [On images](#on-images) below.
+- There is no second kind of card. A photograph is the whole content of this screen, and a theme without one cannot be declared — see [On images](#on-images) below.
 - The same labelled "◀ Back" / "▶ Next" pill buttons are used at every size, so the controls look and behave identically regardless of how the device is held. The arrows and the swipe direction mirror in an RTL locale, where the sequence advances right-to-left. Which arrangement is used depends on the window's width, not its orientation — the breakpoint is 600dp:
   - **Narrow (under 600dp)**: the card fills the remaining space above a button row, with Back/Next side by side underneath it.
   - **Wide (600dp and up)**: Back/Next flank the card in a single row — the card sits between them rather than under them — and the row fills the full screen height (down to, but not under, the status bar), so the image gets as much vertical room as the display allows. The Home button floats over the top-left corner of the image instead of sitting in its own header row, since there's no header row to spare the height for.
-- Either way, Back/Next cycle through the theme's items, wrapping around at both ends. Counts are per theme and range from 7 (Dinosaurs) to 22 (Birds). The placeholder card announces its label to a screen reader as a live region; a photograph announces nothing (see [On images](#on-images)).
+- Either way, Back/Next cycle through the theme's photographs, wrapping around at both ends. Counts are per theme and range from 7 (Dinosaurs) to 22 (Birds). A photograph announces nothing to a screen reader (see [On images](#on-images)).
 - The card also responds to a horizontal swipe — swipe left for next, right for back — as an alternative to the buttons, in both orientations.
 
 ### Parental Gate ("Grown-ups only")
@@ -67,13 +69,24 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - "Done" returns to Home, where the grid now reflects the updated theme selection.
 - A language dropdown sits above the theme list — "Same as phone settings" plus each shipped language named in its own language. Selecting one applies immediately.
 - "Language" and "Categories" section headings separate the two, so the language row does not read as the first entry in the category list. "Choose which themes your child can see." sits under the Categories heading as that section's explanation, rather than under the screen title where it described only half the screen.
+- A **Privacy policy** link sits below the categories, opening the policy **inside the app** as its own screen. Behind the gate deliberately: Play's Families policy wants the policy reachable from within the app, and equally does not want a child one tap from the open web — rendering it here satisfies the first without going near the second. Above Attribution because it is an action and Attribution is not; below the categories because it is not what a parent came in here to do.
+
+### Privacy policy
+
+- The document a parent reads is `docs/privacy-policy.md` itself. Gradle stages that file as an app asset (`StagePrivacyPolicy` in `app/build.gradle.kts`, wired through the variant API), so the copy Play hosts and the copy the app renders cannot drift — there is only one file to edit.
+- `model/PolicyDocument.kt` parses it: titles, section headings, paragraphs, bullets, bold, and links. Deliberately not a Markdown library — the document is one known file written in this repository, and a general parser would be a dependency and a much larger surface to be wrong about in an app whose pitch is that it carries nothing it does not need. The Markdown that file uses must stay within what the parser handles; `PolicyDocumentTest` is where those rules are written down.
+- HTML comments are stripped whole, because the source file opens with a note to whoever edits it next. `PolicyScreenTest.theEditorsNoteIsNotShipped` pins that.
+- Links keep their label and lose their address. Nothing in the app opens a browser — which is the reason the policy is bundled at all — so an underlined address a reader cannot follow would be worse than plain text. The two addresses the document wants a reader to have are written out in full in its source.
+- **Done** returns to Settings, and so does Back. Back going Home from here would make it the one control that discards where a parent was and costs them the gate again.
+- Not restored after process death, for the same reason Settings is not: it is only reachable through the gate.
+
 - An **Attribution** section sits at the foot of the list: one notice per image source, each saying which categories it covers (Unsplash for every category but Space, NASA for Space), plus the Unsplash photographers' names — 183 of them, clamped to three lines behind a **Show more** control so the credits do not sit between a parent and the end of the screen. The control appears only when the list actually overflows, so a shorter roster or a wider window simply shows the lot. Behind the gate rather than on Home, because it is a notice for the adult who installed the app; last in the list, because nothing in it is an action and it should not sit between a parent and the controls that are. The Unsplash License asks for no credit at all, so the names are a courtesy — the notice is the part that has to stay.
 
 ## Themes
 
-Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a name and a set of item labels. Construction carries 14, Space 17; the rest carry 8. `ThemeDef` holds only ids, resource ids, a list of image drawables and a `labelCount`, which is what keeps `AppViewModel` free of Android: it pages an index, the UI resolves the text. `ThemeResourcesTest` asserts each `labelCount` matches both its label array and its image list, since nothing else in the build ties those files together.
+Fourteen fixed themes, each with a hue, an icon, a set of photographs, and — in `strings.xml` — a name. Counts run from Dinosaurs' 7 to Birds' 22; the table below is the roster. `ThemeDef` holds only the id, the two resource ids, the hue and the list of image drawables, which is what keeps `AppViewModel` free of Android: it pages an index around `imageRes.size` and the UI resolves the drawable. `ThemeResourcesTest` asserts each theme's resources are named after its id and that every photograph decodes, since nothing else in the build ties `ThemeDef.kt` to the files on disk.
 
-| Theme | id | Hue | Items | Artwork |
+| Theme | id | Hue | Photographs | Source |
 |---|---|---|---|---|
 | Cars | `cars` | 15 | 14 | photographs (Unsplash) |
 | Construction | `construction` | 45 | 14 | photographs (Unsplash) |
@@ -90,7 +103,7 @@ Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a 
 | Vegetables | `vegetable` | 125 | 14 | photographs (Unsplash) |
 | Space | `space` | 250 | 17 | photographs (NASA) |
 
-Names shown are the English ones; a theme's display name and its labels are `@StringRes`/`@ArrayRes` ids, so both translate. See **Languages** below. No theme's labels reach a screen while it has photographs, though — see [On images](#on-images).
+Names shown are the English ones; a theme's display name is a `@StringRes` id, so it translates. See **Languages** below. The photographs do not — they are the same in every locale, which is why they are `@DrawableRes` ids on `ThemeDef` rather than per-locale resources.
 
 They are declared in that order in `THEME_DEFS`, loosely grouped (things that go, creatures, growing things, space), and that one list drives both the Home grid and the Settings list.
 
@@ -99,6 +112,9 @@ Every theme's color palette (card fill, stripe, and border/accent) is generated 
 - Card fill: `oklch(72% 0.16 hue)`
 - Stripe: `oklch(66% 0.17 hue)`
 - Border / accent: `oklch(50% 0.19 hue)`
+- Label on the card: `oklch(26% 0.10 hue)`
+
+The label tone is the one that is not in the source design. White was, and it reaches only 2.2–2.7:1 against the card fill — under WCAG AA's 3:1 floor for large text, on all fourteen hues. A dark tone derived from the same hue clears 4.5:1 against both the fill and the lighter stripe (worst case 4.73:1), and `CardContrastTest` recomputes that for every hue in `THEME_DEFS`, so a fifteenth theme cannot quietly reintroduce the problem.
 
 ### Icons
 
@@ -112,9 +128,9 @@ python3 tools/svg2vd.py icons-src app/src/main/res/drawable
 
 The converter inlines the SVGs' CSS classes into path attributes, re-expresses `<circle>`/`<rect>`/`<ellipse>` as cubic Bézier path data, and bakes element transforms into the path — all things VectorDrawable can't express directly.
 
-It deliberately supports only the subset this icon set uses, and raises on anything else rather than guessing: group-level fills or classes, `style="..."` attributes, `fill-rule`/`clip-rule`, opacity, a non-zero `viewBox` origin, and colours carrying alpha. A silently mis-converted icon looks plausible and ships; a refusal costs one line of support code. Pass `--check` to verify the committed drawables without writing anything.
+It deliberately supports only the subset this icon set uses, and raises on anything else rather than guessing: group-level fills or classes, `style="..."` attributes, `fill-rule`/`clip-rule`, opacity, a non-zero `viewBox` origin, colours carrying alpha, and any colour keyword but `black` (every other colour in the set is written as a hex literal). A silently mis-converted icon looks plausible and ships; a refusal costs one line of support code. Pass `--check` to verify the committed drawables without writing anything.
 
-**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, add `theme_<id>_name` and a `labels_<id>` array to every `values*/strings.xml`, and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>`. Photographs are optional and separate — see [On images](#on-images). The theme id, the SVG filename and the resource names are kept identical on purpose. `ThemeResourcesTest` (instrumented, needs a device) asserts the resource names match the id; the `checkIconsInSync` Gradle task (wired into `check`, so it runs in `./gradlew build`) re-runs the converter and fails if any committed drawable disagrees with its source.
+**To add a theme:** drop `icons-src/<id>.svg` in, re-run the converter, add a `theme_<id>` string to `values/strings.xml` and to every translation, prepare its photographs (see [On images](#on-images) — they are not optional), and add one `ThemeDef` entry using `R.drawable.ic_theme_<id>` and the theme's image list. The theme id, the SVG filename and the resource names are kept identical on purpose. `ThemeResourcesTest` (instrumented, needs a device) asserts the resource names match the id; the `checkIconsInSync` Gradle task (wired into `check`, so it runs in `./gradlew build`) re-runs the converter and fails if any committed drawable disagrees with its source.
 
 ## Languages
 
@@ -123,11 +139,12 @@ The app ships English and Croatian. Every user-visible string lives in `res/valu
 Croatian deliberately translates only part of the set. Keys it leaves out fall back to the English file, which is Android's normal behaviour and avoids maintaining a duplicate that has to be re-edited whenever the English changes:
 
 - `app_name` and `home_brand` are the product name.
-- `gate_equation` is nothing but `%1$d`/`%2$d` placeholders.
+- `gate_question` is nothing but `%1$d`/`%2$d` placeholders.
 - `attribution_photographers` is a list of names.
-- No image label reaches a screen in Croatian. Every theme ships photographs, and a theme with photographs shows the picture and nothing else — translating a roster nothing displays would be translating scaffolding.
 
-Six glyphs the app draws as text — the gear, tick, house, dropdown chevron and the two nav arrows — are kept in code rather than resources. They are symbols, not words. The controls carrying them are announced by name rather than by glyph. The gear is icon-only and declares a `contentDescription`; every other container-level control — theme card, theme row, language row, Home and the nav pills — takes its name from the label inside it, which `clickable` and `toggleable` merge into the control's own semantics node (`AbstractClickableNode.shouldMergeDescendantSemantics` is `final` and `true`). `AccessibleNamesTest` covers four of them — the theme card, the gear, a theme row and the language row — asserting each ends up with a name and a click action.
+`ThemeResourcesTest.croatianTranslatesEverythingExceptTheKeysItDeliberatelyLeaves` asserts exactly that policy — those four keys identical between `en` and `hr`, everything else different — rather than a count, so it survives a rename and still fails if four translations quietly vanish.
+
+Six glyphs the app draws as text — the gear, tick, house, dropdown chevron and the two nav arrows — are kept in code rather than resources. They are symbols, not words. The controls carrying them are announced by name rather than by glyph. The gear is icon-only and declares a `contentDescription`; every other container-level control — theme card, theme row, language row, Home and the nav pills — takes its name from the label inside it, which `clickable` and `toggleable` merge into the control's own semantics node (`AbstractClickableNode.shouldMergeDescendantSemantics` is `final` and `true`). `AccessibleNamesTest` covers four of them — the theme card, the gear, a theme row and the language row — asserting each ends up with a name and a click action; a fifth case there covers the collapsed credit list, which has to announce its summary rather than all 183 names, since `maxLines` clamps at draw time only and leaves the whole string in the semantics tree.
 
 ### Switching language
 
@@ -143,22 +160,22 @@ On Android 13+ the framework owns the storage and registers the choice with the 
 
 1. Copy `res/values/strings.xml` to `res/values-<code>/strings.xml` and translate the values, leaving every `name="..."` alone. Omit any key that should stay as the English default.
 2. Add the code to `res/xml/locales_config.xml` **and** to `AppLocales.SUPPORTED`.
-3. Run the tests. `ThemeResourcesTest` checks every shipped language for a non-blank, unique name per theme and for label arrays that still match the default's length — arrays replace rather than merge, so a dropped item would otherwise leave the Viewer paging onto an index that no longer exists. It cannot detect a language that simply isn't translated; fallback makes that indistinguishable from a deliberate omission, which is why `croatianTranslatesEverythingExceptTheKeysItDeliberatelyLeaves` pins that separately.
+3. Run the tests. `ThemeResourcesTest.everyShippedLanguageKeepsTheSameNames` checks every shipped language for a non-blank, unique name per theme — a translation that dropped one, or gave two themes the same one, would leave Settings ambiguous and Home mislabelled in that language only. `GateLockedStringTest` separately formats every second of a lockout in every language, since that string carries a plural. Neither can detect a language that simply isn't translated: fallback makes that indistinguishable from a deliberate omission, which is why `croatianTranslatesEverythingExceptTheKeysItDeliberatelyLeaves` pins Croatian's policy by hand. A new language gets no such test unless someone writes one.
 
 Card names wrap to two lines and ellipsize only past that, so a long name costs the icon some height rather than losing characters — `Construction` was clipped to `Constructi…` at 2x font scale when it was one line.
 
 ### On images
 
-A theme either ships photographs or it does not, and each one decides for itself. All fourteen now do — 217 pictures in total, `img_<id>_01.jpg` upward in `res/drawable-nodpi/`, listed in display order by that theme's `<ID>_IMAGES` list in `ThemeDef.kt`:
+Photographs are a theme's entire content. All fourteen ship them — 217 pictures in total, `img_<id>_01.jpg` upward in `res/drawable-nodpi/`, listed in display order by that theme's `<ID>_IMAGES` list in `ThemeDef.kt`:
 
 | Themes | Images | Source |
 |---|---|---|
 | All but Space | 200, from 7 (Dinosaurs) to 22 (Birds) | [Unsplash](https://unsplash.com), under the [Unsplash License](https://unsplash.com/license) |
 | Space | 17 | [NASA](https://www.nasa.gov/) |
 
-The counts differ on purpose — a theme carries however many good images it has — which is why `labelCount` is per theme. **Parent Settings → Attribution** carries a notice per source saying which categories it covers, plus the Unsplash photographers' names.
+The counts differ on purpose — a theme carries however many good images it has — which is why the ViewModel wraps on `imageRes.size` rather than on any shared number. **Parent Settings → Attribution** carries a notice per source saying which categories it covers, plus the Unsplash photographers' names.
 
-That artwork is most of the download: the release APK is 40 MB with it and 1.4 MB with none of it. Play's limit for an app bundle's base download is far above that, so this is a cost rather than a problem — but if it needs to come down, in rough order of effort:
+That artwork is most of the download. Measured on the current tree: the release APK is 39.9 MB, of which 38.4 MB is the 217 JPEGs; everything else — code, icons, strings, AppCompat — is 1.5 MB. The release bundle is 41.5 MB. Play's limit for an app bundle's base download is far above that, so this is a cost rather than a problem — but if it needs to come down, in rough order of effort:
 
 1. **Re-encode as lossy WebP**, files staying in `drawable-nodpi`. No code change at all: `R.drawable` and `painterResource` do not care about the container, and WebP has been decodable since long before this app's `minSdk` of 26. Typically 25–35% off a JPEG-q55 set. Note that quality 55 being at the knee of the curve is a claim about the *JPEG* quality scale — it is not an argument against a better codec.
 2. **Resample to 1080px on the long edge.** The card is inset by its striped frame inside the screen padding, so the drawn width is well under 1280 on most phones.
@@ -166,19 +183,21 @@ That artwork is most of the download: the release APK is 40 MB with it and 1.4 M
 
 An install-time asset pack is *not* the lever it looks like: install-time packs are delivered with the app at install, so they do not reduce the download at all, and an asset pack carries `assets/` rather than `res/` — moving the images into one means giving up `R.drawable` and `painterResource` for `AssetManager`, which changes `ThemeDef.imageRes`'s type and makes `everyPhotographIsDensityIndependent` meaningless. Fast-follow or on-demand packs would shrink the initial download, at the same cost.
 
-The UI tests resolve their fixture with `THEME_DEFS.first { it.imageRes.isNotEmpty() }` rather than naming a theme, so they keep passing whichever themes are photographed.
+**A theme cannot land ahead of its photographs.** `ThemeDef.imageRes` has no default and is required at every call site; an entry without a picture list does not compile.
 
-No theme ships the placeholder today, but nothing forces that and nothing should: **a theme can land ahead of its photographs.** Add the entry and the icon, leave `imageRes` empty, and the Viewer draws the striped card with the item's label until the pictures arrive. `ThemeRosterTest` asserts only that *some* theme has artwork — enough to keep the Viewer's image path from going untested — because which themes are photographed is a content decision rather than a build-time rule. Asserting every theme was tried and rejected: it turned a half-finished theme into a build failure.
+That is a deliberate reversal. A theme could once ship with an empty `imageRes` and the Viewer would draw a striped placeholder card carrying the item's label in monospace text until the pictures arrived. The placeholder is gone, and with it the entire string-array path it existed to display: fourteen `labels_<id>` arrays and 217 `<item>` elements, some 270 lines of `strings.xml` that had rendered nothing on any screen since the last theme was photographed. Keeping the workflow alive was costing a card composable, a chooser in `ViewerScreen`, a nullable image threaded down from `MainActivity`, a JVM test that parsed `strings.xml` off disk with a Gradle input declaration to go with it, a per-theme `labelCount` field that had to be kept equal to `imageRes.size` by an instrumented assertion, and a paragraph of translation policy explaining why none of it was translated — a whole second content model, for a state nothing had been in for months. Croatian never had the arrays at all; they always fell back.
 
-What *is* gated is consistency. `ThemeRosterTest.everyThemeShipsOnePhotographPerLabel` fails `./gradlew build` if a theme's picture count and its `labels_<id>` array disagree, which is the pairing the Viewer relies on. It lives in `app/src/test` rather than beside its siblings in `androidTest` on purpose: it needs no device, and in `androidTest` it would have run solely under `connectedDebugAndroidTest` — which needs an emulator, is in neither the recommended local command below nor any CI, and so would have gated nothing.
+What the reversal gives up is real and worth naming: adding a theme is now one bigger step. The icon and the name cannot land on Monday with the pictures on Friday. Do the whole thing at once, or keep it on a branch.
 
-`ViewerLayoutTest` exercises the placeholder by calling `ViewerScreen` with a null image rather than reaching it from Home, since no theme currently lacks artwork — so the path stays covered whether or not one does.
+`ThemeRosterTest.everyThemeShipsPhotographs` is what makes the runtime half of that a `./gradlew build` failure rather than a crash on a child's screen — a `ThemeDef` assembled some other way, by a future loader or a careless test, would otherwise take the Viewer out of range the moment the theme was tapped. It lives in `app/src/test` rather than beside its siblings in `androidTest` on purpose: it needs no device, and in `androidTest` it would have run solely under `connectedDebugAndroidTest` — which needs an emulator, is in neither the recommended local command below nor any CI, and so would have gated nothing. Its three siblings there are as cheap and as structural: the roster is not empty (which would make the first assertion vacuous), theme ids are non-blank and unique, and no drawable is listed in two slots — a copy-paste duplicate would show a child the same photograph twice while every count still agreed.
 
-Every theme keeps its `labels_<id>` array, but nothing displays it. **A photograph is shown undescribed** — no caption over it, no `contentDescription` behind it. This app is for looking at pictures, its labels were written as artwork stand-ins rather than as prose worth reading aloud, and a screen reader announcing "Yellow digger with a big scooping bucket" adds nothing for the child holding the phone. The array survives as the roster of what the theme holds: one entry per image, in the order `ThemeDef` lists them, which is what `ThemeResourcesTest` counts `labelCount` against, and a note to the next maintainer about which photograph is which.
+The UI tests name Cars as their Viewer fixture (`THEME_DEFS.first { it.id == "cars" }`) rather than searching for a photographed theme, since there is no longer such a thing as an unphotographed one to search past. Naming it also keeps the fixed indices those tests page to stable against a content change somewhere else in the roster.
 
-The practical cost is that nothing in the semantics tree says *which* photograph is on screen. The image therefore carries a test tag naming the drawable it is drawing (`viewerImageTestTag(image)`), which is what the tests match on — what matters about this screen is that the expected image loaded, not what is pictured in it.
+**A photograph is shown undescribed** — no caption over it, no `contentDescription` behind it. This app is for looking at pictures, the labels that used to exist were written as artwork stand-ins rather than as prose worth reading aloud, and a screen reader announcing "Yellow digger with a big scooping bucket" adds nothing for the child holding the phone. `ViewerLayoutTest.aPhotographIsShownWithNoTextAndNoDescription` pins that as a decision rather than an oversight: the node must carry neither `Text` nor `ContentDescription`, rather than carrying a placeholder one. There is also no `Role.Image` to declare — Compose's `Image` sets that role only alongside a description.
 
-**To give a theme photographs:**
+The practical cost is that nothing in the semantics tree says *which* photograph is on screen — and, now that the arrays are gone, nothing written down anywhere says which picture sits at which index either. Look at the folder. The image carries a test tag naming the drawable it is drawing (`viewerImageTestTag(image)`), which is what the tests match on: what matters about this screen is that the expected image loaded, not what is pictured in it.
+
+**To prepare a theme's photographs** — which now has to happen before the `ThemeDef` entry can be written at all:
 
 1. Downscale the sources to 1280px on the long edge and re-encode them. On macOS, with no ImageMagick needed:
 
@@ -186,17 +205,16 @@ The practical cost is that nothing in the semantics tree says *which* photograph
    sips -s format jpeg -s formatOptions 55 --resampleHeightWidthMax 1280 in.jpg --out out.jpg
    ```
 
-   That lands each file around 30–460 KB, and a theme's set at roughly 2–4 MB. Skip the resample when a source is already under 1280px — it would only upscale it.
+   That lands each file between 33 and 453 KB across the set as it stands, and a theme's set between 1.8 MB (Dinosaurs) and 3.9 MB (Forest). Skip the resample when a source is already under 1280px — it would only upscale it.
 2. Drop them in `res/drawable-nodpi/` as `img_<id>_NN.jpg`, numbered from `01`. **`-nodpi` matters**: a drawable in a plain `drawable/` folder is treated as mdpi artwork and upscaled by the device's density, which decodes a 1280px JPEG into a bitmap several times that size for nothing. `everyPhotographIsDensityIndependent` fails if one lands anywhere else.
-3. List them in `ThemeDef.kt` and set the theme's `labelCount` from the list's size.
-4. Keep that theme's `labels_<id>` array one entry per image, in the same order, and **look at each picture to write its entry** — the array is the only written record of which photograph sits at which index. It is not displayed while the theme has artwork, but `labelCount` is still checked against it. Translations of it can be dropped — nothing shows them.
-5. Add any new photographers to `attribution_photographers`. The list is derived from the Unsplash source filenames, which are ASCII-folded, so a name with a diacritic needs correcting by hand against the photographer's profile.
+3. List them in `ThemeDef.kt` as that theme's `<ID>_IMAGES`, in display order, and pass the list as the theme's `imageRes`. `ThemeResourcesTest.everyPhotographIsNamedAfterItsThemeAndPosition` fails if the list and the filenames disagree about position, so the order in the file and the order on disk stay the same fact.
+4. Add any new photographers to `attribution_photographers`. The list is derived from the Unsplash source filenames, which are ASCII-folded, so a name with a diacritic needs correcting by hand against the photographer's profile.
 
 ## Tech stack
 
 - Kotlin, Jetpack Compose (Material 3), single `AppCompatActivity`
 - One `ViewModel` (`AppViewModel`) holds all app state as a sealed `UiState`, plus the set of disabled themes and the gate's failure/lockout counters
-- User-facing text, including every theme name and item label, lives in `strings.xml`
+- User-facing text, including every theme name, lives in `strings.xml`
 - Persistence goes through a `ThemeStore` interface; `SharedPreferencesThemeStore` is the only implementation. That seam is what lets the entire state machine be tested off-device. The language choice is the exception: `AppCompatDelegate` owns that store
 - `androidx.appcompat` is present for one reason: per-app language selection below Android 13, which is also why the activity is an `AppCompatActivity` on a `Theme.AppCompat` parent
 - No navigation library, no networking, no local database
@@ -212,9 +230,10 @@ app/src/main/java/com/kidsexplore/app/
 ├── data/
 │   └── ThemeStore.kt            # persistence seam (themes + gate lock) + SharedPreferences impl
 ├── model/
-│   └── ThemeDef.kt              # theme ids/hues/icons + the 14 THEME_DEFS entries
+│   └── ThemeDef.kt              # theme ids/hues/icons/photographs + the 14 THEME_DEFS entries
 ├── AppLocales.kt                # language selection, backed by AppCompatDelegate
 └── ui/
+    ├── TestTags.kt              # the two test tags the UI declares, and why
     ├── theme/
     │   ├── OklchColor.kt        # OKLCH → sRGB conversion, per-theme palettes
     │   └── Theme.kt             # MaterialTheme wrapper, type styles
@@ -232,6 +251,7 @@ res/values-hr/strings.xml        # Croatian overrides; missing keys fall back
 res/xml/locales_config.xml       # languages the app ships
 icons-src/                       # source SVGs, one per theme id
 tools/svg2vd.py                  # icons-src/*.svg -> res/drawable/ic_theme_*.xml
+docs/                            # privacy policy (md + html) and the Play submission checklist
 ```
 
 ## Building & running
@@ -265,11 +285,14 @@ Reports land in `app/build/reports/tests/testDebugUnitTest/index.html` and `app/
 | `AppViewModelTest` | `test` (JVM) | The whole state machine: transitions, paging and wrap-around, unknown theme ids, gate question generation over 500 seeds, the lockout (driven by a hand-advanced clock rather than a 30-second wait), theme toggling, `visibleThemes` caching, and restore-from-process-death including out-of-range indices. `AppViewModel` takes its store, its `Random` and its clock as parameters, so none of this touches Android. |
 | `GateLockPersistenceTest` | `test` (JVM) | The gate's durability, which is the one thing protecting Settings: that the lockout **and** the failure count survive the app being closed and relaunched, that the lockout still expires on its own, that a correct answer clears it, that a backwards device clock cannot strand a parent, and that the question rotates on every wrong answer. A relaunch is modelled the way Android behaves — same store, fresh `SavedStateHandle`. |
 | `KidsExploreFlowTest` | `androidTest` | The end-to-end journey through the real screens: Home → Viewer (paging by button and by swipe, through a theme's whole set of photographs) → Home → gate (wrong answer, lockout, cancel, correct answer) → Settings (toggle a theme) → Home, asserting the grid updates. Photographs carry no description, so every paging assertion matches the drawable it should be showing, by the test tag naming it. |
-| `ViewerLayoutTest` | `androidTest` | The Viewer's layout at both sides of the 600dp breakpoint, using `DeviceConfigurationOverride(ForcedSize(...))` so a window wider than the test device still renders on screen. Asserts the buttons actually sit beside the image when wide and below it when narrow, rather than only that a branch was taken — and that both the button order and the swipe direction mirror under an RTL override. Covers both card kinds: that a photograph shows its label in no form at all, that it does not swallow the swipe, and that the wide layout holds for it too. |
+| `ViewerLayoutTest` | `androidTest` | The Viewer's layout at both sides of the 600dp breakpoint, using `DeviceConfigurationOverride(ForcedSize(...))` so a window wider than the test device still renders on screen. Asserts the buttons actually sit beside the image when wide and below it when narrow, rather than only that a branch was taken — and that both the button order and the swipe direction mirror under an RTL override. Then the photograph itself: that it carries neither text nor a content description, that it does not swallow the swipe, and — `theViewerDrawsThePhotographItWasGiven` — that the drawable on screen is the one it was handed, which nothing visible would otherwise distinguish from an off-by-one. |
 | `SettingsBehaviourTest` | `androidTest` | The language dropdown, the empty Home state, the attribution notice at the foot of the settings list, and the credit list's collapse/expand control. |
 | `SharedPreferencesThemeStoreTest` | `androidTest` | The real store against real preferences: themes and the gate lock round-tripping through a *second* store instance, the two keys not treading on each other, ids for removed themes being pruned on read, and a lockout surviving a relaunch through actual SharedPreferences rather than a fake. |
-| `ThemeResourcesTest` | `androidTest` | Holds `ThemeDef`, `strings.xml` and the bundled photographs together, for everything that needs real resources: every theme's `labelCount` matches the length of its string array, names and labels are non-blank, ids and names are unique, and every photograph is named after its theme and position, decodes, and lives in `drawable-nodpi`. |
-| `ThemeRosterTest` | `test` | The two roster facts that need no device, so a plain `./gradlew build` gates them: every theme ships photographs, and each ships exactly one per `<item>` in its `labels_<id>` array — read out of `strings.xml` as text, since `Resources` would drag it onto a device. `strings.xml` is declared an input of the test task in `app/build.gradle.kts`, or Gradle would call the task up to date on the one edit this catches. |
+| `ThemeResourcesTest` | `androidTest` | Holds `ThemeDef`, `strings.xml` and the bundled photographs together, for everything that needs real resources: names are non-blank and unique, each theme's icon and name resolve to `ic_theme_<id>` and `theme_<id>`, every photograph is named `img_<id>_NN` after its theme and position, decodes, and lives in `drawable-nodpi`. It also checks every shipped language for names, and pins Croatian's fallback policy and a handful of English defaults by literal. |
+| `PolicyDocumentTest` | `test` (JVM) | The privacy policy's Markdown: that headings, wrapped paragraphs, wrapped bullets and bold parse as intended, that links flatten to something a reader without a browser can use, and — the one that matters — that the editor's HTML comment at the top of the source file never reaches a reader. |
+| `PolicyScreenTest` | `androidTest` | That the policy is actually *in* the APK. Gradle staging `docs/privacy-policy.md` into assets is the step that can silently stop happening, and a JVM test reading the file off disk would pass either way. Also that the screen renders the document and that Done dismisses it. |
+| `ThemeRosterTest` | `test` (JVM) | The four roster facts that need no device, so a plain `./gradlew build` gates them: every theme ships photographs, the roster is not empty, ids are non-blank and unique, and no drawable is listed twice. It reads `THEME_DEFS` and nothing else — the version that parsed `strings.xml` off disk, and the `strings.xml` test-task input in `app/build.gradle.kts` that had to accompany it, went with the label arrays. |
+| `CardContrastTest` | `test` (JVM) | Recomputes the WCAG contrast of every theme's card label against both its fill and its stripe, and fails under 4.5:1. The palette is generated from a hue, so a fifteenth theme with a bad hue is a bad card; this is what stops that shipping. |
 
 To run a single instrumented class:
 
@@ -279,11 +302,34 @@ To run a single instrumented class:
 
 There is no CI; run `./gradlew lint testDebugUnitTest assembleDebug` locally, and the instrumented suite against a device or emulator, before releasing.
 
+**One instrumented test is currently red:** `AppLocalesTest.everyOfferedChoiceSurvivesTheRoundTrip`, which sets each offered locale through `AppCompatDelegate` and reads it back. It has failed on the emulator for a while and has been treated as an emulator quirk, but nobody has confirmed that on real hardware or found the cause — so treat it as an open question about the app's own per-app-language handling, not as a settled property of the test rig. The rest of the suite passes.
+
+## Releasing
+
+Play wants an app bundle, and it rejects an unsigned one at upload:
+
+```bash
+./gradlew bundleRelease   # app/build/outputs/bundle/release/app-release.aab
+```
+
+Signing is read from `keystore.properties` at the repository root, falling back to `KIDS_EXPLORE_STORE_FILE` / `_STORE_PASSWORD` / `_KEY_ALIAS` / `_KEY_PASSWORD` in the environment so CI can supply the values without writing a secret to disk. The file wins over the environment, so a local keystore is not shadowed by a stale exported variable. Both the keystore and the properties file are gitignored.
+
+**All four values are optional, and their absence is a supported state.** With any of them missing the release signing config is not created at all and `release` simply stays unsigned — which is what keeps a fresh clone, `./gradlew build` and `./gradlew assembleRelease` working for someone who has no keystore and no business having one. The APK path says so in the filename — `app-release-unsigned.apk` rather than `app-release.apk`. The bundle path cannot: an unsigned AAB is named `app-release.aab`, exactly like a signed one, and that is the artifact that goes to Play. So `bundleRelease` alone refuses to run without signing, and says what to do about it; `assembleRelease` and `./gradlew build` still degrade quietly.
+
+Two other release-only pieces are worth knowing about before someone tidies them away:
+
+- `bundle { language { enableSplit = false } }` in `app/build.gradle.kts`. With language splitting on, Play installs only the resources matching the device's system language. The in-app picker sets the language with `AppCompatDelegate.setApplicationLocales()`, which changes the app's locale but does not ask Play for a split it never installed — so a parent on an English phone who picked Hrvatski would get English straight back. None of this reproduces locally, because every build made here contains both languages; the bug would exist only in what Play serves. The saving given up is one extra language of short UI strings, `androidResources.localeFilters` having already thrown away the ~100 locales AppCompat ships.
+- The app no longer contains a policy URL at all. Play still needs one for the **Console listing**, and `docs/privacy-policy.html` is the copy to host — once the repository is public and GitHub Pages serves `/docs` from `main`, it lands at `https://ivancesar.github.io/kid-android-image-app/privacy-policy.html`. Hosting is on the submission's critical path, not the app's: nothing in the app breaks if that page is down, which is the whole point of bundling the document. `docs/play-store-submission.md` has the steps.
+
+The rest of the submission — the store listing, the Data safety and Families answers, the content rating, what to do about the keystore — is in **[`docs/play-store-submission.md`](docs/play-store-submission.md)**, written for whoever presses Publish. The policy text itself is `docs/privacy-policy.md`, with a self-contained `docs/privacy-policy.html` alongside it for hosting. Both rest on the same handful of facts about the app — no `INTERNET` permission, no ads, no analytics, no accounts, and one SharedPreferences file leaving the device via Auto Backup. If any of those stops being true, both documents stop being true with it.
+
 ## Known limitations
 
-- The artwork dominates the download: 38.5 MB of the 40 MB release APK is bundled JPEGs (see [On images](#on-images) above). That is a deliberate trade for now — well inside Play's limits, and the pictures are the product. Lossy WebP is the first lever if it stops being acceptable; it needs no code change, only an encoder, which `sips` is not (it reads WebP but cannot write it).
+- The artwork dominates the download: 38.4 MB of the 39.9 MB release APK is bundled JPEGs, and the release bundle is 41.5 MB (see [On images](#on-images) above). That is a deliberate trade for now — well inside Play's limits, and the pictures are the product. Lossy WebP is the first lever if it stops being acceptable; it needs no code change, only an encoder, which `sips` is not (it reads WebP but cannot write it).
 - The photographer credits in `attribution_photographers` are derived from Unsplash filenames, which are ASCII-folded, so most names carrying diacritics are spelled without them. The exceptions are the ones checked by hand — `Wioletta Płonkowska` among them — so the list is inconsistent rather than uniformly folded.
-- The Viewer decodes each photograph with `painterResource`, which has no downsampling, no caching across compositions and no preloading, so every Back/Next/swipe blocks a frame on a full JPEG decode. At 1280px that is a ~6.6 MB `ARGB_8888` bitmap against the app heap, and `drawable-nodpi` correctly prevents density upscaling but still decodes the full 1280px onto a card that draws far narrower. Now that all fourteen themes are photographed this is the next thing to reach for: `BitmapFactory.Options.inSampleSize` sized to the card, off the main thread, behind a small `LruCache` — or an image loader.
+- **Every page turn in the Viewer blocks on a full JPEG decode.** `painterResource` does no downsampling, no caching across compositions and no preloading, so Back, Next and a swipe each decode the whole file synchronously on the main thread. This is a jank problem, not a memory one. The obvious framing is heap pressure, and it is the wrong one: from API 26 onward, which is exactly this app's `minSdk`, bitmap pixels are allocated in the native heap rather than counted against the app's Java heap limit, and nothing here is retained between pages — so no `OutOfMemoryError` is in prospect. What is in prospect is a dropped frame every time a child taps Next. The typical page is 853×1280, which is a 4.4 MB `ARGB_8888` bitmap and about 1.1 megapixels to decode; the worst case is the three 1280×1280 files at 6.6 MB. Decoding a megapixel of JPEG costs tens of milliseconds on a mid-range phone, against a 16 ms frame budget — and `drawable-nodpi` correctly prevents density upscaling but still decodes the full 1280px onto a card that draws far narrower. Nobody has profiled this on a real device yet, so the size figures above are measured and the timing is an estimate. The fix is the usual one: `BitmapFactory.Options.inSampleSize` sized to the card, off the main thread, behind a small `LruCache` — or an image loader.
+- **The parental gate does not escalate, and a determined child gets through it.** Three wrong answers cost 30 seconds; the failure count then resets, so the fourth costs another 30 and so on forever — the penalty never lengthens. The question is one addition of two numbers between 2 and 7 with four buttons, so a random guess is right one time in four and a round of three guesses clears it 58% of the time. Waiting out half a minute buys another round, indefinitely. In practice that is well under a minute of persistence between a child and Parent Settings. What the gate reliably does is stop a toddler batting at the gear and stop the four-taps-and-you're-in problem the question rotation fixed; it is not a lock, and the app should not be described as though it were. An escalating lockout (doubling each time), or a gate that is not arithmetic, is what would change that. Nothing has been done about it.
+- The Cancel link on the gate, the Attribution body text and the category subtitle are all `cancelText`, which is 4.32:1 against the screen behind it — under WCAG AA's 4.5:1 for body text. `CardContrastTest` gates the *theme card* labels at 4.5:1, but nothing gates the neutral tones, and this one misses. Known, unfixed.
 - Nothing stops a child leaving the app for the launcher. The gate protects **Settings**, not the app's boundary; Android's screen pinning is what would deliver that, and it is not wired up.
 - No confirmation/undo when a parent disables a theme a child was mid-viewing — they're just returned to Home the next time they tap Home.
 - Font is the system sans-serif at heavy weights, approximating the source design's Nunito 800/900; no font file is bundled.

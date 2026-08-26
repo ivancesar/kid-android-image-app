@@ -52,19 +52,15 @@ class KidsExploreFlowTest {
     private fun themeNamed(id: String) =
         resources.getString(THEME_DEFS.first { it.id == id }.nameRes)
 
-    /** Names and labels live in strings.xml now, so the tests resolve them the same way the UI does. */
+    /** Names live in strings.xml, so the tests resolve them the same way the UI does. */
     private fun ThemeDef.displayName(): String = resources.getString(nameRes)
 
     /**
      * The theme these tests drive through the Viewer.
      *
-     * Every theme ships photographs today, so a photograph is what the Viewer
-     * shows and the paging assertions below match on the test tag naming the
-     * drawable rather than on a label — nothing on that screen is text. A
-     * theme may still land ahead of its pictures, and the placeholder card it
-     * would fall back to is covered at the composable level by
-     * `ViewerLayoutTest`, which passes a null image directly rather than
-     * depending on an unphotographed theme existing.
+     * A photograph is the whole content of the Viewer, so the paging
+     * assertions below match on the test tag naming the drawable rather than
+     * on any text — nothing on that screen is text.
      */
     private val cars = THEME_DEFS.first { it.id == "cars" }
     private val carImages by lazy { cars.imageRes }
@@ -152,7 +148,7 @@ class KidsExploreFlowTest {
      * Paging a theme has to reach every photograph and wrap.
      *
      * The count is per theme — they run from Dinosaurs' seven to Birds'
-     * twenty-two — and it is `labelCount` the ViewModel wraps on, so this
+     * twenty-two — and it is `imageRes.size` the ViewModel wraps on, so this
      * walks the whole set rather than a fixed number of steps.
      *
      * The photographs carry no description, so the test tag naming the

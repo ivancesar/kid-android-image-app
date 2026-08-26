@@ -1,6 +1,5 @@
 package com.kidsexplore.app.model
 
-import androidx.annotation.ArrayRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
@@ -9,14 +8,10 @@ import com.kidsexplore.app.R
 /**
  * A theme names its content by resource id rather than holding the strings.
  *
- * The names and item labels are the app's primary content, so they belong in
- * `strings.xml` with everything else translatable — and keeping them out of
- * here is also what lets [com.kidsexplore.app.AppViewModel] stay free of
- * Android: it pages an index around [labelCount] and the UI resolves the text.
- *
- * [labelCount] therefore duplicates the length of the [labelsRes] array, which
- * the ViewModel cannot see. `ThemeResourcesTest` asserts the two agree for
- * every theme, so the two cannot drift apart unnoticed.
+ * The theme names are the app's primary text, so they belong in `strings.xml`
+ * with everything else translatable — and keeping them out of here is also
+ * what lets [com.kidsexplore.app.AppViewModel] stay free of Android: it pages
+ * an index around `imageRes.size` and the UI resolves the drawable.
  *
  * `@Immutable` marks this class stable for Compose. Note that it says nothing
  * about a `List<ThemeDef>` parameter, which stays unstable and is compared by
@@ -33,8 +28,6 @@ data class ThemeDef(
      */
     val id: String,
     @param:StringRes val nameRes: Int,
-    @param:ArrayRes val labelsRes: Int,
-    val labelCount: Int,
     val hue: Float,
     /**
      * `res/drawable/ic_theme_<id>.xml`, generated from `icons-src/<id>.svg` by
@@ -43,34 +36,26 @@ data class ThemeDef(
      */
     @param:DrawableRes val iconRes: Int,
     /**
-     * The theme's photographs, in the same order as [labelsRes] — item *n*'s
-     * label describes image *n*, as a note to whoever edits this next. Nothing
-     * displays or announces it: a theme with photographs shows the picture
-     * alone.
+     * The theme's photographs, in the order the Viewer pages them. This is the
+     * theme's entire content — the Viewer shows the picture and nothing else,
+     * and its length is what the ViewModel wraps the index around.
      *
-     * Every theme now carries a set, so the default below is currently unused;
-     * it stays because the Viewer's striped placeholder card is what a theme
-     * added ahead of its artwork would fall back to, and dropping the default
-     * would make adding such a theme a change to this class rather than one
-     * more entry in the list.
-     *
-     * Photographs, unlike names and labels, are the same in every language, so
-     * they are referenced here rather than through a per-locale typed array.
-     * A non-empty list must be exactly [labelCount] long, which is also the
-     * length of the theme's label array; `ThemeRosterTest` asserts the images
-     * against the array off-device, and `ThemeResourcesTest` asserts
-     * [labelCount] against the array on one.
+     * Photographs, unlike the names, are the same in every language, so they
+     * are referenced here rather than through a per-locale resource. Required
+     * and never empty: a theme with no pictures has nothing to show, and
+     * `ThemeRosterTest.everyThemeShipsPhotographs` fails the build rather than
+     * letting one reach a child's screen.
      */
-    val imageRes: List<Int> = emptyList(),
+    val imageRes: List<Int>,
 )
 
 /**
  * Every theme's photographs, in the order the Viewer pages them.
  *
  * Each list is however many usable pictures that theme has and no particular
- * number — they run from Dinosaurs' seven to Birds' twenty-two — which is
- * what [ThemeDef.labelCount] being per-theme is for. Nothing anywhere expects
- * two themes to agree on a count.
+ * number — they run from Dinosaurs' seven to Birds' twenty-two — which is why
+ * the ViewModel wraps on the theme's own count. Nothing anywhere expects two
+ * themes to agree on one.
  *
  * Sources are Unsplash for every theme but Space, under the Unsplash License,
  * with the photographers credited in Parent Settings
@@ -339,79 +324,65 @@ private val SPACE_IMAGES = listOf(
 val THEME_DEFS: List<ThemeDef> = listOf(
     // Things that go
     ThemeDef(
-        id = "cars", nameRes = R.string.theme_cars, labelsRes = R.array.labels_cars,
-        labelCount = CARS_IMAGES.size, hue = 15f, iconRes = R.drawable.ic_theme_cars,
+        id = "cars", nameRes = R.string.theme_cars, hue = 15f, iconRes = R.drawable.ic_theme_cars,
         imageRes = CARS_IMAGES,
     ),
     ThemeDef(
-        id = "construction", nameRes = R.string.theme_construction, labelsRes = R.array.labels_construction,
-        labelCount = CONSTRUCTION_IMAGES.size, hue = 45f, iconRes = R.drawable.ic_theme_construction,
+        id = "construction", nameRes = R.string.theme_construction, hue = 45f, iconRes = R.drawable.ic_theme_construction,
         imageRes = CONSTRUCTION_IMAGES,
     ),
     ThemeDef(
-        id = "trains", nameRes = R.string.theme_trains, labelsRes = R.array.labels_trains,
-        labelCount = TRAINS_IMAGES.size, hue = 350f, iconRes = R.drawable.ic_theme_trains,
+        id = "trains", nameRes = R.string.theme_trains, hue = 350f, iconRes = R.drawable.ic_theme_trains,
         imageRes = TRAINS_IMAGES,
     ),
 
     // Creatures
     ThemeDef(
-        id = "animals", nameRes = R.string.theme_animals, labelsRes = R.array.labels_animals,
-        labelCount = ANIMALS_IMAGES.size, hue = 320f, iconRes = R.drawable.ic_theme_animals,
+        id = "animals", nameRes = R.string.theme_animals, hue = 320f, iconRes = R.drawable.ic_theme_animals,
         imageRes = ANIMALS_IMAGES,
     ),
     ThemeDef(
-        id = "bird", nameRes = R.string.theme_bird, labelsRes = R.array.labels_bird,
-        labelCount = BIRD_IMAGES.size, hue = 225f, iconRes = R.drawable.ic_theme_bird,
+        id = "bird", nameRes = R.string.theme_bird, hue = 225f, iconRes = R.drawable.ic_theme_bird,
         imageRes = BIRD_IMAGES,
     ),
     ThemeDef(
-        id = "insects", nameRes = R.string.theme_insects, labelsRes = R.array.labels_insects,
-        labelCount = INSECTS_IMAGES.size, hue = 200f, iconRes = R.drawable.ic_theme_insects,
+        id = "insects", nameRes = R.string.theme_insects, hue = 200f, iconRes = R.drawable.ic_theme_insects,
         imageRes = INSECTS_IMAGES,
     ),
     ThemeDef(
-        id = "ocean", nameRes = R.string.theme_ocean, labelsRes = R.array.labels_ocean,
-        labelCount = OCEAN_IMAGES.size, hue = 175f, iconRes = R.drawable.ic_theme_ocean,
+        id = "ocean", nameRes = R.string.theme_ocean, hue = 175f, iconRes = R.drawable.ic_theme_ocean,
         imageRes = OCEAN_IMAGES,
     ),
     ThemeDef(
-        id = "farm", nameRes = R.string.theme_farm, labelsRes = R.array.labels_farm,
-        labelCount = FARM_IMAGES.size, hue = 75f, iconRes = R.drawable.ic_theme_farm,
+        id = "farm", nameRes = R.string.theme_farm, hue = 75f, iconRes = R.drawable.ic_theme_farm,
         imageRes = FARM_IMAGES,
     ),
     ThemeDef(
-        id = "dinosaurs", nameRes = R.string.theme_dinosaurs, labelsRes = R.array.labels_dinosaurs,
-        labelCount = DINOSAURS_IMAGES.size, hue = 285f, iconRes = R.drawable.ic_theme_dinosaurs,
+        id = "dinosaurs", nameRes = R.string.theme_dinosaurs, hue = 285f, iconRes = R.drawable.ic_theme_dinosaurs,
         imageRes = DINOSAURS_IMAGES,
     ),
 
     // Growing things
     ThemeDef(
-        id = "flowers", nameRes = R.string.theme_flowers, labelsRes = R.array.labels_flowers,
-        labelCount = FLOWERS_IMAGES.size, hue = 296f, iconRes = R.drawable.ic_theme_flowers,
+        id = "flowers", nameRes = R.string.theme_flowers, hue = 296f, iconRes = R.drawable.ic_theme_flowers,
         imageRes = FLOWERS_IMAGES,
     ),
     ThemeDef(
-        id = "forest", nameRes = R.string.theme_forest, labelsRes = R.array.labels_forest,
-        labelCount = FOREST_IMAGES.size, hue = 150f, iconRes = R.drawable.ic_theme_forest,
+        id = "forest", nameRes = R.string.theme_forest, hue = 150f, iconRes = R.drawable.ic_theme_forest,
         imageRes = FOREST_IMAGES,
     ),
     ThemeDef(
-        id = "fruit", nameRes = R.string.theme_fruit, labelsRes = R.array.labels_fruit,
-        labelCount = FRUIT_IMAGES.size, hue = 100f, iconRes = R.drawable.ic_theme_fruit,
+        id = "fruit", nameRes = R.string.theme_fruit, hue = 100f, iconRes = R.drawable.ic_theme_fruit,
         imageRes = FRUIT_IMAGES,
     ),
     ThemeDef(
-        id = "vegetable", nameRes = R.string.theme_vegetable, labelsRes = R.array.labels_vegetable,
-        labelCount = VEGETABLE_IMAGES.size, hue = 125f, iconRes = R.drawable.ic_theme_vegetable,
+        id = "vegetable", nameRes = R.string.theme_vegetable, hue = 125f, iconRes = R.drawable.ic_theme_vegetable,
         imageRes = VEGETABLE_IMAGES,
     ),
 
     // Out there
     ThemeDef(
-        id = "space", nameRes = R.string.theme_space, labelsRes = R.array.labels_space,
-        labelCount = SPACE_IMAGES.size, hue = 250f, iconRes = R.drawable.ic_theme_space,
+        id = "space", nameRes = R.string.theme_space, hue = 250f, iconRes = R.drawable.ic_theme_space,
         imageRes = SPACE_IMAGES,
     ),
 )
