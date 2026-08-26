@@ -9,10 +9,12 @@
   checks the hosted copy, and a repository copy that says something different
   is worse than no repository copy at all.
 
-  One placeholder has to be filled in before this is published:
-    * the URL it ends up at, which also goes in PRIVACY_POLICY_URL in
-      app/src/main/java/com/kidsexplore/app/ui/screens/SettingsScreen.kt and in
-      the Play Console listing.
+  This file is also the app's own copy of the policy: Gradle stages it as an
+  asset (see `copyPrivacyPolicy` in app/build.gradle.kts) and PolicyScreen
+  renders it. Editing it therefore changes what a parent reads in Parent
+  Settings, not only what is published — and the Markdown it uses must stay
+  within what model/PolicyDocument.kt parses: headings, paragraphs, bullets,
+  bold, links and autolinks.
 
   Everything else is a statement of fact about the app as it is built today. If
   the app ever gains a network call, an analytics library, an advertisement or a
@@ -37,7 +39,7 @@ of ours for it to be sent to. Every photograph the app shows is packaged inside
 the app itself and is displayed from the device.
 
 The only permission in the installed app is
-`android.permission.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. It is a
+`com.kidsexplore.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. It is a
 signature-level Android permission contributed automatically by a standard
 Android support library, it grants no access to anything on the device, and it
 involves no data at all. The app requests no camera, microphone, location,
@@ -97,9 +99,9 @@ children either.
   for, no profiling, and no data subject rights request that could be answered
   with anything other than "we hold nothing about you". The app does not track
   users across apps or websites.
-* **Outbound links.** The single link out of the app — the one that opened this
-  document — is placed inside Parent Settings, behind a parental gate that a
-  child is not expected to pass.
+* **Outbound links.** There are none. This document is stored inside the app
+  and displayed by the app itself, so reading it opens no browser and makes no
+  network request. Nothing anywhere in Kids Explore navigates out of it.
 
 ## Data deletion
 
@@ -111,8 +113,9 @@ or clear device backup in your Android settings.
 ## Changes to this policy
 
 If the app ever changes in a way that affects this policy, this document will be
-updated and the "Last updated" date at the top changed. The current version is
-always available at the address linked from Parent Settings inside the app.
+updated and the "Last updated" date at the top changed. The version that applies
+to the copy of the app you have is the one shown in Parent Settings, inside the
+app itself; the same document is also published on the web for Google Play.
 
 ## Contact
 

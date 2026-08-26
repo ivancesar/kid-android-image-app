@@ -44,7 +44,8 @@
     <string name="settings_subtitle">Odredite koje kategorije vaše dijete može vidjeti.</string>
     <string name="settings_done">Gotovo</string>
     <string name="settings_privacy_policy">Pravila privatnosti</string>
-    <string name="settings_privacy_policy_unavailable">Nije moguće otvoriti preglednik. Pravila se nalaze na %1$s</string>
+    <string name="settings_privacy_policy_open">Otvori pravila privatnosti</string>
+    <string name="policy_done">Gotovo</string>
 
     <!-- Language picker -->
     <string name="settings_language">Jezik</string>

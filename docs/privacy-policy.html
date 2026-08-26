@@ -7,9 +7,10 @@
   a bad joke, and it also means this file works from any static host, straight
   out of the repository — GitHub Pages serves docs/ as-is.
 
-  Edit this together with privacy-policy.md. One placeholder must be replaced
-  before publishing: the URL this ends up at, which also goes in
-  PRIVACY_POLICY_URL in SettingsScreen.kt and in the Play Console listing.
+  Edit this together with privacy-policy.md, which is the source of truth and is
+  also what the app itself renders in Parent Settings. This copy exists for
+  hosting: the Play Console listing needs a public URL, which the app no longer
+  uses for anything.
 -->
 <html lang="en">
 <head>
@@ -110,7 +111,7 @@ contains no networking code of any kind, so there is nowhere for information to
 be sent, and no server of ours for it to be sent to. Every photograph the app
 shows is packaged inside the app itself and is displayed from the device.</p>
 <p>The only permission in the installed app is
-<code>android.permission.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION</code>. It is a
+<code>com.kidsexplore.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION</code>. It is a
 signature-level Android permission contributed automatically by a standard
 Android support library, it grants no access to anything on the device, and it
 involves no data at all. The app requests no camera, microphone, location,
@@ -182,8 +183,9 @@ clear device backup in your Android settings.</p>
 
 <h2>Changes to this policy</h2>
 <p>If the app ever changes in a way that affects this policy, this document will
-be updated and the "Last updated" date at the top changed. The current version is
-always available at the address linked from Parent Settings inside the app.</p>
+be updated and the "Last updated" date at the top changed. The version that applies
+to the copy of the app you have is the one shown in Parent Settings, inside the
+app itself; the same document is also published on the web for Google Play.</p>
 
 <h2>Contact</h2>
 <!-- An issue tracker rather than an email address: the repository is public, and

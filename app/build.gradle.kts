@@ -1,4 +1,10 @@
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import java.util.Properties
 
 plugins {
@@ -211,3 +217,67 @@ val checkIconsInSync = tasks.register<Exec>("checkIconsInSync") {
 }
 
 tasks.named("check") { dependsOn(checkIconsInSync) }
+
+/**
+ * Stages `docs/privacy-policy.md` as an app asset, so `PolicyScreen` renders the
+ * very document `docs/` publishes.
+ *
+ * A task with declared input and output rather than a copy done at configuration
+ * time: this way editing the policy re-runs it, and not editing it does not.
+ */
+abstract class StagePrivacyPolicy : DefaultTask() {
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val policy: RegularFileProperty
+
+    @get:OutputDirectory
+    abstract val stagedAssets: DirectoryProperty
+
+    @TaskAction
+    fun stage() {
+        val target = stagedAssets.get().asFile
+        target.mkdirs()
+        policy.get().asFile.copyTo(target.resolve("privacy-policy.md"), overwrite = true)
+    }
+}
+
+/**
+ * Registered through the variant API rather than `sourceSets`, which AGP no
+ * longer lets a provider into — and this way the asset directory carries its
+ * producing task with it, so no build ever races the copy.
+ */
+androidComponents {
+    onVariants { variant ->
+        val stage = tasks.register<StagePrivacyPolicy>(
+            "stagePrivacyPolicy${variant.name.replaceFirstChar { it.uppercase() }}",
+        ) {
+            description = "Stages docs/privacy-policy.md as an app asset."
+            policy.set(rootProject.layout.projectDirectory.file("docs/privacy-policy.md"))
+        }
+        variant.sources.assets?.addGeneratedSourceDirectory(stage, StagePrivacyPolicy::stagedAssets)
+    }
+}
+
+/**
+ * `bundleRelease` refuses to produce an unsigned bundle.
+ *
+ * Everywhere else, missing signing degrades quietly and on purpose: a fresh
+ * clone has no keystore and must still build. But an unsigned AAB is named
+ * `app-release.aab`, exactly like a signed one — where `assembleRelease` at
+ * least names its output `app-release-unsigned.apk` — so the one command whose
+ * output goes to Play is also the one that gives no sign of the problem. A
+ * mistyped CI secret would archive a normal-looking artifact and the news would
+ * arrive from Play's rejection instead of from here.
+ */
+tasks.matching { it.name == "bundleRelease" }.configureEach {
+    doFirst {
+        check(android.buildTypes.getByName("release").signingConfig != null) {
+            "bundleRelease would produce an UNSIGNED bundle, which Play rejects. " +
+                "Create keystore.properties at the repository root, or export " +
+                "KIDS_EXPLORE_STORE_FILE / _STORE_PASSWORD / _KEY_ALIAS / _KEY_PASSWORD. " +
+                "See docs/play-store-submission.md section 2. " +
+                "(assembleRelease still builds unsigned, if that is what you want.)"
+        }
+    }
+}

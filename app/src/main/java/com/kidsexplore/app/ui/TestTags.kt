@@ -28,3 +28,12 @@ fun viewerImageTestTag(@DrawableRes image: Int): String = "$VIEWER_IMAGE_TEST_TA
 
 /** Prefix of [viewerImageTestTag]; the tag itself is what tests match on. */
 const val VIEWER_IMAGE_TEST_TAG = "viewer-image"
+
+/**
+ * The privacy policy's scrolling body.
+ *
+ * The policy is one long document with no controls in it, so a test has
+ * nothing else to hold on to — and asserting on its prose would tie the test
+ * to wording that is meant to be edited.
+ */
+const val POLICY_LIST_TEST_TAG = "policy-list"

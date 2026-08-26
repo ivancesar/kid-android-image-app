@@ -32,12 +32,13 @@
     <string name="settings_language_system">Same as phone settings</string>
     <string name="settings_done">Done</string>
     <!--
-      The privacy policy link, and what is said instead when the tap has nowhere
-      to go. The second one carries the address so a parent on a device with no
-      browser can still read the policy somewhere else.
+      The privacy policy link in Parent Settings, the action label a screen
+      reader announces for it, and the button that closes the policy again.
+      The policy opens inside the app, so none of these mention a browser.
     -->
     <string name="settings_privacy_policy">Privacy policy</string>
-    <string name="settings_privacy_policy_unavailable">Couldn\'t open a browser. The policy is at %1$s</string>
+    <string name="settings_privacy_policy_open">Open the privacy policy</string>
+    <string name="policy_done">Done</string>
 
     <!--
       Theme names. These are the app's primary content — the words a child

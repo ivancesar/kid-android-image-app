@@ -9,7 +9,7 @@ them luck.
 Facts the answers below rest on, all verified against the built app:
 
 * one permission in the merged release manifest,
-  `android.permission.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (signature-level,
+  `com.kidsexplore.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (signature-level,
   contributed by `androidx.core`);
 * no `INTERNET` permission, no advertising ID, no networking code anywhere in
   `app/src/main`;
@@ -23,35 +23,34 @@ being true with it.
 
 ---
 
-## 1. Before anything else: make the policy reachable
+## 1. Before anything else: host the policy
 
-`PRIVACY_POLICY_URL` in `app/src/main/java/com/kidsexplore/app/ui/screens/SettingsScreen.kt`
-is set to:
+The app itself no longer needs this — `docs/privacy-policy.md` is bundled as an
+asset and Parent Settings renders it, so a parent can always read the policy
+offline. But the **Play Console listing** still requires a public URL, and Play
+checks that it resolves.
 
-    https://ivancesar.github.io/kid-android-image-app/privacy-policy.html
+`docs/privacy-policy.html` is the copy to host. Two steps make it live, both in
+the repository's settings on github.com, and both are the repository owner's
+decision rather than something a build can do:
 
-That address does not resolve yet. Two things make it live, both in the
-repository's settings on github.com, and both are decisions for the repository
-owner rather than steps a build can take:
-
-1. **Make the repository public.** It is private today. A policy Play cannot
-   fetch is the same as no policy.
+1. **Make the repository public.** It is private today.
 2. **Enable GitHub Pages**, serving `/docs` from the `main` branch. The file is
    deliberately self-contained — no external stylesheet, font or script — so
    Pages serves it as-is with no build step.
 
-Then open the address in a browser and confirm it renders before pasting it into
-the Play Console listing. Play checks it, and the in-app link in Parent Settings
-points at the same place — a child-directed app is expected to offer the policy
-from inside the app, and a dead link there is worse than none.
+It then lands at:
+
+    https://ivancesar.github.io/kid-android-image-app/privacy-policy.html
+
+Open it in a browser, confirm it renders, and paste that into the listing. Keep
+it in step with `docs/privacy-policy.md`, which is the source of truth and is
+what the app renders.
 
 Policy questions go to the repository's issue tracker rather than an email
 address. Play separately requires a developer contact email on the Console
 account itself; that is an account setting and has nothing to do with these
 documents.
-
-Both documents also carry a "Last updated" date of 26 August 2026. Change it if
-the text changes.
 
 **Hosting the policy.** `docs/privacy-policy.html` is deliberately
 self-contained — no external stylesheet, font, script or image — so any static
@@ -284,7 +283,7 @@ accounts older than that date are exempt.
 
 ## 7. Order of operations
 
-1. Fill in the two placeholders (section 1) and publish the policy page.
+1. Host the policy (section 1) and publish the policy page.
 2. Create the keystore and `keystore.properties` (section 2).
 3. `./gradlew build && ./gradlew bundleRelease`, then run the three verification
    checks (section 3).

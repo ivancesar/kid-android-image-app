@@ -74,6 +74,7 @@ fun SettingsScreen(
     onDone: () -> Unit,
     currentLanguage: String,
     onPickLanguage: (String) -> Unit,
+    onOpenPolicy: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -171,7 +172,7 @@ fun SettingsScreen(
             // not, and below the categories because it is not the thing a
             // parent came in here to do.
             item(key = "privacy") {
-                PrivacyPolicyLink()
+                PrivacyPolicyLink(onOpen = onOpenPolicy)
             }
 
             item(key = "attribution") {
@@ -195,38 +196,19 @@ fun SettingsScreen(
 }
 
 /**
- * Where the hosted privacy policy lives.
+ * The way into the privacy policy, behind the parental gate.
  *
- * This is where `docs/privacy-policy.html` lands once the repository is public
- * and GitHub Pages is serving `docs/` from the default branch. Until both of
- * those are done the address 404s, so it must be checked in a browser before
- * any upload to Play: the same address goes in the Console listing, Play
- * verifies the policy is reachable, and a child-directed app is expected to
- * offer it from inside the app too — which is what [PrivacyPolicyLink] is.
+ * Opens the policy inside the app rather than in a browser. Play's Families
+ * policy wants the document reachable from within the app and equally does not
+ * want a child one tap from the open web; rendering it here satisfies the first
+ * without going anywhere near the second, and it cannot break the way a link to
+ * a hosted page can. Still placed in Settings, so a child does not meet it.
  *
- * Hardcoded rather than a placeholder because a wrong-but-eventually-right URL
- * is easier to notice than an `example.com` one that reads as intentional.
- */
-private const val PRIVACY_POLICY_URL =
-    "https://ivancesar.github.io/kid-android-image-app/privacy-policy.html"
-
-/**
- * A way out to the privacy policy, behind the parental gate.
- *
- * Behind the gate deliberately. Play's Families policy wants the policy
- * reachable from within the app, and it equally does not want a child one tap
- * away from a browser — Settings is the one screen that is already gated, so it
- * is the only place an outbound link belongs.
- *
- * Set as a link rather than as a button: this leaves the app, and it should not
- * look like the controls above it that do not.
+ * Set as a link rather than as a button because it opens a document rather than
+ * changing anything, which is what every control above it does.
  */
 @Composable
-private fun PrivacyPolicyLink() {
-    val context = LocalContext.current
-    // Read here rather than inside the click: `stringResource` is a composable
-    // read, and it is also what makes the message follow a language change.
-    val unavailable = stringResource(R.string.settings_privacy_policy_unavailable, PRIVACY_POLICY_URL)
+private fun PrivacyPolicyLink(onOpen: () -> Unit) {
     Text(
         text = stringResource(R.string.settings_privacy_policy),
         fontSize = 13.sp,
@@ -239,24 +221,13 @@ private fun PrivacyPolicyLink() {
             // HomeButton: heightIn before clickable is what makes the clickable
             // node itself 48dp tall rather than only the box drawn around it.
             .heightIn(min = 48.dp)
-            .clickable(role = Role.Button) {
-                // A device with no browser is rare but real — a stripped kids'
-                // tablet, a locked-down enterprise profile — and an
-                // uncaught ActivityNotFoundException there would crash the app
-                // on a link that exists to satisfy a policy requirement. The
-                // address is read out instead, so the tap still leads somewhere.
-                //
-                // try/catch rather than checking `resolveActivity` first: from
-                // API 30 package visibility makes that return null even when a
-                // browser is installed, unless the manifest declares a
-                // <queries> element for it. Launching and catching needs no
-                // such declaration and is the check that cannot be wrong.
-                try {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, PRIVACY_POLICY_URL.toUri()))
-                } catch (_: ActivityNotFoundException) {
-                    Toast.makeText(context, unavailable, Toast.LENGTH_LONG).show()
-                }
-            }
+            .clickable(
+                role = Role.Button,
+                // Named because this is the one control here that replaces the
+                // whole screen; "Privacy policy" alone sounds like a heading.
+                onClickLabel = stringResource(R.string.settings_privacy_policy_open),
+                onClick = onOpen,
+            )
             .padding(horizontal = 4.dp)
             .wrapContentHeight(),
     )

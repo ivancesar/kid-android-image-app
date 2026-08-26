@@ -78,6 +78,7 @@ class AccessibleNamesTest {
                     onDone = {},
                     currentLanguage = AppLocales.SYSTEM,
                     onPickLanguage = {},
+                        onOpenPolicy = {},
                 )
             }
         }
@@ -95,6 +96,7 @@ class AccessibleNamesTest {
                     onDone = {},
                     currentLanguage = AppLocales.SYSTEM,
                     onPickLanguage = {},
+                        onOpenPolicy = {},
                 )
             }
         }
@@ -130,6 +132,7 @@ class AccessibleNamesTest {
                         onDone = {},
                         currentLanguage = AppLocales.SYSTEM,
                         onPickLanguage = {},
+                        onOpenPolicy = {},
                     )
                 }
             }

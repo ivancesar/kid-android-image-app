@@ -13,6 +13,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.ui.screens.GateScreen
 import com.kidsexplore.app.ui.screens.HomeScreen
+import com.kidsexplore.app.ui.screens.PolicyScreen
 import com.kidsexplore.app.ui.screens.SettingsScreen
 import com.kidsexplore.app.ui.screens.ViewerScreen
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
@@ -57,7 +58,12 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
 
     // Back is the most-pressed button on an Android device; without this it
     // quit the app from every screen. Home stays unhandled so Back still exits.
-    BackHandler(enabled = state !is UiState.Home) { viewModel.goHome() }
+    BackHandler(enabled = state !is UiState.Home) {
+        // From the policy, Back returns to the screen that opened it. Sending a
+        // parent to Home from there would make Back the one control that
+        // discards where they were, and they would have to pass the gate again.
+        if (state is UiState.Policy) viewModel.closePolicy() else viewModel.goHome()
+    }
 
     when (state) {
         UiState.Home -> HomeScreen(
@@ -102,6 +108,9 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
             // in ViewModel state.
             currentLanguage = AppLocales.current(),
             onPickLanguage = AppLocales::apply,
+            onOpenPolicy = viewModel::openPolicy,
         )
+
+        UiState.Policy -> PolicyScreen(onBack = viewModel::closePolicy)
     }
 }
