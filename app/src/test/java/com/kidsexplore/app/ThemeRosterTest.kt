@@ -13,36 +13,37 @@ import java.io.File
  *
  * Their siblings in `ThemeResourcesTest` genuinely need Android — they resolve
  * string arrays, inflate drawables and read resource entry names. These two
- * need no `Resources`, and living in `androidTest` meant they
- * ran only under `connectedDebugAndroidTest`, which needs an emulator and is
- * in neither the README's recommended local command nor any CI (there is no
- * CI). A theme could ship without its photographs and nothing in the default
- * build would say so, which is the opposite of what the assertion is for.
+ * need no `Resources`, and living in `androidTest` meant they ran only under
+ * `connectedDebugAndroidTest`, which needs an emulator and is in neither the
+ * README's recommended local command nor any CI (there is no CI). Images and
+ * labels could drift apart and the default build would say nothing, which is
+ * the opposite of what the assertion is for.
  */
 class ThemeRosterTest {
 
     /**
-     * Every theme has artwork.
+     * Some theme has artwork.
      *
-     * This started as "Construction has photographs", was loosened to "some
-     * theme does" while the set was growing, and is tight again now the set is
-     * finished: no theme ships the placeholder card. A child must never land
-     * on stand-in text, so a theme reaching the grid without its pictures is a
-     * shipping bug, not a work-in-progress state.
+     * Deliberately "some" and not "every". Every theme does ship photographs
+     * today, and asserting that outright was tried — it made adding a theme
+     * ahead of its pictures a build failure, which is a workflow this project
+     * wants to keep: an entry and an SVG can land first and the photographs
+     * follow. `ThemeDef.imageRes` defaults to empty and the Viewer draws the
+     * striped placeholder for a null image precisely so that half-finished
+     * state renders instead of crashing.
      *
-     * That makes this the assertion that fails when a theme is added before it
-     * has been photographed. The failure is the point — write the entry and
-     * drop the images in together. `ThemeDef.imageRes` still defaults to empty
-     * and the Viewer still renders the placeholder for a null image, so
-     * nothing is broken in the meantime; it just does not ship.
+     * What is worth pinning is that the roster is not empty. The Viewer's
+     * photograph path, and every test that exercises it, resolves its fixture
+     * with `first { it.imageRes.isNotEmpty() }`, and all of it would go
+     * quietly vacuous if the last theme lost its images. Which themes are
+     * photographed, and how many each carries, is a content decision that
+     * [everyThemeShipsOnePhotographPerLabel] already polices for consistency.
      */
     @Test
-    fun everyThemeShipsPhotographs() {
-        val bare = THEME_DEFS.filter { it.imageRes.isEmpty() }.map { it.id }
+    fun atLeastOneThemeShipsPhotographs() {
         assertTrue(
-            "these themes would show the placeholder card rather than a " +
-                "photograph: $bare",
-            bare.isEmpty(),
+            "no theme ships photographs - the Viewer's image path is untested",
+            THEME_DEFS.any { it.imageRes.isNotEmpty() },
         )
     }
 

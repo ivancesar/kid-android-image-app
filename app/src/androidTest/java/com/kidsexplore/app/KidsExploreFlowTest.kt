@@ -58,12 +58,13 @@ class KidsExploreFlowTest {
     /**
      * The theme these tests drive through the Viewer.
      *
-     * Every theme ships photographs now, so a photograph is what the Viewer
+     * Every theme ships photographs today, so a photograph is what the Viewer
      * shows and the paging assertions below match on the test tag naming the
-     * drawable rather than on a label — nothing on that screen is text. The
-     * placeholder card a theme without artwork would fall back to is covered
-     * at the composable level by `ViewerLayoutTest`, which can pass a null
-     * image directly; it is no longer reachable from Home.
+     * drawable rather than on a label — nothing on that screen is text. A
+     * theme may still land ahead of its pictures, and the placeholder card it
+     * would fall back to is covered at the composable level by
+     * `ViewerLayoutTest`, which passes a null image directly rather than
+     * depending on an unphotographed theme existing.
      */
     private val cars = THEME_DEFS.first { it.id == "cars" }
     private val carImages by lazy { cars.imageRes }

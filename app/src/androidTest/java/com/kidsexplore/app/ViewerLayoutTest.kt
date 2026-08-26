@@ -54,13 +54,13 @@ class ViewerLayoutTest {
     /**
      * A theme to hang the placeholder card off.
      *
-     * Every theme ships photographs now, so the placeholder is no longer
-     * reachable from Home — but the Viewer still renders it whenever
-     * `currentImage` is null, which is what a theme added ahead of its artwork
-     * would get. These tests call `ViewerScreen` directly and pass no image,
-     * so they still exercise that path; which theme carries it is immaterial,
-     * and its label array is being borrowed as card text rather than read as
-     * the photo roster it now is.
+     * Every theme ships photographs today, so no theme on Home reaches the
+     * placeholder — but the Viewer renders it whenever `currentImage` is null,
+     * which is what a theme added ahead of its artwork gets. These tests call
+     * `ViewerScreen` directly and pass no image, so the path stays covered
+     * without depending on an unphotographed theme existing. Which theme
+     * carries it is immaterial; its label array is borrowed as card text
+     * rather than read as the photo roster it also is.
      */
     private val cars = THEME_DEFS.first { it.id == "cars" }
     private val carLabels by lazy { resources.getStringArray(cars.labelsRes).toList() }
@@ -70,8 +70,9 @@ class ViewerLayoutTest {
      *
      * Resolved by having artwork rather than named, so these keep passing if
      * the set of photographed themes changes underneath them.
-     * `ThemeRosterTest.everyThemeShipsPhotographs` is what makes an empty roster fail
-     * loudly rather than as a confusing `NoSuchElementException` in here.
+     * `ThemeRosterTest.atLeastOneThemeShipsPhotographs` is what makes an empty
+     * roster fail loudly rather than as a confusing `NoSuchElementException`
+     * in here.
      */
     private val photoTheme = THEME_DEFS.first { it.imageRes.isNotEmpty() }
     private val photoLabels by lazy {
