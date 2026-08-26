@@ -70,5 +70,7 @@
     <string name="settings_attribution">Zasluge</string>
     <string name="attribution_images">Slike u svim kategorijama osim Svemira ustupio je Unsplash pod svojom Unsplash licencom</string>
     <string name="attribution_photographers_line">Fotografije s Unsplasha: %1$s</string>
+    <string name="attribution_show_more">Prikaži više</string>
+    <string name="attribution_show_less">Prikaži manje</string>
     <string name="attribution_nasa">Slike u kategoriji Svemir ustupila je NASA</string>
 </resources>

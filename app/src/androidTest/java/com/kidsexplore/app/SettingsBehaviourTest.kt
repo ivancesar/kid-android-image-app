@@ -140,6 +140,45 @@ class SettingsBehaviourTest {
         compose.onNodeWithText(notice).assertIsDisplayed()
     }
 
+    /**
+     * The credit list is clamped to three lines, and the control opens and
+     * closes it.
+     *
+     * Asserting on the control rather than on the clamped text: `maxLines`
+     * ellipsizes at draw time, so the full string is in the semantics tree in
+     * both states and matching on a name proves nothing about what is on
+     * screen. "Show more" being present *is* the assertion that something was
+     * clamped — the composable only emits it when the layout actually
+     * overflowed — and it flipping to "Show less" and back is the toggle.
+     *
+     * Each state is scrolled to before it is asserted on. Expanding pushes the
+     * control far below the fold — 183 names is several screens — so it is
+     * present but off-screen until the list is moved, which is the difference
+     * `assertIsDisplayed` catches and `assertExists` would not.
+     */
+    @Test
+    fun theCreditListCollapsesAndExpands() {
+        settings()
+
+        val more = str(R.string.attribution_show_more)
+        val less = str(R.string.attribution_show_less)
+        val list = compose.onNodeWithTag(THEME_LIST_TEST_TAG)
+
+        list.performScrollToNode(hasText(more))
+        compose.onNodeWithText(more).assertIsDisplayed()
+        compose.onNodeWithText(less).assertDoesNotExist()
+
+        compose.onNodeWithText(more).performClick()
+        list.performScrollToNode(hasText(less))
+        compose.onNodeWithText(less).assertIsDisplayed()
+        compose.onNodeWithText(more).assertDoesNotExist()
+
+        compose.onNodeWithText(less).performClick()
+        list.performScrollToNode(hasText(more))
+        compose.onNodeWithText(more).assertIsDisplayed()
+        compose.onNodeWithText(less).assertDoesNotExist()
+    }
+
     @Test
     fun aPopulatedHomeShowsNoEmptyMessage() {
         compose.setContent {

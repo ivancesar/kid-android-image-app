@@ -28,6 +28,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +43,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kidsexplore.app.AppLocales
@@ -203,26 +206,73 @@ private fun Attribution() {
         )
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             AttributionLine(stringResource(R.string.attribution_images))
-            AttributionLine(
-                // One sentence rather than a heading and a list: TalkBack
-                // reads it as a sentence either way, and a list of twelve
-                // names is a wall of rows a parent has to swipe through to
-                // reach the end of the screen.
-                //
-                // A format string, not concatenation: the separator and the
-                // word order belong to the language, and gluing them together
-                // here puts both out of a translator's reach.
-                stringResource(
-                    R.string.attribution_photographers_line,
-                    stringResource(R.string.attribution_photographers),
-                ),
-            )
+            PhotographerCredits()
         }
         // Its own block rather than another clause on the Unsplash one: the
         // two sources cover different categories and carry different terms,
         // and NASA's material is not licensed so much as simply not
         // copyrighted.
         AttributionLine(stringResource(R.string.attribution_nasa))
+    }
+}
+
+/** How much of the credit list shows before a parent asks for the rest. */
+private const val COLLAPSED_CREDIT_LINES = 3
+
+/**
+ * Unsplash's photographers, clamped to [COLLAPSED_CREDIT_LINES] with a control
+ * to open the rest.
+ *
+ * One sentence rather than a heading and a list: TalkBack reads it as a
+ * sentence either way, and 183 names as 183 rows is a wall to swipe through.
+ * At that length the sentence was a wall too, which is what the clamp is for —
+ * the names are all still here, they just no longer sit between a parent and
+ * the end of the screen.
+ *
+ * A format string, not concatenation: the separator and the word order belong
+ * to the language, and gluing them together here puts both out of a
+ * translator's reach.
+ */
+@Composable
+private fun PhotographerCredits() {
+    // rememberSaveable, not remember: this is the last item in a LazyColumn,
+    // so scrolling it off screen would otherwise silently re-collapse it.
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    var overflows by rememberSaveable { mutableStateOf(false) }
+
+    Text(
+        text = stringResource(
+            R.string.attribution_photographers_line,
+            stringResource(R.string.attribution_photographers),
+        ),
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        color = NeutralColors.cancelText,
+        maxLines = if (expanded) Int.MAX_VALUE else COLLAPSED_CREDIT_LINES,
+        overflow = TextOverflow.Ellipsis,
+        // Only meaningful while collapsed. Expanded there is nothing left to
+        // overflow, and assigning it unconditionally would take away the
+        // control that closes it again.
+        onTextLayout = { if (!expanded) overflows = it.hasVisualOverflow },
+    )
+    // Absent when the whole list already fits — a shorter roster, a wider
+    // window, or a smaller font scale — rather than offering to expand what
+    // is not clamped.
+    if (overflows) {
+        Text(
+            text = stringResource(
+                if (expanded) R.string.attribution_show_less
+                else R.string.attribution_show_more
+            ),
+            fontSize = 12.sp,
+            color = NeutralColors.cancelText,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier
+                // Padding outside the clickable would leave the target the
+                // height of 12sp text, well under the 48dp minimum.
+                .clickable(role = Role.Button) { expanded = !expanded }
+                .padding(vertical = 14.dp, horizontal = 4.dp),
+        )
     }
 }
 
