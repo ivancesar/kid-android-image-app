@@ -281,7 +281,7 @@ There is no CI; run `./gradlew lint testDebugUnitTest assembleDebug` locally, an
 
 ## Known limitations
 
-- The artwork dominates the download: 38.5 MB of the 40 MB release APK is bundled JPEGs (see [On images](#on-images) above). Lossy WebP is the cheap lever if that starts to matter — no code change — and re-encoding is only skipped here because this machine has no WebP encoder installed.
+- The artwork dominates the download: 38.5 MB of the 40 MB release APK is bundled JPEGs (see [On images](#on-images) above). That is a deliberate trade for now — well inside Play's limits, and the pictures are the product. Lossy WebP is the first lever if it stops being acceptable; it needs no code change, only an encoder, which `sips` is not (it reads WebP but cannot write it).
 - The photographer credits in `attribution_photographers` are derived from Unsplash filenames, which are ASCII-folded — names carrying diacritics are currently spelled without them.
 - The Viewer decodes each photograph with `painterResource`, which has no downsampling, no caching across compositions and no preloading, so every Back/Next/swipe blocks a frame on a full JPEG decode. At 1280px that is a ~6.6 MB `ARGB_8888` bitmap against the app heap, and `drawable-nodpi` correctly prevents density upscaling but still decodes the full 1280px onto a card that draws far narrower. Now that all fourteen themes are photographed this is the next thing to reach for: `BitmapFactory.Options.inSampleSize` sized to the card, off the main thread, behind a small `LruCache` — or an image loader.
 - Nothing stops a child leaving the app for the launcher. The gate protects **Settings**, not the app's boundary; Android's screen pinning is what would deliver that, and it is not wired up.
