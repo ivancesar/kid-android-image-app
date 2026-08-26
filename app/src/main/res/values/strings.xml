@@ -353,10 +353,20 @@
       What a screen reader hears in place of the names while they are
       collapsed. maxLines clamps at draw time only - Compose publishes the
       whole string to the semantics tree either way - so without this a
-      TalkBack user hears all 183 names and is then offered a control that
-      changes nothing they can perceive.
+      TalkBack user hears every name and is then offered a control that
+      changes nothing they can perceive. The count is substituted rather than
+      written out, so it cannot drift from the roster.
     -->
-    <string name="attribution_photographers_summary">Unsplash photographs by 183 photographers</string>
+    <plurals name="attribution_photographers_summary">
+        <item quantity="one">Unsplash photographs by %1$d photographer</item>
+        <item quantity="other">Unsplash photographs by %1$d photographers</item>
+    </plurals>
+    <!--
+      Said alongside the control, so a screen reader hears which way the
+      credits currently sit rather than only what tapping would do.
+    -->
+    <string name="attribution_state_expanded">Expanded</string>
+    <string name="attribution_state_collapsed">Collapsed</string>
     <string name="attribution_show_more">Show more</string>
     <string name="attribution_show_less">Show less</string>
     <string name="attribution_nasa">Space images are courtesy of NASA</string>

@@ -70,7 +70,18 @@
     <string name="settings_attribution">Zasluge</string>
     <string name="attribution_images">Slike u svim kategorijama osim Svemira ustupio je Unsplash pod svojom Unsplash licencom</string>
     <string name="attribution_photographers_line">Fotografije s Unsplasha: %1$s</string>
-    <string name="attribution_photographers_summary">Fotografije s Unsplasha, 183 fotografa</string>
+    <!--
+      Croatian takes three plural categories where English takes two:
+      1 fotograf, 2-4 fotografa, 5+ fotografa. Written here rather than by the
+      translator, so it wants a native check.
+    -->
+    <plurals name="attribution_photographers_summary">
+        <item quantity="one">Fotografije s Unsplasha, %1$d fotografa</item>
+        <item quantity="few">Fotografije s Unsplasha, %1$d fotografa</item>
+        <item quantity="other">Fotografije s Unsplasha, %1$d fotografa</item>
+    </plurals>
+    <string name="attribution_state_expanded">Prošireno</string>
+    <string name="attribution_state_collapsed">Sažeto</string>
     <string name="attribution_show_more">Prikaži više</string>
     <string name="attribution_show_less">Prikaži manje</string>
     <string name="attribution_nasa">Slike u kategoriji Svemir ustupila je NASA</string>

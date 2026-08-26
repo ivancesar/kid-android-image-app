@@ -209,6 +209,8 @@ class ThemeResourcesTest {
             R.string.attribution_images, R.string.attribution_photographers_line,
             R.string.attribution_nasa, R.string.attribution_show_more,
             R.string.attribution_show_less,
+            R.string.attribution_state_expanded,
+            R.string.attribution_state_collapsed,
         )
         mustTranslate.forEach { id ->
             val name = resources.getResourceEntryName(id)
@@ -217,6 +219,18 @@ class ThemeResourcesTest {
                 en.getString(id) != hr.getString(id),
             )
         }
+
+        // The credit summary is a plural, so it resolves through a different
+        // call and would fall out of the list above unnoticed - which is how
+        // it got missed the first time. It is what TalkBack reads for the
+        // collapsed credits, so an untranslated one is a Croatian a11y
+        // regression that every other assertion here would pass.
+        assertTrue(
+            "attribution_photographers_summary is identical in en and hr - " +
+                "is it missing from values-hr?",
+            en.getQuantityString(R.plurals.attribution_photographers_summary, 183, 183) !=
+                hr.getQuantityString(R.plurals.attribution_photographers_summary, 183, 183),
+        )
 
         // Theme names too, except Ocean, which is the same word in both.
         THEME_DEFS.filterNot { it.id == "ocean" }.forEach { theme ->

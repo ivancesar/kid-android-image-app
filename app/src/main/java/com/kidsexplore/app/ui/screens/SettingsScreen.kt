@@ -39,9 +39,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.text
@@ -241,21 +243,31 @@ private const val COLLAPSED_CREDIT_LINES = 3
  */
 @Composable
 private fun PhotographerCredits() {
-    // rememberSaveable, not remember: this is the last item in a LazyColumn,
-    // so scrolling it off screen would otherwise silently re-collapse it.
+    // Both rememberSaveable, and they have to agree: this is the last item in
+    // a LazyColumn, so it is disposed whenever it scrolls off screen.
+    //
+    // `overflows` looks like a pure measurement that could be re-derived with
+    // a plain `remember`, and it cannot - not while `onTextLayout` below is
+    // guarded on `!expanded`. Restore `expanded = true` next to a fresh
+    // `overflows = false` and the text lays out unclamped, the guard skips the
+    // assignment, and the control never comes back: the credits are stuck open
+    // with no way to close them short of leaving Settings. Losing the guard
+    // instead has the same effect one step earlier, since an expanded layout
+    // reports no overflow. They are one piece of state in two variables; keep
+    // them on the same lifetime.
     var expanded by rememberSaveable { mutableStateOf(false) }
-    // remember, not rememberSaveable: this is a measurement, not intent.
-    // Restoring one taken at a different width or font scale would show the
-    // wrong control until the next layout corrected it, and the correct value
-    // costs one layout pass to re-derive.
-    var overflows by remember { mutableStateOf(false) }
+    var overflows by rememberSaveable { mutableStateOf(false) }
 
-    val summary = stringResource(R.string.attribution_photographers_summary)
+    val names = stringResource(R.string.attribution_photographers)
+    // Counted rather than written down, so the summary cannot drift from the
+    // roster it is summarising. The names are one proper-noun list shared by
+    // every locale, so the separator is the same everywhere.
+    val count = names.split(", ").size
+    val summary = pluralStringResource(
+        R.plurals.attribution_photographers_summary, count, count,
+    )
     Text(
-        text = stringResource(
-            R.string.attribution_photographers_line,
-            stringResource(R.string.attribution_photographers),
-        ),
+        text = stringResource(R.string.attribution_photographers_line, names),
         fontSize = 12.sp,
         lineHeight = 16.sp,
         color = NeutralColors.cancelText,
@@ -266,10 +278,18 @@ private fun PhotographerCredits() {
         // unless the node is given the shorter text to announce as well.
         // Without this, TalkBack reads all 183 names and is then offered a
         // control that changes nothing it can perceive.
+        //
+        // clearAndSetSemantics rather than semantics: replacing a node's
+        // semantics is what it is for, where `semantics` only wins the text
+        // property by peer-collapse ordering, which is an implementation
+        // detail rather than a contract. It also drops the text-layout action
+        // along with the text, instead of leaving one that describes the full
+        // 183-name layout while a 40-character summary is what gets announced
+        // - a mismatch TalkBack's line-granularity navigation would walk into.
         modifier = if (expanded) {
             Modifier
         } else {
-            Modifier.semantics { text = AnnotatedString(summary) }
+            Modifier.clearAndSetSemantics { text = AnnotatedString(summary) }
         },
         // Only meaningful while collapsed. Expanded there is nothing left to
         // overflow, and assigning it unconditionally would take away the
@@ -279,6 +299,8 @@ private fun PhotographerCredits() {
     // Absent when the whole list already fits — a shorter roster, a wider
     // window, or a smaller font scale — rather than offering to expand what
     // is not clamped.
+    val expandedState = stringResource(R.string.attribution_state_expanded)
+    val collapsedState = stringResource(R.string.attribution_state_collapsed)
     if (overflows) {
         Text(
             text = stringResource(
@@ -289,16 +311,23 @@ private fun PhotographerCredits() {
             color = NeutralColors.cancelText,
             textDecoration = TextDecoration.Underline,
             modifier = Modifier
-                // 12sp text plus 28dp of padding is ~42dp; `clickable` on a
-                // bare Text does not pick up Material's minimum interactive
-                // size, so the height is set here the way HomeButton does it.
+                // `clickable` on a bare Text does not pick up Material's
+                // minimum interactive size - that applies to material3
+                // components - so 12sp of text would leave a ~17dp target.
+                // heightIn before clickable is what makes the clickable node
+                // itself 48dp tall rather than only the box drawn around it;
+                // wrapContentHeight then centres the text in that height.
+                // Same order as ViewerScreen's HomeButton.
                 .heightIn(min = 48.dp)
                 .clickable(role = Role.Button) { expanded = !expanded }
                 .padding(horizontal = 4.dp)
                 .wrapContentHeight()
                 // Announced as expand/collapse rather than only as a button,
-                // so the action names what it does to the text above it.
+                // so the action names what it does to the text above it, and
+                // with the state said out loud - "Show more" alone does not
+                // tell a screen reader which way the credits currently sit.
                 .semantics {
+                    stateDescription = if (expanded) expandedState else collapsedState
                     if (expanded) {
                         collapse { expanded = false; true }
                     } else {

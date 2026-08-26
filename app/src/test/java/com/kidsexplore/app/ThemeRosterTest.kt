@@ -2,8 +2,10 @@ package com.kidsexplore.app
 
 import com.kidsexplore.app.model.THEME_DEFS
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 /**
  * The two facts about the roster that need no device, so that they gate a
@@ -11,7 +13,7 @@ import org.junit.Test
  *
  * Their siblings in `ThemeResourcesTest` genuinely need Android — they resolve
  * string arrays, inflate drawables and read resource entry names. These two
- * only count entries in [THEME_DEFS], and living in `androidTest` meant they
+ * need no `Resources`, and living in `androidTest` meant they
  * ran only under `connectedDebugAndroidTest`, which needs an emulator and is
  * in neither the README's recommended local command nor any CI (there is no
  * CI). A theme could ship without its photographs and nothing in the default
@@ -45,26 +47,55 @@ class ThemeRosterTest {
     }
 
     /**
-     * A theme with photographs must have exactly as many as it has labels.
+     * A theme ships exactly as many photographs as its label array has entries.
      *
-     * The Viewer pairs them by index, and [com.kidsexplore.app.AppViewModel]
-     * wraps its index on `labelCount` without being able to see either list —
-     * so a short list would drop back to the placeholder card partway through
-     * the set, and a long one would leave photographs a child can never reach.
+     * This is the leg of the invariant that can actually come apart. Every
+     * entry in `THEME_DEFS` derives `labelCount` from the same list it passes
+     * as `imageRes`, so comparing those two to each other only catches a
+     * copy-paste crossover — it cannot catch the case the roster exists to
+     * prevent, which is images and labels drifting out of step. That needs the
+     * string array, so this reads `strings.xml` off disk rather than through
+     * `Resources`, which is what keeps it on the JVM.
      *
-     * `ThemeResourcesTest.everyThemeLabelCountMatchesItsStringArray` covers the
-     * third leg, `labelCount` against the string array, and has to stay on a
-     * device to resolve it.
+     * The parsing is deliberately shallow: `labels_<id>` and `<item>` are both
+     * conventions `ThemeResourcesTest.everyThemeResourceIsNamedAfterItsId`
+     * already pins on a device, so a rename fails there rather than silently
+     * emptying this.
      */
     @Test
-    fun everyThemeWithPhotographsHasOnePerLabel() {
+    fun everyThemeShipsOnePhotographPerLabel() {
+        val xml = defaultStrings()
         THEME_DEFS.filter { it.imageRes.isNotEmpty() }.forEach { theme ->
+            val array = Regex(
+                """<string-array name="labels_${theme.id}">(.*?)</string-array>""",
+                RegexOption.DOT_MATCHES_ALL,
+            ).find(xml)
+            assertNotNull("no labels_${theme.id} array in strings.xml", array)
+            val labels = Regex("<item>").findAll(array!!.groupValues[1]).count()
             assertEquals(
-                "theme '${theme.id}' declares labelCount=${theme.labelCount} " +
-                    "but ships ${theme.imageRes.size} photographs",
-                theme.labelCount,
+                "theme '${theme.id}' ships ${theme.imageRes.size} photographs " +
+                    "but its labels_${theme.id} array holds $labels",
+                labels,
                 theme.imageRes.size,
             )
         }
+    }
+
+    /**
+     * `strings.xml` as text.
+     *
+     * Gradle runs unit tests with the module directory as the working
+     * directory; the walk up covers being run from the repo root instead.
+     */
+    private fun defaultStrings(): String {
+        val relative = "src/main/res/values/strings.xml"
+        var dir: File? = File("").absoluteFile
+        while (dir != null) {
+            for (candidate in listOf(File(dir, relative), File(dir, "app/$relative"))) {
+                if (candidate.isFile) return candidate.readText()
+            }
+            dir = dir.parentFile
+        }
+        throw AssertionError("could not locate $relative from ${File("").absolutePath}")
     }
 }

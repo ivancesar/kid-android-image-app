@@ -56,8 +56,10 @@ data class ThemeDef(
      *
      * Photographs, unlike names and labels, are the same in every language, so
      * they are referenced here rather than through a per-locale typed array.
-     * A non-empty list must be exactly [labelCount] long; `ThemeResourcesTest`
-     * asserts that, for the same reason it asserts the label array's length.
+     * A non-empty list must be exactly [labelCount] long, which is also the
+     * length of the theme's label array; `ThemeRosterTest` asserts the images
+     * against the array off-device, and `ThemeResourcesTest` asserts
+     * [labelCount] against the array on one.
      */
     val imageRes: List<Int> = emptyList(),
 )

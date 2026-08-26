@@ -78,7 +78,7 @@ Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a 
 | Cars | `cars` | 15 | 14 | photographs (Unsplash) |
 | Construction | `construction` | 45 | 14 | photographs (Unsplash) |
 | Trains | `trains` | 350 | 15 | photographs (Unsplash) |
-| Animals | `animals` | 320 | 25 | photographs (Unsplash) |
+| Animals | `animals` | 320 | 24 | photographs (Unsplash) |
 | Birds | `bird` | 225 | 19 | photographs (Unsplash) |
 | Insects | `insects` | 200 | 14 | photographs (Unsplash) |
 | Ocean | `ocean` | 175 | 17 | photographs (Unsplash) |
@@ -269,7 +269,7 @@ Reports land in `app/build/reports/tests/testDebugUnitTest/index.html` and `app/
 | `SettingsBehaviourTest` | `androidTest` | The language dropdown, the empty Home state, the attribution notice at the foot of the settings list, and the credit list's collapse/expand control. |
 | `SharedPreferencesThemeStoreTest` | `androidTest` | The real store against real preferences: themes and the gate lock round-tripping through a *second* store instance, the two keys not treading on each other, ids for removed themes being pruned on read, and a lockout surviving a relaunch through actual SharedPreferences rather than a fake. |
 | `ThemeResourcesTest` | `androidTest` | Holds `ThemeDef`, `strings.xml` and the bundled photographs together, for everything that needs real resources: every theme's `labelCount` matches the length of its string array, names and labels are non-blank, ids and names are unique, and every photograph is named after its theme and position, decodes, and lives in `drawable-nodpi`. |
-| `ThemeRosterTest` | `test` | The two roster facts that need no device, so a plain `./gradlew build` gates them: every theme ships photographs, and a photographed theme has exactly one per label. |
+| `ThemeRosterTest` | `test` | The two roster facts that need no device, so a plain `./gradlew build` gates them: every theme ships photographs, and each ships exactly one per `<item>` in its `labels_<id>` array — read out of `strings.xml` as text, since `Resources` would drag it onto a device. `strings.xml` is declared an input of the test task in `app/build.gradle.kts`, or Gradle would call the task up to date on the one edit this catches. |
 
 To run a single instrumented class:
 
@@ -282,7 +282,7 @@ There is no CI; run `./gradlew lint testDebugUnitTest assembleDebug` locally, an
 ## Known limitations
 
 - The artwork dominates the download: 38.5 MB of the 40 MB release APK is bundled JPEGs (see [On images](#on-images) above). That is a deliberate trade for now — well inside Play's limits, and the pictures are the product. Lossy WebP is the first lever if it stops being acceptable; it needs no code change, only an encoder, which `sips` is not (it reads WebP but cannot write it).
-- The photographer credits in `attribution_photographers` are derived from Unsplash filenames, which are ASCII-folded — names carrying diacritics are currently spelled without them.
+- The photographer credits in `attribution_photographers` are derived from Unsplash filenames, which are ASCII-folded, so most names carrying diacritics are spelled without them. The exceptions are the ones checked by hand — `Wioletta Płonkowska` among them — so the list is inconsistent rather than uniformly folded.
 - The Viewer decodes each photograph with `painterResource`, which has no downsampling, no caching across compositions and no preloading, so every Back/Next/swipe blocks a frame on a full JPEG decode. At 1280px that is a ~6.6 MB `ARGB_8888` bitmap against the app heap, and `drawable-nodpi` correctly prevents density upscaling but still decodes the full 1280px onto a card that draws far narrower. Now that all fourteen themes are photographed this is the next thing to reach for: `BitmapFactory.Options.inSampleSize` sized to the card, off the main thread, behind a small `LruCache` — or an image loader.
 - Nothing stops a child leaving the app for the launcher. The gate protects **Settings**, not the app's boundary; Android's screen pinning is what would deliver that, and it is not wired up.
 - No confirmation/undo when a parent disables a theme a child was mid-viewing — they're just returned to Home the next time they tap Home.

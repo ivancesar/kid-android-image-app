@@ -1,6 +1,10 @@
 package com.kidsexplore.app
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.test.ForcedSize
+import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -115,17 +119,26 @@ class AccessibleNamesTest {
     fun theCollapsedCreditListAnnouncesASummaryRatherThanEveryName() {
         compose.setContent {
             KidsExploreTheme {
-                SettingsScreen(
-                    disabledThemeIds = emptySet(),
-                    onToggle = {},
-                    onDone = {},
-                    currentLanguage = AppLocales.SYSTEM,
-                    onPickLanguage = {},
-                )
+                // Forced narrow: the summary only replaces the names while the
+                // text is actually clamped, which a wide window would not do.
+                DeviceConfigurationOverride(
+                    DeviceConfigurationOverride.ForcedSize(DpSize(400.dp, 800.dp)),
+                ) {
+                    SettingsScreen(
+                        disabledThemeIds = emptySet(),
+                        onToggle = {},
+                        onDone = {},
+                        currentLanguage = AppLocales.SYSTEM,
+                        onPickLanguage = {},
+                    )
+                }
             }
         }
-        val summary = str(R.string.attribution_photographers_summary)
         val names = str(R.string.attribution_photographers)
+        val count = names.split(", ").size
+        val summary = resources.getQuantityString(
+            R.plurals.attribution_photographers_summary, count, count,
+        )
 
         compose.onNodeWithTag(THEME_LIST_TEST_TAG).performScrollToNode(hasText(summary))
         compose.onNodeWithText(summary).assertIsDisplayed()
