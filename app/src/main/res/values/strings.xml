@@ -100,17 +100,13 @@
         <item>White tiger standing in the jungle</item>
         <item>Rhino with a big horn out on the plain</item>
         <item>Gorilla sitting by a rock, looking up</item>
-        <item>Orange and yellow parrot on a branch</item>
         <item>Deer with big antlers in the evening light</item>
         <item>Elephants walking in a line across the plain</item>
         <item>Dolphin leaping right out of the sea</item>
-        <item>Two penguins standing beside the blue sea</item>
         <item>Red squirrel nibbling on a branch</item>
         <item>Red fox standing in the snow</item>
         <item>Panda chewing a mouthful of bamboo</item>
         <item>Bright green and orange tree frog</item>
-        <item>Sea turtle swimming in deep blue water</item>
-        <item>Two puffins among the wild flowers</item>
     </string-array>
 
     <string name="theme_dinosaurs">Dinosaurs</string>
@@ -183,6 +179,7 @@
         <item>A shoal of yellow-tailed fish</item>
         <item>Humpback whale leaping out of the sea</item>
         <item>Whales feeding with their mouths wide open</item>
+        <item>Sea turtle swimming in deep blue water</item>
     </string-array>
 
     <string name="theme_farm">Farm</string>
@@ -232,6 +229,9 @@
         <item>Three blue and yellow macaws in a row</item>
         <item>Little green parrot on a mossy branch</item>
         <item>Toucan with a rainbow beak in the rain</item>
+        <item>Orange and yellow parrot on a branch</item>
+        <item>Two penguins standing beside the blue sea</item>
+        <item>Two puffins among the wild flowers</item>
     </string-array>
 
     <string-array name="labels_insects">

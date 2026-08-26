@@ -46,7 +46,7 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - The same labelled "◀ Back" / "▶ Next" pill buttons are used at every size, so the controls look and behave identically regardless of how the device is held. The arrows and the swipe direction mirror in an RTL locale, where the sequence advances right-to-left. Which arrangement is used depends on the window's width, not its orientation — the breakpoint is 600dp:
   - **Narrow (under 600dp)**: the card fills the remaining space above a button row, with Back/Next side by side underneath it.
   - **Wide (600dp and up)**: Back/Next flank the card in a single row — the card sits between them rather than under them — and the row fills the full screen height (down to, but not under, the status bar), so the image gets as much vertical room as the display allows. The Home button floats over the top-left corner of the image instead of sitting in its own header row, since there's no header row to spare the height for.
-- Either way, Back/Next cycle through the theme's items, wrapping around at both ends. Counts are per theme and range from 7 (Dinosaurs) to 24 (Animals). The placeholder card announces its label to a screen reader as a live region; a photograph announces nothing (see [On images](#on-images)).
+- Either way, Back/Next cycle through the theme's items, wrapping around at both ends. Counts are per theme and range from 7 (Dinosaurs) to 22 (Birds). The placeholder card announces its label to a screen reader as a live region; a photograph announces nothing (see [On images](#on-images)).
 - The card also responds to a horizontal swipe — swipe left for next, right for back — as an alternative to the buttons, in both orientations.
 
 ### Parental Gate ("Grown-ups only")
@@ -78,10 +78,10 @@ Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a 
 | Cars | `cars` | 15 | 14 | photographs (Unsplash) |
 | Construction | `construction` | 45 | 14 | photographs (Unsplash) |
 | Trains | `trains` | 350 | 15 | photographs (Unsplash) |
-| Animals | `animals` | 320 | 24 | photographs (Unsplash) |
-| Birds | `bird` | 225 | 19 | photographs (Unsplash) |
+| Animals | `animals` | 320 | 20 | photographs (Unsplash) |
+| Birds | `bird` | 225 | 22 | photographs (Unsplash) |
 | Insects | `insects` | 200 | 14 | photographs (Unsplash) |
-| Ocean | `ocean` | 175 | 17 | photographs (Unsplash) |
+| Ocean | `ocean` | 175 | 18 | photographs (Unsplash) |
 | Farm | `farm` | 75 | 17 | photographs (Unsplash) |
 | Dinosaurs | `dinosaurs` | 285 | 7 | photographs (Unsplash) |
 | Flowers | `flowers` | 296 | 14 | photographs (Unsplash) |
@@ -153,7 +153,7 @@ A theme either ships photographs or it does not, and each one decides for itself
 
 | Themes | Images | Source |
 |---|---|---|
-| All but Space | 200, from 7 (Dinosaurs) to 24 (Animals) | [Unsplash](https://unsplash.com), under the [Unsplash License](https://unsplash.com/license) |
+| All but Space | 200, from 7 (Dinosaurs) to 22 (Birds) | [Unsplash](https://unsplash.com), under the [Unsplash License](https://unsplash.com/license) |
 | Space | 17 | [NASA](https://www.nasa.gov/) |
 
 The counts differ on purpose — a theme carries however many good images it has — which is why `labelCount` is per theme. **Parent Settings → Attribution** carries a notice per source saying which categories it covers, plus the Unsplash photographers' names.

@@ -68,7 +68,7 @@ data class ThemeDef(
  * Every theme's photographs, in the order the Viewer pages them.
  *
  * Each list is however many usable pictures that theme has and no particular
- * number — they run from Dinosaurs' seven to Animals' twenty-four — which is
+ * number — they run from Dinosaurs' seven to Birds' twenty-two — which is
  * what [ThemeDef.labelCount] being per-theme is for. Nothing anywhere expects
  * two themes to agree on a count.
  *
@@ -150,10 +150,6 @@ private val ANIMALS_IMAGES = listOf(
     R.drawable.img_animals_18,
     R.drawable.img_animals_19,
     R.drawable.img_animals_20,
-    R.drawable.img_animals_21,
-    R.drawable.img_animals_22,
-    R.drawable.img_animals_23,
-    R.drawable.img_animals_24,
 )
 
 private val BIRD_IMAGES = listOf(
@@ -176,6 +172,9 @@ private val BIRD_IMAGES = listOf(
     R.drawable.img_bird_17,
     R.drawable.img_bird_18,
     R.drawable.img_bird_19,
+    R.drawable.img_bird_20,
+    R.drawable.img_bird_21,
+    R.drawable.img_bird_22,
 )
 
 private val INSECTS_IMAGES = listOf(
@@ -213,6 +212,7 @@ private val OCEAN_IMAGES = listOf(
     R.drawable.img_ocean_15,
     R.drawable.img_ocean_16,
     R.drawable.img_ocean_17,
+    R.drawable.img_ocean_18,
 )
 
 private val FARM_IMAGES = listOf(
