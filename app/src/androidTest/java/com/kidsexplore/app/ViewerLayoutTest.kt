@@ -70,7 +70,7 @@ class ViewerLayoutTest {
      *
      * Resolved by having artwork rather than named, so these keep passing if
      * the set of photographed themes changes underneath them.
-     * `atLeastOneThemeShipsPhotographs` is what makes an empty roster fail
+     * `ThemeRosterTest.everyThemeShipsPhotographs` is what makes an empty roster fail
      * loudly rather than as a confusing `NoSuchElementException` in here.
      */
     private val photoTheme = THEME_DEFS.first { it.imageRes.isNotEmpty() }

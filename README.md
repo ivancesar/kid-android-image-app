@@ -46,7 +46,7 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - The same labelled "◀ Back" / "▶ Next" pill buttons are used at every size, so the controls look and behave identically regardless of how the device is held. The arrows and the swipe direction mirror in an RTL locale, where the sequence advances right-to-left. Which arrangement is used depends on the window's width, not its orientation — the breakpoint is 600dp:
   - **Narrow (under 600dp)**: the card fills the remaining space above a button row, with Back/Next side by side underneath it.
   - **Wide (600dp and up)**: Back/Next flank the card in a single row — the card sits between them rather than under them — and the row fills the full screen height (down to, but not under, the status bar), so the image gets as much vertical room as the display allows. The Home button floats over the top-left corner of the image instead of sitting in its own header row, since there's no header row to spare the height for.
-- Either way, Back/Next cycle through the theme's items, wrapping around at both ends. Counts are per theme and range from 7 (Dinosaurs) to 25 (Animals). The placeholder card announces its label to a screen reader as a live region; a photograph announces nothing (see [On images](#on-images)).
+- Either way, Back/Next cycle through the theme's items, wrapping around at both ends. Counts are per theme and range from 7 (Dinosaurs) to 24 (Animals). The placeholder card announces its label to a screen reader as a live region; a photograph announces nothing (see [On images](#on-images)).
 - The card also responds to a horizontal swipe — swipe left for next, right for back — as an alternative to the buttons, in both orientations.
 
 ### Parental Gate ("Grown-ups only")
@@ -125,7 +125,7 @@ Croatian deliberately translates only part of the set. Keys it leaves out fall b
 - `app_name` and `home_brand` are the product name.
 - `gate_equation` is nothing but `%1$d`/`%2$d` placeholders.
 - `attribution_photographers` is a list of names.
-- No image label reaches a screen in Croatian. A theme with photographs shows the picture and nothing else, and the rest are stand-in text for artwork the app does not ship yet — translating either would be translating scaffolding.
+- No image label reaches a screen in Croatian. Every theme ships photographs, and a theme with photographs shows the picture and nothing else — translating a roster nothing displays would be translating scaffolding.
 
 Six glyphs the app draws as text — the gear, tick, house, dropdown chevron and the two nav arrows — are kept in code rather than resources. They are symbols, not words. The controls carrying them are announced by name rather than by glyph. The gear is icon-only and declares a `contentDescription`; every other container-level control — theme card, theme row, language row, Home and the nav pills — takes its name from the label inside it, which `clickable` and `toggleable` merge into the control's own semantics node (`AbstractClickableNode.shouldMergeDescendantSemantics` is `final` and `true`). `AccessibleNamesTest` covers four of them — the theme card, the gear, a theme row and the language row — asserting each ends up with a name and a click action.
 
@@ -149,20 +149,28 @@ Card names wrap to two lines and ellipsize only past that, so a long name costs 
 
 ### On images
 
-A theme either ships photographs or it does not, and each one decides for itself. All fourteen now do — 218 pictures in total, `img_<id>_01.jpg` upward in `res/drawable-nodpi/`, listed in display order by that theme's `<ID>_IMAGES` list in `ThemeDef.kt`:
+A theme either ships photographs or it does not, and each one decides for itself. All fourteen now do — 217 pictures in total, `img_<id>_01.jpg` upward in `res/drawable-nodpi/`, listed in display order by that theme's `<ID>_IMAGES` list in `ThemeDef.kt`:
 
 | Themes | Images | Source |
 |---|---|---|
-| All but Space | 201, from 7 (Dinosaurs) to 25 (Animals) | [Unsplash](https://unsplash.com), under the [Unsplash License](https://unsplash.com/license) |
+| All but Space | 200, from 7 (Dinosaurs) to 24 (Animals) | [Unsplash](https://unsplash.com), under the [Unsplash License](https://unsplash.com/license) |
 | Space | 17 | [NASA](https://www.nasa.gov/) |
 
 The counts differ on purpose — a theme carries however many good images it has — which is why `labelCount` is per theme. **Parent Settings → Attribution** carries a notice per source saying which categories it covers, plus the Unsplash photographers' names.
 
-That artwork is most of the download: the release APK is 38 MB with it and 1.4 MB with none of it. If that becomes a problem, the thing to reach for is an app bundle with the images in an install-time asset pack, or fewer pictures per theme — not lower quality, which is already at the knee of the curve.
+That artwork is most of the download: the release APK is 40 MB with it and 1.4 MB with none of it. Play's limit for an app bundle's base download is far above that, so this is a cost rather than a problem — but if it needs to come down, in rough order of effort:
 
-Nothing in the code or the tests names which themes are photographed. `ThemeResourcesTest` asserts only that at least one is, and the UI tests resolve their fixture with `THEME_DEFS.first { it.imageRes.isNotEmpty() }`, so the roster is a content decision throughout.
+1. **Re-encode as lossy WebP**, files staying in `drawable-nodpi`. No code change at all: `R.drawable` and `painterResource` do not care about the container, and WebP has been decodable since long before this app's `minSdk` of 26. Typically 25–35% off a JPEG-q55 set. Note that quality 55 being at the knee of the curve is a claim about the *JPEG* quality scale — it is not an argument against a better codec.
+2. **Resample to 1080px on the long edge.** The card is inset by its striped frame inside the screen padding, so the drawn width is well under 1280 on most phones.
+3. **Fewer pictures per theme.**
 
-No theme ships the placeholder, and `everyThemeShipsPhotographs` fails the build if one does — a child must never land on stand-in text, so a theme reaching the grid without its pictures is a shipping bug rather than a work-in-progress state. That is the assertion a new theme trips until it has been photographed; write the entry and drop the images in together.
+An install-time asset pack is *not* the lever it looks like: install-time packs are delivered with the app at install, so they do not reduce the download at all, and an asset pack carries `assets/` rather than `res/` — moving the images into one means giving up `R.drawable` and `painterResource` for `AssetManager`, which changes `ThemeDef.imageRes`'s type and makes `everyPhotographIsDensityIndependent` meaningless. Fast-follow or on-demand packs would shrink the initial download, at the same cost.
+
+The UI tests resolve their fixture with `THEME_DEFS.first { it.imageRes.isNotEmpty() }` rather than naming a theme, so they keep passing whichever themes are photographed.
+
+No theme ships the placeholder, and `ThemeRosterTest.everyThemeShipsPhotographs` fails `./gradlew build` if one does — a child must never land on stand-in text, so a theme reaching the grid without its pictures is a shipping bug rather than a work-in-progress state. That is the assertion a new theme trips until it has been photographed; write the entry and drop the images in together.
+
+It lives in `app/src/test`, not beside its siblings in `androidTest`, on purpose: it only counts entries in `THEME_DEFS` and needs no device, and in `androidTest` it would have run solely under `connectedDebugAndroidTest` — which needs an emulator, is in neither the recommended local command below nor any CI, and so would have gated nothing.
 
 The machinery behind the placeholder is still there — `ThemeDef.imageRes` defaults to empty and the Viewer renders the striped card whenever `currentImage` is null — so a half-added theme renders sensibly, it just does not ship. `ViewerLayoutTest` exercises that path by calling `ViewerScreen` with a null image, since it is no longer reachable from Home.
 
@@ -260,7 +268,8 @@ Reports land in `app/build/reports/tests/testDebugUnitTest/index.html` and `app/
 | `ViewerLayoutTest` | `androidTest` | The Viewer's layout at both sides of the 600dp breakpoint, using `DeviceConfigurationOverride(ForcedSize(...))` so a window wider than the test device still renders on screen. Asserts the buttons actually sit beside the image when wide and below it when narrow, rather than only that a branch was taken — and that both the button order and the swipe direction mirror under an RTL override. Covers both card kinds: that a photograph shows its label in no form at all, that it does not swallow the swipe, and that the wide layout holds for it too. |
 | `SettingsBehaviourTest` | `androidTest` | The language dropdown, the empty Home state, the attribution notice at the foot of the settings list, and the credit list's collapse/expand control. |
 | `SharedPreferencesThemeStoreTest` | `androidTest` | The real store against real preferences: themes and the gate lock round-tripping through a *second* store instance, the two keys not treading on each other, ids for removed themes being pruned on read, and a lockout surviving a relaunch through actual SharedPreferences rather than a fake. |
-| `ThemeResourcesTest` | `androidTest` | Holds `ThemeDef`, `strings.xml` and the bundled photographs together: every theme's `labelCount` matches the length of its string array *and* the length of its image list, names and labels are non-blank, ids and names are unique, at least one theme has artwork, and every photograph is named after its theme and position, decodes, and lives in `drawable-nodpi`. |
+| `ThemeResourcesTest` | `androidTest` | Holds `ThemeDef`, `strings.xml` and the bundled photographs together, for everything that needs real resources: every theme's `labelCount` matches the length of its string array, names and labels are non-blank, ids and names are unique, and every photograph is named after its theme and position, decodes, and lives in `drawable-nodpi`. |
+| `ThemeRosterTest` | `test` | The two roster facts that need no device, so a plain `./gradlew build` gates them: every theme ships photographs, and a photographed theme has exactly one per label. |
 
 To run a single instrumented class:
 
@@ -272,9 +281,9 @@ There is no CI; run `./gradlew lint testDebugUnitTest assembleDebug` locally, an
 
 ## Known limitations
 
-- The artwork dominates the download: 38 MB of the release APK is bundled JPEGs (see [On images](#on-images) above). An install-time asset pack would be the fix if that starts to matter.
+- The artwork dominates the download: 38.5 MB of the 40 MB release APK is bundled JPEGs (see [On images](#on-images) above). Lossy WebP is the cheap lever if that starts to matter — no code change — and re-encoding is only skipped here because this machine has no WebP encoder installed.
 - The photographer credits in `attribution_photographers` are derived from Unsplash filenames, which are ASCII-folded — names carrying diacritics are currently spelled without them.
-- The Viewer decodes each photograph with `painterResource`, which is fine for one full-screen image at a time but has no downsampling or preloading of its own. If more themes gain artwork — or the images get much larger than the 1280px they are now — an image loader would be the thing to reach for.
+- The Viewer decodes each photograph with `painterResource`, which has no downsampling, no caching across compositions and no preloading, so every Back/Next/swipe blocks a frame on a full JPEG decode. At 1280px that is a ~6.6 MB `ARGB_8888` bitmap against the app heap, and `drawable-nodpi` correctly prevents density upscaling but still decodes the full 1280px onto a card that draws far narrower. Now that all fourteen themes are photographed this is the next thing to reach for: `BitmapFactory.Options.inSampleSize` sized to the card, off the main thread, behind a small `LruCache` — or an image loader.
 - Nothing stops a child leaving the app for the launcher. The gate protects **Settings**, not the app's boundary; Android's screen pinning is what would deliver that, and it is not wired up.
 - No confirmation/undo when a parent disables a theme a child was mid-viewing — they're just returned to Home the next time they tap Home.
 - Font is the system sans-serif at heavy weights, approximating the source design's Nunito 800/900; no font file is bundled.

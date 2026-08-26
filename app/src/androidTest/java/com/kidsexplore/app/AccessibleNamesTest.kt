@@ -5,10 +5,15 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.ui.screens.HomeScreen
+import com.kidsexplore.app.ui.THEME_LIST_TEST_TAG
 import com.kidsexplore.app.ui.screens.SettingsScreen
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
 import org.junit.Rule
@@ -92,5 +97,45 @@ class AccessibleNamesTest {
         compose.onNode(
             hasClickAction() and hasText(str(R.string.settings_language_system)),
         ).assertIsDisplayed()
+    }
+
+    /**
+     * Collapsing the photographer credits has to actually collapse them for a
+     * screen reader too.
+     *
+     * `maxLines` clamps at draw time only: Compose publishes the whole string
+     * to the semantics tree regardless, so without an explicit override a
+     * TalkBack user hears all 183 names in the collapsed state and is then
+     * offered a control that changes nothing they can perceive. This is the
+     * assertion that the collapsed node announces the summary instead — the
+     * one thing `theCreditListCollapsesAndExpands` cannot see, since it
+     * matches on the control rather than on the text.
+     */
+    @Test
+    fun theCollapsedCreditListAnnouncesASummaryRatherThanEveryName() {
+        compose.setContent {
+            KidsExploreTheme {
+                SettingsScreen(
+                    disabledThemeIds = emptySet(),
+                    onToggle = {},
+                    onDone = {},
+                    currentLanguage = AppLocales.SYSTEM,
+                    onPickLanguage = {},
+                )
+            }
+        }
+        val summary = str(R.string.attribution_photographers_summary)
+        val names = str(R.string.attribution_photographers)
+
+        compose.onNodeWithTag(THEME_LIST_TEST_TAG).performScrollToNode(hasText(summary))
+        compose.onNodeWithText(summary).assertIsDisplayed()
+        // The run-on list of names must not be what gets announced.
+        compose.onNodeWithText(names, substring = true).assertDoesNotExist()
+
+        compose.onNodeWithText(str(R.string.attribution_show_more)).performClick()
+        // Expanded, the names are the point and the summary steps aside.
+        compose.onNodeWithTag(THEME_LIST_TEST_TAG)
+            .performScrollToNode(hasText(names, substring = true))
+        compose.onNodeWithText(summary).assertDoesNotExist()
     }
 }

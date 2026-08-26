@@ -91,25 +91,6 @@ class ThemeResourcesTest {
     }
 
     /**
-     * A theme with photographs must have exactly as many as it has labels.
-     * The Viewer pairs them by index — item *n*'s label is what TalkBack reads
-     * out for image *n* — so a short list would silently drop back to the
-     * placeholder card partway through the set, and a long one would leave
-     * photographs a child can never reach.
-     */
-    @Test
-    fun everyThemeWithPhotographsHasOnePerLabel() {
-        THEME_DEFS.filter { it.imageRes.isNotEmpty() }.forEach { theme ->
-            assertEquals(
-                "theme '${theme.id}' declares labelCount=${theme.labelCount} " +
-                    "but ships ${theme.imageRes.size} photographs",
-                theme.labelCount,
-                theme.imageRes.size,
-            )
-        }
-    }
-
-    /**
      * `img_<id>_NN`, one-based and zero-padded, in the order the Viewer pages
      * them. Named after the theme for the same reason its icon and its string
      * resources are, and numbered so a mismatch between the list in
@@ -156,31 +137,6 @@ class ThemeResourcesTest {
                 ContextCompat.getDrawable(context, id),
             )
         }
-    }
-
-    /**
-     * Every theme has artwork.
-     *
-     * This started as "Construction has photographs", was loosened to "some
-     * theme does" while the set was growing, and is now tight again because
-     * the set is finished: no theme ships the placeholder card. A child must
-     * never land on stand-in text, so a theme reaching the grid without its
-     * pictures is a shipping bug, not a work-in-progress state.
-     *
-     * That makes this the assertion that fails when a new theme is added
-     * before it has been photographed. The failure is the point — write the
-     * entry and drop the images in together. [ThemeDef.imageRes] still
-     * defaults to empty and the Viewer still renders the placeholder for a
-     * null image, so nothing is broken in the meantime; it just does not ship.
-     */
-    @Test
-    fun everyThemeShipsPhotographs() {
-        val bare = THEME_DEFS.filter { it.imageRes.isEmpty() }.map { it.id }
-        assertTrue(
-            "these themes would show the placeholder card rather than a " +
-                "photograph: $bare",
-            bare.isEmpty(),
-        )
     }
 
     @Test

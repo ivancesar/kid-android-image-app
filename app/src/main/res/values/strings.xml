@@ -88,7 +88,6 @@
     <string name="theme_animals">Animals</string>
     <string-array name="labels_animals">
         <item>Dolphin peeping out of bright blue water</item>
-        <item>Pink flamingo standing in still blue water</item>
         <item>A giraffe head on a long spotted neck</item>
         <item>Little tabby kitten sitting very still</item>
         <item>Lion with a big mane walking through the grass</item>
@@ -350,6 +349,14 @@
       lines with these to open and close it; the names are still all there,
       just not in the way by default.
     -->
+    <!--
+      What a screen reader hears in place of the names while they are
+      collapsed. maxLines clamps at draw time only - Compose publishes the
+      whole string to the semantics tree either way - so without this a
+      TalkBack user hears all 183 names and is then offered a control that
+      changes nothing they can perceive.
+    -->
+    <string name="attribution_photographers_summary">Unsplash photographs by 183 photographers</string>
     <string name="attribution_show_more">Show more</string>
     <string name="attribution_show_less">Show less</string>
     <string name="attribution_nasa">Space images are courtesy of NASA</string>

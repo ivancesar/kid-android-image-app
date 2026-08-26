@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -40,8 +42,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.collapse
+import androidx.compose.ui.semantics.expand
+import androidx.compose.ui.semantics.text
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextDecoration
@@ -238,8 +244,13 @@ private fun PhotographerCredits() {
     // rememberSaveable, not remember: this is the last item in a LazyColumn,
     // so scrolling it off screen would otherwise silently re-collapse it.
     var expanded by rememberSaveable { mutableStateOf(false) }
-    var overflows by rememberSaveable { mutableStateOf(false) }
+    // remember, not rememberSaveable: this is a measurement, not intent.
+    // Restoring one taken at a different width or font scale would show the
+    // wrong control until the next layout corrected it, and the correct value
+    // costs one layout pass to re-derive.
+    var overflows by remember { mutableStateOf(false) }
 
+    val summary = stringResource(R.string.attribution_photographers_summary)
     Text(
         text = stringResource(
             R.string.attribution_photographers_line,
@@ -250,6 +261,16 @@ private fun PhotographerCredits() {
         color = NeutralColors.cancelText,
         maxLines = if (expanded) Int.MAX_VALUE else COLLAPSED_CREDIT_LINES,
         overflow = TextOverflow.Ellipsis,
+        // `maxLines` clamps at draw time only - the whole string still reaches
+        // the semantics tree - so collapsing is a no-op for a screen reader
+        // unless the node is given the shorter text to announce as well.
+        // Without this, TalkBack reads all 183 names and is then offered a
+        // control that changes nothing it can perceive.
+        modifier = if (expanded) {
+            Modifier
+        } else {
+            Modifier.semantics { text = AnnotatedString(summary) }
+        },
         // Only meaningful while collapsed. Expanded there is nothing left to
         // overflow, and assigning it unconditionally would take away the
         // control that closes it again.
@@ -268,10 +289,22 @@ private fun PhotographerCredits() {
             color = NeutralColors.cancelText,
             textDecoration = TextDecoration.Underline,
             modifier = Modifier
-                // Padding outside the clickable would leave the target the
-                // height of 12sp text, well under the 48dp minimum.
+                // 12sp text plus 28dp of padding is ~42dp; `clickable` on a
+                // bare Text does not pick up Material's minimum interactive
+                // size, so the height is set here the way HomeButton does it.
+                .heightIn(min = 48.dp)
                 .clickable(role = Role.Button) { expanded = !expanded }
-                .padding(vertical = 14.dp, horizontal = 4.dp),
+                .padding(horizontal = 4.dp)
+                .wrapContentHeight()
+                // Announced as expand/collapse rather than only as a button,
+                // so the action names what it does to the text above it.
+                .semantics {
+                    if (expanded) {
+                        collapse { expanded = false; true }
+                    } else {
+                        expand { expanded = true; true }
+                    }
+                },
         )
     }
 }

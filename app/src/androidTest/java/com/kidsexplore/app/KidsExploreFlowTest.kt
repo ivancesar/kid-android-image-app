@@ -151,7 +151,7 @@ class KidsExploreFlowTest {
      * Paging a theme has to reach every photograph and wrap.
      *
      * The count is per theme — they run from Dinosaurs' seven to Animals'
-     * twenty-five — and it is `labelCount` the ViewModel wraps on, so this
+     * twenty-four — and it is `labelCount` the ViewModel wraps on, so this
      * walks the whole set rather than a fixed number of steps.
      *
      * The photographs carry no description, so the test tag naming the
