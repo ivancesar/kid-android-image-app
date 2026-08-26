@@ -46,28 +46,54 @@ data class ThemeDef(
      * The theme's photographs, in the same order as [labelsRes] — item *n*'s
      * label describes image *n*, as a note to whoever edits this next. Nothing
      * displays or announces it: a theme with photographs shows the picture
-     * alone. Empty for a theme whose artwork has not been shot yet; those
-     * still render the striped placeholder card.
+     * alone.
+     *
+     * Every theme now carries a set, so the default below is currently unused;
+     * it stays because the Viewer's striped placeholder card is what a theme
+     * added ahead of its artwork would fall back to, and dropping the default
+     * would make adding such a theme a change to this class rather than one
+     * more entry in the list.
      *
      * Photographs, unlike names and labels, are the same in every language, so
      * they are referenced here rather than through a per-locale typed array.
-     * A non-empty list must be exactly [labelCount] long; `ThemeResourcesTest`
-     * asserts that, for the same reason it asserts the label array's length.
+     * A non-empty list must be exactly [labelCount] long, which is also the
+     * length of the theme's label array; `ThemeRosterTest` asserts the images
+     * against the array off-device, and `ThemeResourcesTest` asserts
+     * [labelCount] against the array on one.
      */
     val imageRes: List<Int> = emptyList(),
 )
 
 /**
- * Construction, the first theme with real photography.
+ * Every theme's photographs, in the order the Viewer pages them.
  *
- * Fourteen rather than the [LABELS_PER_THEME] eight the placeholder themes
- * carry: the set is however many usable photographs there are, and
- * [ThemeDef.labelCount] is per-theme precisely so it can say so — see also
- * [SPACE_IMAGES], which lands on a different number again.
+ * Each list is however many usable pictures that theme has and no particular
+ * number — they run from Dinosaurs' seven to Birds' twenty-two — which is
+ * what [ThemeDef.labelCount] being per-theme is for. Nothing anywhere expects
+ * two themes to agree on a count.
  *
- * Sources are Unsplash, under the Unsplash License; the photographers are
- * credited in Parent Settings (`R.string.attribution_photographers`).
+ * Sources are Unsplash for every theme but Space, under the Unsplash License,
+ * with the photographers credited in Parent Settings
+ * (`R.string.attribution_photographers`); Space is public-domain NASA imagery,
+ * credited separately by `R.string.attribution_nasa`.
  */
+private val CARS_IMAGES = listOf(
+    R.drawable.img_cars_01,
+    R.drawable.img_cars_02,
+    R.drawable.img_cars_03,
+    R.drawable.img_cars_04,
+    R.drawable.img_cars_05,
+    R.drawable.img_cars_06,
+    R.drawable.img_cars_07,
+    R.drawable.img_cars_08,
+    R.drawable.img_cars_09,
+    R.drawable.img_cars_10,
+    R.drawable.img_cars_11,
+    R.drawable.img_cars_12,
+    R.drawable.img_cars_13,
+    R.drawable.img_cars_14,
+)
+
 private val CONSTRUCTION_IMAGES = listOf(
     R.drawable.img_construction_01,
     R.drawable.img_construction_02,
@@ -85,13 +111,211 @@ private val CONSTRUCTION_IMAGES = listOf(
     R.drawable.img_construction_14,
 )
 
-/**
- * Space, photographed by spacecraft rather than by anyone.
- *
- * Public-domain NASA imagery, credited in Parent Settings — see
- * `R.string.attribution_nasa`. Seventeen, because that is how many were
- * picked; nothing expects two photographed themes to agree on a count.
- */
+private val TRAINS_IMAGES = listOf(
+    R.drawable.img_trains_01,
+    R.drawable.img_trains_02,
+    R.drawable.img_trains_03,
+    R.drawable.img_trains_04,
+    R.drawable.img_trains_05,
+    R.drawable.img_trains_06,
+    R.drawable.img_trains_07,
+    R.drawable.img_trains_08,
+    R.drawable.img_trains_09,
+    R.drawable.img_trains_10,
+    R.drawable.img_trains_11,
+    R.drawable.img_trains_12,
+    R.drawable.img_trains_13,
+    R.drawable.img_trains_14,
+    R.drawable.img_trains_15,
+)
+
+private val ANIMALS_IMAGES = listOf(
+    R.drawable.img_animals_01,
+    R.drawable.img_animals_02,
+    R.drawable.img_animals_03,
+    R.drawable.img_animals_04,
+    R.drawable.img_animals_05,
+    R.drawable.img_animals_06,
+    R.drawable.img_animals_07,
+    R.drawable.img_animals_08,
+    R.drawable.img_animals_09,
+    R.drawable.img_animals_10,
+    R.drawable.img_animals_11,
+    R.drawable.img_animals_12,
+    R.drawable.img_animals_13,
+    R.drawable.img_animals_14,
+    R.drawable.img_animals_15,
+    R.drawable.img_animals_16,
+    R.drawable.img_animals_17,
+    R.drawable.img_animals_18,
+    R.drawable.img_animals_19,
+    R.drawable.img_animals_20,
+)
+
+private val BIRD_IMAGES = listOf(
+    R.drawable.img_bird_01,
+    R.drawable.img_bird_02,
+    R.drawable.img_bird_03,
+    R.drawable.img_bird_04,
+    R.drawable.img_bird_05,
+    R.drawable.img_bird_06,
+    R.drawable.img_bird_07,
+    R.drawable.img_bird_08,
+    R.drawable.img_bird_09,
+    R.drawable.img_bird_10,
+    R.drawable.img_bird_11,
+    R.drawable.img_bird_12,
+    R.drawable.img_bird_13,
+    R.drawable.img_bird_14,
+    R.drawable.img_bird_15,
+    R.drawable.img_bird_16,
+    R.drawable.img_bird_17,
+    R.drawable.img_bird_18,
+    R.drawable.img_bird_19,
+    R.drawable.img_bird_20,
+    R.drawable.img_bird_21,
+    R.drawable.img_bird_22,
+)
+
+private val INSECTS_IMAGES = listOf(
+    R.drawable.img_insects_01,
+    R.drawable.img_insects_02,
+    R.drawable.img_insects_03,
+    R.drawable.img_insects_04,
+    R.drawable.img_insects_05,
+    R.drawable.img_insects_06,
+    R.drawable.img_insects_07,
+    R.drawable.img_insects_08,
+    R.drawable.img_insects_09,
+    R.drawable.img_insects_10,
+    R.drawable.img_insects_11,
+    R.drawable.img_insects_12,
+    R.drawable.img_insects_13,
+    R.drawable.img_insects_14,
+)
+
+private val OCEAN_IMAGES = listOf(
+    R.drawable.img_ocean_01,
+    R.drawable.img_ocean_02,
+    R.drawable.img_ocean_03,
+    R.drawable.img_ocean_04,
+    R.drawable.img_ocean_05,
+    R.drawable.img_ocean_06,
+    R.drawable.img_ocean_07,
+    R.drawable.img_ocean_08,
+    R.drawable.img_ocean_09,
+    R.drawable.img_ocean_10,
+    R.drawable.img_ocean_11,
+    R.drawable.img_ocean_12,
+    R.drawable.img_ocean_13,
+    R.drawable.img_ocean_14,
+    R.drawable.img_ocean_15,
+    R.drawable.img_ocean_16,
+    R.drawable.img_ocean_17,
+    R.drawable.img_ocean_18,
+)
+
+private val FARM_IMAGES = listOf(
+    R.drawable.img_farm_01,
+    R.drawable.img_farm_02,
+    R.drawable.img_farm_03,
+    R.drawable.img_farm_04,
+    R.drawable.img_farm_05,
+    R.drawable.img_farm_06,
+    R.drawable.img_farm_07,
+    R.drawable.img_farm_08,
+    R.drawable.img_farm_09,
+    R.drawable.img_farm_10,
+    R.drawable.img_farm_11,
+    R.drawable.img_farm_12,
+    R.drawable.img_farm_13,
+    R.drawable.img_farm_14,
+    R.drawable.img_farm_15,
+    R.drawable.img_farm_16,
+    R.drawable.img_farm_17,
+)
+
+private val DINOSAURS_IMAGES = listOf(
+    R.drawable.img_dinosaurs_01,
+    R.drawable.img_dinosaurs_02,
+    R.drawable.img_dinosaurs_03,
+    R.drawable.img_dinosaurs_04,
+    R.drawable.img_dinosaurs_05,
+    R.drawable.img_dinosaurs_06,
+    R.drawable.img_dinosaurs_07,
+)
+
+private val FLOWERS_IMAGES = listOf(
+    R.drawable.img_flowers_01,
+    R.drawable.img_flowers_02,
+    R.drawable.img_flowers_03,
+    R.drawable.img_flowers_04,
+    R.drawable.img_flowers_05,
+    R.drawable.img_flowers_06,
+    R.drawable.img_flowers_07,
+    R.drawable.img_flowers_08,
+    R.drawable.img_flowers_09,
+    R.drawable.img_flowers_10,
+    R.drawable.img_flowers_11,
+    R.drawable.img_flowers_12,
+    R.drawable.img_flowers_13,
+    R.drawable.img_flowers_14,
+)
+
+private val FOREST_IMAGES = listOf(
+    R.drawable.img_forest_01,
+    R.drawable.img_forest_02,
+    R.drawable.img_forest_03,
+    R.drawable.img_forest_04,
+    R.drawable.img_forest_05,
+    R.drawable.img_forest_06,
+    R.drawable.img_forest_07,
+    R.drawable.img_forest_08,
+    R.drawable.img_forest_09,
+    R.drawable.img_forest_10,
+    R.drawable.img_forest_11,
+    R.drawable.img_forest_12,
+    R.drawable.img_forest_13,
+    R.drawable.img_forest_14,
+    R.drawable.img_forest_15,
+    R.drawable.img_forest_16,
+    R.drawable.img_forest_17,
+    R.drawable.img_forest_18,
+    R.drawable.img_forest_19,
+)
+
+private val FRUIT_IMAGES = listOf(
+    R.drawable.img_fruit_01,
+    R.drawable.img_fruit_02,
+    R.drawable.img_fruit_03,
+    R.drawable.img_fruit_04,
+    R.drawable.img_fruit_05,
+    R.drawable.img_fruit_06,
+    R.drawable.img_fruit_07,
+    R.drawable.img_fruit_08,
+    R.drawable.img_fruit_09,
+    R.drawable.img_fruit_10,
+    R.drawable.img_fruit_11,
+    R.drawable.img_fruit_12,
+)
+
+private val VEGETABLE_IMAGES = listOf(
+    R.drawable.img_vegetable_01,
+    R.drawable.img_vegetable_02,
+    R.drawable.img_vegetable_03,
+    R.drawable.img_vegetable_04,
+    R.drawable.img_vegetable_05,
+    R.drawable.img_vegetable_06,
+    R.drawable.img_vegetable_07,
+    R.drawable.img_vegetable_08,
+    R.drawable.img_vegetable_09,
+    R.drawable.img_vegetable_10,
+    R.drawable.img_vegetable_11,
+    R.drawable.img_vegetable_12,
+    R.drawable.img_vegetable_13,
+    R.drawable.img_vegetable_14,
+)
+
 private val SPACE_IMAGES = listOf(
     R.drawable.img_space_01,
     R.drawable.img_space_02,
@@ -112,19 +336,12 @@ private val SPACE_IMAGES = listOf(
     R.drawable.img_space_17,
 )
 
-/**
- * How many items a theme ships while its content is still placeholder labels.
- * A theme with photographs carries as many as it has — see
- * [CONSTRUCTION_IMAGES] and [SPACE_IMAGES], which disagree — which is why
- * [ThemeDef.labelCount] is per theme.
- */
-private const val LABELS_PER_THEME = 8
-
 val THEME_DEFS: List<ThemeDef> = listOf(
     // Things that go
     ThemeDef(
         id = "cars", nameRes = R.string.theme_cars, labelsRes = R.array.labels_cars,
-        labelCount = LABELS_PER_THEME, hue = 15f, iconRes = R.drawable.ic_theme_cars,
+        labelCount = CARS_IMAGES.size, hue = 15f, iconRes = R.drawable.ic_theme_cars,
+        imageRes = CARS_IMAGES,
     ),
     ThemeDef(
         id = "construction", nameRes = R.string.theme_construction, labelsRes = R.array.labels_construction,
@@ -133,51 +350,62 @@ val THEME_DEFS: List<ThemeDef> = listOf(
     ),
     ThemeDef(
         id = "trains", nameRes = R.string.theme_trains, labelsRes = R.array.labels_trains,
-        labelCount = LABELS_PER_THEME, hue = 350f, iconRes = R.drawable.ic_theme_trains,
+        labelCount = TRAINS_IMAGES.size, hue = 350f, iconRes = R.drawable.ic_theme_trains,
+        imageRes = TRAINS_IMAGES,
     ),
 
     // Creatures
     ThemeDef(
         id = "animals", nameRes = R.string.theme_animals, labelsRes = R.array.labels_animals,
-        labelCount = LABELS_PER_THEME, hue = 320f, iconRes = R.drawable.ic_theme_animals,
+        labelCount = ANIMALS_IMAGES.size, hue = 320f, iconRes = R.drawable.ic_theme_animals,
+        imageRes = ANIMALS_IMAGES,
     ),
     ThemeDef(
         id = "bird", nameRes = R.string.theme_bird, labelsRes = R.array.labels_bird,
-        labelCount = LABELS_PER_THEME, hue = 225f, iconRes = R.drawable.ic_theme_bird,
+        labelCount = BIRD_IMAGES.size, hue = 225f, iconRes = R.drawable.ic_theme_bird,
+        imageRes = BIRD_IMAGES,
     ),
     ThemeDef(
         id = "insects", nameRes = R.string.theme_insects, labelsRes = R.array.labels_insects,
-        labelCount = LABELS_PER_THEME, hue = 200f, iconRes = R.drawable.ic_theme_insects,
+        labelCount = INSECTS_IMAGES.size, hue = 200f, iconRes = R.drawable.ic_theme_insects,
+        imageRes = INSECTS_IMAGES,
     ),
     ThemeDef(
         id = "ocean", nameRes = R.string.theme_ocean, labelsRes = R.array.labels_ocean,
-        labelCount = LABELS_PER_THEME, hue = 175f, iconRes = R.drawable.ic_theme_ocean,
+        labelCount = OCEAN_IMAGES.size, hue = 175f, iconRes = R.drawable.ic_theme_ocean,
+        imageRes = OCEAN_IMAGES,
     ),
     ThemeDef(
         id = "farm", nameRes = R.string.theme_farm, labelsRes = R.array.labels_farm,
-        labelCount = LABELS_PER_THEME, hue = 75f, iconRes = R.drawable.ic_theme_farm,
+        labelCount = FARM_IMAGES.size, hue = 75f, iconRes = R.drawable.ic_theme_farm,
+        imageRes = FARM_IMAGES,
     ),
     ThemeDef(
         id = "dinosaurs", nameRes = R.string.theme_dinosaurs, labelsRes = R.array.labels_dinosaurs,
-        labelCount = LABELS_PER_THEME, hue = 285f, iconRes = R.drawable.ic_theme_dinosaurs,
+        labelCount = DINOSAURS_IMAGES.size, hue = 285f, iconRes = R.drawable.ic_theme_dinosaurs,
+        imageRes = DINOSAURS_IMAGES,
     ),
 
     // Growing things
     ThemeDef(
         id = "flowers", nameRes = R.string.theme_flowers, labelsRes = R.array.labels_flowers,
-        labelCount = LABELS_PER_THEME, hue = 296f, iconRes = R.drawable.ic_theme_flowers,
+        labelCount = FLOWERS_IMAGES.size, hue = 296f, iconRes = R.drawable.ic_theme_flowers,
+        imageRes = FLOWERS_IMAGES,
     ),
     ThemeDef(
         id = "forest", nameRes = R.string.theme_forest, labelsRes = R.array.labels_forest,
-        labelCount = LABELS_PER_THEME, hue = 150f, iconRes = R.drawable.ic_theme_forest,
+        labelCount = FOREST_IMAGES.size, hue = 150f, iconRes = R.drawable.ic_theme_forest,
+        imageRes = FOREST_IMAGES,
     ),
     ThemeDef(
         id = "fruit", nameRes = R.string.theme_fruit, labelsRes = R.array.labels_fruit,
-        labelCount = LABELS_PER_THEME, hue = 100f, iconRes = R.drawable.ic_theme_fruit,
+        labelCount = FRUIT_IMAGES.size, hue = 100f, iconRes = R.drawable.ic_theme_fruit,
+        imageRes = FRUIT_IMAGES,
     ),
     ThemeDef(
         id = "vegetable", nameRes = R.string.theme_vegetable, labelsRes = R.array.labels_vegetable,
-        labelCount = LABELS_PER_THEME, hue = 125f, iconRes = R.drawable.ic_theme_vegetable,
+        labelCount = VEGETABLE_IMAGES.size, hue = 125f, iconRes = R.drawable.ic_theme_vegetable,
+        imageRes = VEGETABLE_IMAGES,
     ),
 
     // Out there

@@ -40,28 +40,34 @@
       Each array's length must match its theme's `labelCount` in ThemeDef.kt;
       ThemeResourcesTest asserts that for every theme, because the ViewModel
       wraps its index against labelCount without being able to see resources.
+
+      Every theme now ships photographs, so none of these labels currently
+      reaches a screen: the Viewer shows the picture alone and does not
+      describe it. They are the roster of what each theme holds - one entry
+      per image, in the order ThemeDef lists them, which is what
+      ThemeResourcesTest counts labelCount against. Treat them as a note to
+      the next maintainer about which photograph sits at which index, and
+      keep them in step when the pictures change.
     -->
     <string name="theme_cars">Cars</string>
     <string-array name="labels_cars">
-        <item>Red sports car, side view</item>
-        <item>Yellow taxi, front view</item>
-        <item>Blue pickup truck</item>
-        <item>Green race car with number</item>
-        <item>Police car with lights on</item>
-        <item>Yellow school bus</item>
-        <item>Motorcycle, side view</item>
-        <item>Orange convertible car</item>
+        <item>Yellow sports car parked under green trees</item>
+        <item>Red classic sports car on a sunny road</item>
+        <item>Green monster truck out on the white salt flats</item>
+        <item>Black muscle car, front view, on a leafy street</item>
+        <item>Orange camper van parked at the kerb</item>
+        <item>Silver coupe on a hilltop road at sunset</item>
+        <item>Grey sports car in front of a garage door</item>
+        <item>Black racing car waiting on the track</item>
+        <item>Red muscle car on a road above the hills</item>
+        <item>Blue sports car in the desert at sunset</item>
+        <item>Green sports car with white stripes, seen from above</item>
+        <item>Light blue beetle car on a grassy hill</item>
+        <item>White sports car with mountains behind it</item>
+        <item>Three old racing cars in a row: orange, cream and blue</item>
     </string-array>
 
     <string name="theme_construction">Construction</string>
-    <!--
-      Construction has photographs, so unlike every other theme's these labels
-      never reach a screen: the Viewer shows the picture and nothing else, and
-      does not describe it. They stay as the roster of what the theme holds -
-      one entry per image, in the order ThemeDef.CONSTRUCTION_IMAGES lists them,
-      which is what ThemeResourcesTest counts labelCount against. Treat them as
-      a note to the next maintainer about which photograph is which.
-    -->
     <string-array name="labels_construction">
         <item>Yellow digger with a big scooping bucket</item>
         <item>Yellow digger parked under a cloudy blue sky</item>
@@ -81,34 +87,40 @@
 
     <string name="theme_animals">Animals</string>
     <string-array name="labels_animals">
-        <item>Lion resting in tall grass</item>
-        <item>Elephant walking in savanna</item>
-        <item>Giraffe eating tree leaves</item>
-        <item>Panda sitting with bamboo</item>
-        <item>Owl perched on a branch</item>
-        <item>Rabbit hopping in a field</item>
-        <item>Puppy playing with a ball</item>
-        <item>Kitten napping in sun</item>
+        <item>Dolphin peeping out of bright blue water</item>
+        <item>A giraffe head on a long spotted neck</item>
+        <item>Little tabby kitten sitting very still</item>
+        <item>Lion with a big mane walking through the grass</item>
+        <item>A zebra\'s black and white stripes up close</item>
+        <item>Baby crocodile with a bright yellow eye</item>
+        <item>Tiger padding down a dusty track</item>
+        <item>Polar bear standing up on the snow</item>
+        <item>White horse galloping across a dark field</item>
+        <item>Monkey pulling a very surprised face</item>
+        <item>White tiger standing in the jungle</item>
+        <item>Rhino with a big horn out on the plain</item>
+        <item>Gorilla sitting by a rock, looking up</item>
+        <item>Deer with big antlers in the evening light</item>
+        <item>Elephants walking in a line across the plain</item>
+        <item>Dolphin leaping right out of the sea</item>
+        <item>Red squirrel nibbling on a branch</item>
+        <item>Red fox standing in the snow</item>
+        <item>Panda chewing a mouthful of bamboo</item>
+        <item>Bright green and orange tree frog</item>
     </string-array>
 
     <string name="theme_dinosaurs">Dinosaurs</string>
     <string-array name="labels_dinosaurs">
-        <item>T-Rex roaring, side view</item>
-        <item>Triceratops grazing on plants</item>
-        <item>Stegosaurus walking, side view</item>
-        <item>Pterodactyl flying over cliffs</item>
-        <item>Brontosaurus beside a lake</item>
-        <item>Velociraptor running fast</item>
-        <item>Ankylosaurus with tail spikes</item>
-        <item>Baby dinosaur hatching from egg</item>
+        <item>Feathered raptor model against a blue sky</item>
+        <item>Raptor model roaring in the woods</item>
+        <item>T-Rex model striding through misty trees</item>
+        <item>T-Rex model with its mouth wide open</item>
+        <item>Two long-necked dinosaur models by a waterfall</item>
+        <item>A raptor model\'s head among dark leaves</item>
+        <item>Long-necked dinosaur model on a green lawn</item>
     </string-array>
 
     <string name="theme_space">Space</string>
-    <!--
-      Like Construction's, these are a roster rather than content: Space has
-      photographs, so nothing displays them. One entry per image, in the order
-      ThemeDef.SPACE_IMAGES lists them.
-    -->
     <string-array name="labels_space">
         <item>Earth from space, blue oceans under white clouds</item>
         <item>Earth rising over the Moon\'s grey craters</item>
@@ -131,26 +143,43 @@
 
     <string name="theme_trains">Trains</string>
     <string-array name="labels_trains">
-        <item>Red steam train, side view</item>
-        <item>Bullet train speeding by</item>
-        <item>Freight train with cargo cars</item>
-        <item>Toy train on a track</item>
-        <item>Train crossing a bridge</item>
-        <item>Subway train at a station</item>
-        <item>Yellow train engine, front view</item>
-        <item>Train going through tunnel</item>
+        <item>Yellow engine pulling a long line of freight wagons</item>
+        <item>Red passenger train rounding a bend in autumn</item>
+        <item>Freight train curving beside a turquoise river</item>
+        <item>Grey tanker train under a stormy sky</item>
+        <item>Old steam engine puffing through the trees</item>
+        <item>White high-speed train waiting at the platform</item>
+        <item>Green steam train in a leafy tunnel of trees</item>
+        <item>Bullet train pulling into a busy station</item>
+        <item>White monorail gliding over a flower garden</item>
+        <item>Steam train crossing a stone bridge in the hills</item>
+        <item>Red train on a snowy mountain viaduct</item>
+        <item>Red engine hauling freight cars over a bridge</item>
+        <item>Silver commuter train speeding past the city</item>
+        <item>Red engine and freight wagons under big clouds</item>
+        <item>Steam train and its smoke on a tall arched bridge</item>
     </string-array>
 
     <string name="theme_ocean">Ocean</string>
     <string-array name="labels_ocean">
-        <item>Clownfish swimming by coral</item>
-        <item>Sea turtle gliding underwater</item>
-        <item>Octopus with curled arms</item>
-        <item>Starfish on the sand</item>
-        <item>Whale breaching the surface</item>
-        <item>Seahorse near seaweed</item>
-        <item>Crab on the beach</item>
-        <item>School of tropical fish</item>
+        <item>Killer whale sliding up to the water\'s edge</item>
+        <item>Red and white starfish on the wet sand</item>
+        <item>Crab with its claws up on the beach</item>
+        <item>Striped fish swimming over the reef</item>
+        <item>Yellow seahorse with a curled tail</item>
+        <item>Sawfish with a long toothed nose</item>
+        <item>Little orange fish all over a coral reef</item>
+        <item>Shark gliding through dark water</item>
+        <item>Orange jellyfish trailing long tentacles</item>
+        <item>Spiky lionfish beside the coral</item>
+        <item>A whole swarm of pale jellyfish</item>
+        <item>Clownfish hiding in a green anemone</item>
+        <item>Sea lion swimming just under the surface</item>
+        <item>Stingray flying through the blue water</item>
+        <item>A shoal of yellow-tailed fish</item>
+        <item>Humpback whale leaping out of the sea</item>
+        <item>Whales feeding with their mouths wide open</item>
+        <item>Sea turtle swimming in deep blue water</item>
     </string-array>
 
     <string name="theme_farm">Farm</string>
@@ -161,85 +190,143 @@
     <string name="theme_fruit">Fruit</string>
     <string name="theme_vegetable">Vegetables</string>
     <string-array name="labels_farm">
-        <item>Pig in a muddy pen</item>
-        <item>Cow grazing in a field</item>
-        <item>Chicken by the barn</item>
-        <item>Sheep with wooly coat</item>
-        <item>Horse in a green pasture</item>
-        <item>Duck swimming in a pond</item>
-        <item>Red barn with silo</item>
-        <item>Tractor in a wheat field</item>
+        <item>Three brown and white calves in the barn</item>
+        <item>Rows of cabbages growing in the field</item>
+        <item>Brown hen with a red comb in the yard</item>
+        <item>Green tractor cutting hay under dark clouds</item>
+        <item>Round hay bales dotted over the hills</item>
+        <item>Tractor seen from above, dust trailing behind</item>
+        <item>Little pink piglet standing in the straw</item>
+        <item>Red barn beside the autumn trees</item>
+        <item>Four sheep looking up from the grass</item>
+        <item>Four horses leaning over the fence</item>
+        <item>Red and green tractors working at sunset</item>
+        <item>Carrots and leeks on the market stall</item>
+        <item>Rabbit and her bunny in the hay</item>
+        <item>Woolly sheep looking straight at you</item>
+        <item>Combine harvester cutting the golden wheat</item>
+        <item>Cows in the field at sunset</item>
+        <item>Farm track between the fences at sunrise</item>
     </string-array>
 
     <string-array name="labels_bird">
-        <item>Robin perched on a branch</item>
-        <item>Blue jay with bright feathers</item>
-        <item>Woodpecker on a tree trunk</item>
-        <item>Flamingo standing in water</item>
-        <item>Penguin waddling on ice</item>
-        <item>Eagle soaring over mountains</item>
-        <item>Hummingbird at a flower</item>
-        <item>Parrot with rainbow feathers</item>
+        <item>Robin with an orange chest on an old gate</item>
+        <item>Green hummingbird hovering in the air</item>
+        <item>Owl with big orange eyes in the dark</item>
+        <item>Pink flamingo standing in still blue water</item>
+        <item>Blue and yellow macaw, close up</item>
+        <item>White egret flying low over the reeds</item>
+        <item>Five cranes flying through the clouds</item>
+        <item>Bird coming in to land with wings spread at sunset</item>
+        <item>Peacock perched on an old branch</item>
+        <item>Bald eagle soaring in a clear blue sky</item>
+        <item>Bright red cardinal on a snowy branch</item>
+        <item>Barred owl sitting quietly in a tree</item>
+        <item>Bald eagle coming down to its big stick nest</item>
+        <item>Owl gliding low over the snow</item>
+        <item>White swan on dark green water</item>
+        <item>Two red macaws snuggling on a branch</item>
+        <item>Three blue and yellow macaws in a row</item>
+        <item>Little green parrot on a mossy branch</item>
+        <item>Toucan with a rainbow beak in the rain</item>
+        <item>Orange and yellow parrot on a branch</item>
+        <item>Two penguins standing beside the blue sea</item>
+        <item>Two puffins among the wild flowers</item>
     </string-array>
 
     <string-array name="labels_insects">
-        <item>Butterfly on a purple flower</item>
-        <item>Bumblebee gathering pollen</item>
-        <item>Ladybug on a green leaf</item>
-        <item>Dragonfly over a pond</item>
-        <item>Ant carrying a crumb</item>
-        <item>Grasshopper in tall grass</item>
-        <item>Caterpillar on a stem</item>
-        <item>Firefly glowing at dusk</item>
+        <item>Yellow and pink moth resting on a wall</item>
+        <item>Honeybee gathering pollen from a flower</item>
+        <item>Stag beetle with big jaws on a leaf</item>
+        <item>Red ladybird tucked into a green leaf</item>
+        <item>Green grasshopper gripping a thin twig</item>
+        <item>Brown cricket on a wooden plank</item>
+        <item>Praying mantis with its front legs raised</item>
+        <item>Orange and black butterfly with its wings open</item>
+        <item>Stripy caterpillar climbing a stem</item>
+        <item>Fluffy white moth on a stone</item>
+        <item>Pale green luna moth with long tails</item>
+        <item>Mosquito on a plain white background</item>
+        <item>Jumping spider with big shiny eyes</item>
+        <item>Butterfly sipping from an orange flower</item>
     </string-array>
 
     <string-array name="labels_flowers">
-        <item>Sunflower facing the sun</item>
-        <item>Red rose with green leaves</item>
-        <item>Tulips in a spring garden</item>
-        <item>Daisy with white petals</item>
-        <item>Lavender swaying in a field</item>
-        <item>Cherry blossoms on a branch</item>
-        <item>Orchid in a small pot</item>
-        <item>Poppy in a summer meadow</item>
+        <item>Pink cherry blossom against a blue sky</item>
+        <item>Lots of red roses seen from above</item>
+        <item>Tiny blue forget-me-nots among green leaves</item>
+        <item>Purple lavender waving in a meadow</item>
+        <item>Red poppies standing in a wheat field</item>
+        <item>Pale purple flowers glowing in the evening sun</item>
+        <item>Red tulips reaching up to a blue sky</item>
+        <item>Deep blue hydrangea blooms</item>
+        <item>A big bunch of bright yellow sunflowers</item>
+        <item>A wild meadow full of different flowers</item>
+        <item>Pink and purple lupins in front of a stone church</item>
+        <item>Golden poppies under a bright blue sky</item>
+        <item>Yellow flowers covering a whole hillside</item>
+        <item>Pink water lily floating on a pond</item>
     </string-array>
 
     <string-array name="labels_forest">
-        <item>Tall pine trees in a row</item>
-        <item>Mushrooms on a mossy log</item>
-        <item>Sunlight through the leaves</item>
-        <item>Fox trotting between trees</item>
-        <item>Stream running over rocks</item>
-        <item>Acorns under an oak tree</item>
-        <item>Deer standing in a clearing</item>
-        <item>Autumn leaves on the ground</item>
+        <item>A green clearing high above the forest</item>
+        <item>A leafy path between tall straight trees</item>
+        <item>Three red toadstools with white spots</item>
+        <item>A dim path through thick green woods</item>
+        <item>Little brown mushrooms on a mossy log</item>
+        <item>A meadow below a great grey cliff</item>
+        <item>A cluster of orange mushrooms in the moss</item>
+        <item>Sunlight down a track between the pines</item>
+        <item>Mist drifting over a green hillside forest</item>
+        <item>Tiny white mushrooms standing in the moss</item>
+        <item>Fog in the valley between wooded hills</item>
+        <item>Snow still lying under the mountain pines</item>
+        <item>Fir trees on a ridge below the mountains</item>
+        <item>A rocky stream running through a misty valley</item>
+        <item>Light breaking into a dark green wood</item>
+        <item>The sun going down behind the mountain trees</item>
+        <item>Sunbeams between the trunks of a pine wood</item>
+        <item>Branches arching over a still green river</item>
+        <item>A line of trees under big white clouds</item>
     </string-array>
 
     <string-array name="labels_fruit">
-        <item>Red apple on a branch</item>
-        <item>Bunch of yellow bananas</item>
-        <item>Strawberries in a basket</item>
-        <item>Orange cut in half</item>
-        <item>Bunch of purple grapes</item>
-        <item>Watermelon slice on a plate</item>
-        <item>Ripe pear on a table</item>
-        <item>Pineapple with spiky leaves</item>
+        <item>A market stall piled high with fruit</item>
+        <item>Sliced fruit arranged around a wooden board</item>
+        <item>A whole crate of red strawberries</item>
+        <item>Small yellow plums on a sunny branch</item>
+        <item>Apples, pears and melons at the market</item>
+        <item>Grapes, mango, kiwi and pineapple in a basket</item>
+        <item>A basket of pineapple, mango and green grapes</item>
+        <item>Chopped fruit salad with berries and mint</item>
+        <item>Oranges ripening on the tree</item>
+        <item>A big pile of fruit on a dark table</item>
+        <item>A tray of fruit and vegetables from the market</item>
+        <item>Fruit juices in jugs beside the fresh fruit</item>
     </string-array>
 
     <string-array name="labels_vegetable">
-        <item>Orange carrot with green top</item>
-        <item>Broccoli floret on a board</item>
-        <item>Red tomato on the vine</item>
-        <item>Corn on the cob</item>
-        <item>Green peas in a pod</item>
-        <item>Purple eggplant, side view</item>
-        <item>Potatoes in a wooden crate</item>
-        <item>Bell peppers in three colors</item>
+        <item>Peppers, broccoli and courgettes on a stall</item>
+        <item>Vegetables of every colour spread out</item>
+        <item>A bowl of peppers, corn and tomatoes held up</item>
+        <item>Baskets of broccoli, beans and tomatoes</item>
+        <item>A big market counter full of vegetables</item>
+        <item>Lettuces and onions growing in a garden bed</item>
+        <item>A heap of round green cabbages</item>
+        <item>Cauliflowers, cabbages and red tomatoes</item>
+        <item>Aubergines, carrots and peppers side by side</item>
+        <item>Vegetables laid out on a white background</item>
+        <item>A great pile of small potatoes</item>
+        <item>A crate of fresh green spinach leaves</item>
+        <item>A wooden box of vegetables out on the grass</item>
+        <item>Yellow and red peppers in a heap</item>
     </string-array>
     <!--
-      Attribution. One line per source, each naming the category it covers —
+      Attribution. One line per source, each naming the categories it covers —
       a single blanket line stopped being true the moment a second theme got
-      its pictures somewhere else.
+      its pictures somewhere else. Unsplash now supplies every category but
+      Space, so its line says so by exception rather than listing thirteen
+      names that would go stale on the next theme.
 
       The Unsplash License does not require credit and NASA's material is not
       copyrighted at all, but the photographers get named anyway; the notices
@@ -247,10 +334,41 @@
       list, so they are not translatable; they are substituted into a line that
       is, so the separator and the word order stay with the language rather
       than being glued on in Kotlin.
+
+      The list is derived from the Unsplash source filenames, which are folded
+      to ASCII — so a photographer whose name carries a diacritic is spelled
+      here without it unless someone has checked their profile and corrected
+      it by hand.
     -->
     <string name="settings_attribution">Attribution</string>
-    <string name="attribution_images">Construction images provided by Unsplash under their Unsplash Licence</string>
+    <string name="attribution_images">Every category except Space uses images provided by Unsplash under their Unsplash Licence</string>
     <string name="attribution_photographers_line">Unsplash photographs by: %1$s</string>
+    <!--
+      The credit list runs to 183 names, which is most of a screen of solid
+      text between a parent and the end of this one. It is clamped to three
+      lines with these to open and close it; the names are still all there,
+      just not in the way by default.
+    -->
+    <!--
+      What a screen reader hears in place of the names while they are
+      collapsed. maxLines clamps at draw time only - Compose publishes the
+      whole string to the semantics tree either way - so without this a
+      TalkBack user hears every name and is then offered a control that
+      changes nothing they can perceive. The count is substituted rather than
+      written out, so it cannot drift from the roster.
+    -->
+    <plurals name="attribution_photographers_summary">
+        <item quantity="one">Unsplash photographs by %1$d photographer</item>
+        <item quantity="other">Unsplash photographs by %1$d photographers</item>
+    </plurals>
+    <!--
+      Said alongside the control, so a screen reader hears which way the
+      credits currently sit rather than only what tapping would do.
+    -->
+    <string name="attribution_state_expanded">Expanded</string>
+    <string name="attribution_state_collapsed">Collapsed</string>
+    <string name="attribution_show_more">Show more</string>
+    <string name="attribution_show_less">Show less</string>
     <string name="attribution_nasa">Space images are courtesy of NASA</string>
-    <string name="attribution_photographers" translatable="false">Abdul Zreika, Anatol Rurac, Bernd Dittrich, Chandler Cruttenden, David Griffiths, Jamar Penny, Jason Jarrach, Maria Lupan, Michael Kora, Michal Vrba, Nihar Reddy Jangam, Wioletta Płonkowska</string>
+    <string name="attribution_photographers" translatable="false">Aarn Giri, Abdul Zreika, Adam Berkecz, Ahmed Badawy, Akshay Nanavati, Alejandro Contreras, Alexander Schimmeck, Alexandr Podvalny, Aman Shrestha, Amoon Ra, Amy Baugess, Anatol Rurac, Andrew Pons, Andrey Kremkov, Andy Holmes, Ankush Minda, Annie Spratt, Anton Darius, Arnaldo Aldana, Arno Smit, Aubrey Yu, Ben Moreland, Bernd Dittrich, BH Bharathy, Biel Morro, Bithinraj MB, Bob Brewer, Chad Stembridge, Chandler Cruttenden, Chantal Garnier, Chi Pham, Chittima Stanmore, Chris Briggs, Chris Ensminger, Chris Sabor, Christian Cagni, Christina Brinza, Christopher Carson, Claud Richmond, Daniel Abadia, David Bruyndonckx, David Clode, David Griffiths, Deb Dowd, Denis Chick, Dhiva Krishna, Dillon Kydd, Dmytro Bukhantsov, Dorne Marting, Duong Thinh, Edgar, Elegance Nairobi, Elena Mozhvilo, Elias Morr, Enrico Bet, Esteban Castle, Esther Gorlee, Fausto Garcia Menendez, Fikri Rasyid, Filip Mroz, Florian Schneider, Frances Gunn, Francesco, Francesco Ungaro, Frank Kroeger, Frida Lannerstrom, Gaetano Cessati, Gerome Bruneau, Gregoire Jeanneau, Hans Jurgen Mager, Hans Veth, Heather Maguire, Heiko Haller, Helena Lopes, Herson Rodriguez, Imat Bagja Gumilar, Inigo de la Maza, J M, Jacopo Maiarelli, Jakub Kapusnak, Jamar Penny, Jamie Haughton, Jane Ong, Jason Jarrach, Jesse Bauer, Joel Durkee, Johannes Hofmann, Jonas Kakaroto, Josh Berquist, Judith Prins, Kahl Orr, Kar Ming Moo, Keith Markilie, Kelly Sikkema, Kevin Mueller, Lance Asper, Laura College, Laurent Jollet, Lucas van Oort, Lucia Macedo, Lukasz Szmigiel, Mado El Khouly, Manny Peralta, Margarida Afonso, Maria Lupan, Marita Kavelashvili, Markus Spiske, Mathew Schwartz, Matthew Spiteri, Meritt Thomas, Michael Denning, Michael Kora, Michal Vrba, Mika Brandt, Naseem Buras, Natasha Skov, Nature Uninterrupted Photography, Nihar Reddy Jangam, Nina Plobner, Nithin P John, Oleksandr Sushko, Pagie Page, Patrice Bouchard, Paul Carroll, Paul Summers, Peter Hammer, Peter Robbins, Peter Wendt, Philippe Gauthier, Pine Watt, Powell Rasull, Priom, Radoslaw Prekurat, Randy Fath, Ray Aucott, Ray Hennessy, Richard Lee, Robert Woeger, Robyn Budlender, Rodrigo dos Reis, Roi Dimor, Roland Losslein, Rolf Neumann, Rosie Kerr, Ruben Ortega, Sam Carter, Scott Goodwill, Sean Cotton, Sebastian Unrau, Sergei A, Sergey Shmidt, Shutter Sphere Collective, Sid Balachandran, Skon Communication, Sonika Agarwal, Stefan Rodriguez, Stephanie Leblanc, Steven Binotto, Steven Carr, Steven Kamenar, Stijn te Strake, Sydney Rae, Thomas Elliott, Thomas Kelley, Tienko Dima, Tim Mossholder, Tom Arrowsmith, Tom Brunberg, Tonmoy Iftekhar, Tyler Clemmensen, Umesh Soni, Vaibhav Pixels, Valdemaras Januska, Vivek Kumar, Werner Sevenster, Wexor Tmg, Wioletta Płonkowska, Wynand van Poortvliet, Yuichi Kageyama, Zdenek Machacek, Zlatko Duric, Zoltan Tasi, Zsak Ferenc Tibor</string>
 </resources>

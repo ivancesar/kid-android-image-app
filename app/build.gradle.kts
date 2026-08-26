@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.PathSensitivity
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -118,3 +120,20 @@ val checkIconsInSync = tasks.register<Exec>("checkIconsInSync") {
 }
 
 tasks.named("check") { dependsOn(checkIconsInSync) }
+
+/**
+ * `ThemeRosterTest.everyThemeShipsOnePhotographPerLabel` reads
+ * `values/strings.xml` off disk, because counting `<item>`s against
+ * `ThemeDef.imageRes` is the roster check worth gating a plain `./gradlew
+ * build` on and `Resources` would drag it onto a device.
+ *
+ * Gradle cannot see a file a test opens itself. Removing a label changes no
+ * resource id, so `R.jar` and the test classpath stay byte-identical, the task
+ * is up to date, and the check silently does not run on the one edit it exists
+ * to catch. Declaring it as an input is what makes that edit re-run the test.
+ */
+tasks.withType<Test>().configureEach {
+    inputs.file(layout.projectDirectory.file("src/main/res/values/strings.xml"))
+        .withPropertyName("defaultStrings")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+}

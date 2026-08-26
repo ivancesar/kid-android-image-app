@@ -91,25 +91,6 @@ class ThemeResourcesTest {
     }
 
     /**
-     * A theme with photographs must have exactly as many as it has labels.
-     * The Viewer pairs them by index — item *n*'s label is what TalkBack reads
-     * out for image *n* — so a short list would silently drop back to the
-     * placeholder card partway through the set, and a long one would leave
-     * photographs a child can never reach.
-     */
-    @Test
-    fun everyThemeWithPhotographsHasOnePerLabel() {
-        THEME_DEFS.filter { it.imageRes.isNotEmpty() }.forEach { theme ->
-            assertEquals(
-                "theme '${theme.id}' declares labelCount=${theme.labelCount} " +
-                    "but ships ${theme.imageRes.size} photographs",
-                theme.labelCount,
-                theme.imageRes.size,
-            )
-        }
-    }
-
-    /**
      * `img_<id>_NN`, one-based and zero-padded, in the order the Viewer pages
      * them. Named after the theme for the same reason its icon and its string
      * resources are, and numbered so a mismatch between the list in
@@ -156,26 +137,6 @@ class ThemeResourcesTest {
                 ContextCompat.getDrawable(context, id),
             )
         }
-    }
-
-    /**
-     * Some theme has artwork.
-     *
-     * This used to name Construction as the only one, which was true when it
-     * was the only one and became a chore the moment a second theme was being
-     * photographed. What is worth pinning is not the roster but that the
-     * roster is not empty: the Viewer's photograph path, and every test that
-     * exercises it, resolves its fixture with
-     * `first { it.imageRes.isNotEmpty() }`, and all of it would go quietly
-     * vacuous if the last theme lost its images. Which theme, and how many,
-     * is a content decision the other assertions here already police.
-     */
-    @Test
-    fun atLeastOneThemeShipsPhotographs() {
-        assertTrue(
-            "no theme ships photographs - the Viewer's image path is untested",
-            THEME_DEFS.any { it.imageRes.isNotEmpty() },
-        )
     }
 
     @Test
@@ -246,7 +207,10 @@ class ThemeResourcesTest {
             R.string.settings_done, R.string.settings_language,
             R.string.settings_language_system, R.string.settings_attribution,
             R.string.attribution_images, R.string.attribution_photographers_line,
-            R.string.attribution_nasa,
+            R.string.attribution_nasa, R.string.attribution_show_more,
+            R.string.attribution_show_less,
+            R.string.attribution_state_expanded,
+            R.string.attribution_state_collapsed,
         )
         mustTranslate.forEach { id ->
             val name = resources.getResourceEntryName(id)
@@ -255,6 +219,18 @@ class ThemeResourcesTest {
                 en.getString(id) != hr.getString(id),
             )
         }
+
+        // The credit summary is a plural, so it resolves through a different
+        // call and would fall out of the list above unnoticed - which is how
+        // it got missed the first time. It is what TalkBack reads for the
+        // collapsed credits, so an untranslated one is a Croatian a11y
+        // regression that every other assertion here would pass.
+        assertTrue(
+            "attribution_photographers_summary is identical in en and hr - " +
+                "is it missing from values-hr?",
+            en.getQuantityString(R.plurals.attribution_photographers_summary, 183, 183) !=
+                hr.getQuantityString(R.plurals.attribution_photographers_summary, 183, 183),
+        )
 
         // Theme names too, except Ocean, which is the same word in both.
         THEME_DEFS.filterNot { it.id == "ocean" }.forEach { theme ->
@@ -280,11 +256,13 @@ class ThemeResourcesTest {
         assertEquals("Pick something to look at!", en.getString(R.string.home_title))
         // The notices the app owes its image sources, pinned by literal rather
         // than left to a resolve-from-resources assertion that would pass on
-        // any wording at all. Each names the category it covers: a blanket
+        // any wording at all. Each says which categories it covers: a blanket
         // line was true only while one theme had pictures, and a notice that
-        // credits the wrong source for a category is worse than none.
+        // credits the wrong source for a category is worse than none. Unsplash
+        // supplies all thirteen themes NASA does not, so its line carves Space
+        // out by name rather than listing the rest.
         assertEquals(
-            "Construction images provided by Unsplash under their Unsplash Licence",
+            "Every category except Space uses images provided by Unsplash under their Unsplash Licence",
             en.getString(R.string.attribution_images),
         )
         assertEquals(
