@@ -159,22 +159,27 @@ class ThemeResourcesTest {
     }
 
     /**
-     * Some theme has artwork.
+     * Every theme has artwork.
      *
-     * This used to name Construction as the only one, which was true when it
-     * was the only one and became a chore the moment a second theme was being
-     * photographed. What is worth pinning is not the roster but that the
-     * roster is not empty: the Viewer's photograph path, and every test that
-     * exercises it, resolves its fixture with
-     * `first { it.imageRes.isNotEmpty() }`, and all of it would go quietly
-     * vacuous if the last theme lost its images. Which theme, and how many,
-     * is a content decision the other assertions here already police.
+     * This started as "Construction has photographs", was loosened to "some
+     * theme does" while the set was growing, and is now tight again because
+     * the set is finished: no theme ships the placeholder card. A child must
+     * never land on stand-in text, so a theme reaching the grid without its
+     * pictures is a shipping bug, not a work-in-progress state.
+     *
+     * That makes this the assertion that fails when a new theme is added
+     * before it has been photographed. The failure is the point — write the
+     * entry and drop the images in together. [ThemeDef.imageRes] still
+     * defaults to empty and the Viewer still renders the placeholder for a
+     * null image, so nothing is broken in the meantime; it just does not ship.
      */
     @Test
-    fun atLeastOneThemeShipsPhotographs() {
+    fun everyThemeShipsPhotographs() {
+        val bare = THEME_DEFS.filter { it.imageRes.isEmpty() }.map { it.id }
         assertTrue(
-            "no theme ships photographs - the Viewer's image path is untested",
-            THEME_DEFS.any { it.imageRes.isNotEmpty() },
+            "these themes would show the placeholder card rather than a " +
+                "photograph: $bare",
+            bare.isEmpty(),
         )
     }
 
@@ -280,11 +285,13 @@ class ThemeResourcesTest {
         assertEquals("Pick something to look at!", en.getString(R.string.home_title))
         // The notices the app owes its image sources, pinned by literal rather
         // than left to a resolve-from-resources assertion that would pass on
-        // any wording at all. Each names the category it covers: a blanket
+        // any wording at all. Each says which categories it covers: a blanket
         // line was true only while one theme had pictures, and a notice that
-        // credits the wrong source for a category is worse than none.
+        // credits the wrong source for a category is worse than none. Unsplash
+        // supplies all thirteen themes NASA does not, so its line carves Space
+        // out by name rather than listing the rest.
         assertEquals(
-            "Construction images provided by Unsplash under their Unsplash Licence",
+            "Every category except Space uses images provided by Unsplash under their Unsplash Licence",
             en.getString(R.string.attribution_images),
         )
         assertEquals(

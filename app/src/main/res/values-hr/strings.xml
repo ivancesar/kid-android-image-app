@@ -3,9 +3,8 @@
   Croatian. Keys absent here fall back to values/strings.xml on purpose:
   app_name and home_brand are the product name, gate_question is nothing but
   placeholders, attribution_photographers is a list of names, and the image
-  labels never reach a Croatian user: a theme with photographs shows the
-  picture and nothing else, and the rest are stand-in text for artwork the
-  app does not ship yet.
+  labels never reach a Croatian user: every theme now ships photographs, and
+  a theme with photographs shows the picture and nothing else.
 
   home_settings_button, home_empty_title, home_empty_body and the attribution
   strings arrived on main after the translation pass and were translated here
@@ -69,7 +68,7 @@
 
     <!-- Attribution -->
     <string name="settings_attribution">Zasluge</string>
-    <string name="attribution_images">Slike u kategoriji Gradnja ustupio je Unsplash pod svojom Unsplash licencom</string>
+    <string name="attribution_images">Slike u svim kategorijama osim Svemira ustupio je Unsplash pod svojom Unsplash licencom</string>
     <string name="attribution_photographers_line">Fotografije s Unsplasha: %1$s</string>
     <string name="attribution_nasa">Slike u kategoriji Svemir ustupila je NASA</string>
 </resources>

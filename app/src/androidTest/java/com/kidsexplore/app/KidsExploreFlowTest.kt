@@ -55,10 +55,18 @@ class KidsExploreFlowTest {
     /** Names and labels live in strings.xml now, so the tests resolve them the same way the UI does. */
     private fun ThemeDef.displayName(): String = resources.getString(nameRes)
 
-    private fun ThemeDef.labels(): List<String> = resources.getStringArray(labelsRes).toList()
-
+    /**
+     * The theme these tests drive through the Viewer.
+     *
+     * Every theme ships photographs now, so a photograph is what the Viewer
+     * shows and the paging assertions below match on the test tag naming the
+     * drawable rather than on a label — nothing on that screen is text. The
+     * placeholder card a theme without artwork would fall back to is covered
+     * at the composable level by `ViewerLayoutTest`, which can pass a null
+     * image directly; it is no longer reachable from Home.
+     */
     private val cars = THEME_DEFS.first { it.id == "cars" }
-    private val carLabels by lazy { cars.labels() }
+    private val carImages by lazy { cars.imageRes }
 
     @Before
     fun setUp() {
@@ -114,20 +122,8 @@ class KidsExploreFlowTest {
     fun tappingAThemeOpensItsViewer() {
         compose.onNodeWithText(themeNamed("cars")).performClick()
 
-        compose.onNodeWithText(carLabels[0]).assertIsDisplayed()
+        compose.onNodeWithTag(viewerImageTestTag(carImages[0])).assertIsDisplayed()
         compose.onNodeWithText(str(R.string.viewer_home)).assertIsDisplayed()
-    }
-
-    @Test
-    fun nextButtonWalksEveryImageAndWrapsAround() {
-        compose.onNodeWithText(themeNamed("cars")).performClick()
-
-        carLabels.forEach { expected ->
-            compose.onNodeWithText(expected).assertIsDisplayed()
-            compose.onNodeWithText(str(R.string.viewer_next)).performClick()
-        }
-        // wrapped back to the first image
-        compose.onNodeWithText(carLabels[0]).assertIsDisplayed()
     }
 
     @Test
@@ -135,33 +131,36 @@ class KidsExploreFlowTest {
         compose.onNodeWithText(themeNamed("cars")).performClick()
 
         compose.onNodeWithText(str(R.string.viewer_back)).performClick()
-        compose.onNodeWithText(carLabels.last()).assertIsDisplayed()
+        compose.onNodeWithTag(viewerImageTestTag(carImages.last())).assertIsDisplayed()
     }
 
     @Test
     fun swipingLeftAndRightChangesTheImage() {
         compose.onNodeWithText(themeNamed("cars")).performClick()
 
-        compose.onNodeWithText(carLabels[0]).performTouchInput { swipeLeft() }
-        compose.onNodeWithText(carLabels[1]).assertIsDisplayed()
+        compose.onNodeWithTag(viewerImageTestTag(carImages[0]))
+            .performTouchInput { swipeLeft() }
+        compose.onNodeWithTag(viewerImageTestTag(carImages[1])).assertIsDisplayed()
 
-        compose.onNodeWithText(carLabels[1]).performTouchInput { swipeRight() }
-        compose.onNodeWithText(carLabels[0]).assertIsDisplayed()
+        compose.onNodeWithTag(viewerImageTestTag(carImages[1]))
+            .performTouchInput { swipeRight() }
+        compose.onNodeWithTag(viewerImageTestTag(carImages[0])).assertIsDisplayed()
     }
 
     /**
-     * Paging a theme that ships photographs has to reach every one and wrap.
-     * The count is per theme — the photographed one has fourteen where the
-     * placeholder themes have eight — and it is `labelCount` the ViewModel
-     * wraps on.
+     * Paging a theme has to reach every photograph and wrap.
+     *
+     * The count is per theme — they run from Dinosaurs' seven to Animals'
+     * twenty-five — and it is `labelCount` the ViewModel wraps on, so this
+     * walks the whole set rather than a fixed number of steps.
      *
      * The photographs carry no description, so the test tag naming the
      * drawable is the only thing that says which one is up. What matters here
      * is exactly that: the expected image loaded at the expected step, not
      * what is pictured in it.
      *
-     * The theme is resolved by having artwork rather than named, so a second
-     * photographed theme needs no edit here.
+     * The theme is resolved by having artwork rather than named, so this keeps
+     * passing whichever themes are photographed.
      */
     @Test
     fun nextButtonWalksEveryPhotographAndWrapsAround() {

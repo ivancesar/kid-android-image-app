@@ -42,11 +42,11 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - Dark full-bleed background.
 - A small square "Home" button returns to Home — that's the entire header here, no theme name shown, to keep the focus on the image.
 - The picture itself, in a card framed by a diagonal two-tone stripe pattern in the theme's colors. The card is cut to the photograph's own aspect ratio — the largest rectangle of that shape the space allows — so a portrait and a landscape shot each fill what they can without letterboxing, and both grow to fill a tablet. The stripes survive as a thin frame, which is the only thing on this otherwise dark screen that says which category a child is in.
-- A theme with no photography yet keeps the original placeholder: the same striped card, filling the space, with the item's label in monospace text, centered. See [On images](#on-images) below.
+- A theme with no photography keeps the original placeholder: the same striped card, filling the space, with the item's label in monospace text, centered. Every theme ships pictures now, so nothing on Home reaches it — see [On images](#on-images) below.
 - The same labelled "◀ Back" / "▶ Next" pill buttons are used at every size, so the controls look and behave identically regardless of how the device is held. The arrows and the swipe direction mirror in an RTL locale, where the sequence advances right-to-left. Which arrangement is used depends on the window's width, not its orientation — the breakpoint is 600dp:
   - **Narrow (under 600dp)**: the card fills the remaining space above a button row, with Back/Next side by side underneath it.
   - **Wide (600dp and up)**: Back/Next flank the card in a single row — the card sits between them rather than under them — and the row fills the full screen height (down to, but not under, the status bar), so the image gets as much vertical room as the display allows. The Home button floats over the top-left corner of the image instead of sitting in its own header row, since there's no header row to spare the height for.
-- Either way, Back/Next cycle through the theme's items, wrapping around at both ends. Construction has 14 and Space 17; every other theme has 8. The placeholder card announces its label to a screen reader as a live region; a photograph announces nothing (see [On images](#on-images)).
+- Either way, Back/Next cycle through the theme's items, wrapping around at both ends. Counts are per theme and range from 7 (Dinosaurs) to 25 (Animals). The placeholder card announces its label to a screen reader as a live region; a photograph announces nothing (see [On images](#on-images)).
 - The card also responds to a horizontal swipe — swipe left for next, right for back — as an alternative to the buttons, in both orientations.
 
 ### Parental Gate ("Grown-ups only")
@@ -67,7 +67,7 @@ The app draws edge to edge (required from `targetSdk` 35 on). Screens pad their 
 - "Done" returns to Home, where the grid now reflects the updated theme selection.
 - A language dropdown sits above the theme list — "Same as phone settings" plus each shipped language named in its own language. Selecting one applies immediately.
 - "Language" and "Categories" section headings separate the two, so the language row does not read as the first entry in the category list. "Choose which themes your child can see." sits under the Categories heading as that section's explanation, rather than under the screen title where it described only half the screen.
-- An **Attribution** section sits at the foot of the list: one notice per image source, each naming the category it covers (Unsplash for Construction, NASA for Space), plus the Unsplash photographers' names. Behind the gate rather than on Home, because it is a notice for the adult who installed the app; last in the list, because nothing in it is an action and it should not sit between a parent and the controls that are. The Unsplash License asks for no credit at all, so the names are a courtesy — the notice is the part that has to stay.
+- An **Attribution** section sits at the foot of the list: one notice per image source, each saying which categories it covers (Unsplash for every category but Space, NASA for Space), plus the Unsplash photographers' names — 183 of them. Behind the gate rather than on Home, because it is a notice for the adult who installed the app; last in the list, because nothing in it is an action and it should not sit between a parent and the controls that are. The Unsplash License asks for no credit at all, so the names are a courtesy — the notice is the part that has to stay.
 
 ## Themes
 
@@ -75,22 +75,22 @@ Fourteen fixed themes, each with a hue, an icon, and — in `strings.xml` — a 
 
 | Theme | id | Hue | Items | Artwork |
 |---|---|---|---|---|
-| Cars | `cars` | 15 | 8 | placeholder |
+| Cars | `cars` | 15 | 14 | photographs (Unsplash) |
 | Construction | `construction` | 45 | 14 | photographs (Unsplash) |
-| Trains | `trains` | 350 | 8 | placeholder |
-| Animals | `animals` | 320 | 8 | placeholder |
-| Birds | `bird` | 225 | 8 | placeholder |
-| Insects | `insects` | 200 | 8 | placeholder |
-| Ocean | `ocean` | 175 | 8 | placeholder |
-| Farm | `farm` | 75 | 8 | placeholder |
-| Dinosaurs | `dinosaurs` | 285 | 8 | placeholder |
-| Flowers | `flowers` | 296 | 8 | placeholder |
-| Forest | `forest` | 150 | 8 | placeholder |
-| Fruit | `fruit` | 100 | 8 | placeholder |
-| Vegetables | `vegetable` | 125 | 8 | placeholder |
+| Trains | `trains` | 350 | 15 | photographs (Unsplash) |
+| Animals | `animals` | 320 | 25 | photographs (Unsplash) |
+| Birds | `bird` | 225 | 19 | photographs (Unsplash) |
+| Insects | `insects` | 200 | 14 | photographs (Unsplash) |
+| Ocean | `ocean` | 175 | 17 | photographs (Unsplash) |
+| Farm | `farm` | 75 | 17 | photographs (Unsplash) |
+| Dinosaurs | `dinosaurs` | 285 | 7 | photographs (Unsplash) |
+| Flowers | `flowers` | 296 | 14 | photographs (Unsplash) |
+| Forest | `forest` | 150 | 19 | photographs (Unsplash) |
+| Fruit | `fruit` | 100 | 12 | photographs (Unsplash) |
+| Vegetables | `vegetable` | 125 | 14 | photographs (Unsplash) |
 | Space | `space` | 250 | 17 | photographs (NASA) |
 
-Names shown are the English ones; a theme's display name and its 8 labels are `@StringRes`/`@ArrayRes` ids, so both translate. See **Languages** below.
+Names shown are the English ones; a theme's display name and its labels are `@StringRes`/`@ArrayRes` ids, so both translate. See **Languages** below. No theme's labels reach a screen while it has photographs, though — see [On images](#on-images).
 
 They are declared in that order in `THEME_DEFS`, loosely grouped (things that go, creatures, growing things, space), and that one list drives both the Home grid and the Settings list.
 
@@ -149,20 +149,24 @@ Card names wrap to two lines and ellipsize only past that, so a long name costs 
 
 ### On images
 
-A theme either ships photographs or it does not, and each one decides for itself. Two do:
+A theme either ships photographs or it does not, and each one decides for itself. All fourteen now do — 218 pictures in total, `img_<id>_01.jpg` upward in `res/drawable-nodpi/`, listed in display order by that theme's `<ID>_IMAGES` list in `ThemeDef.kt`:
 
-| Theme | Images | Files | Source |
-|---|---|---|---|
-| Construction | 14 | `img_construction_01.jpg` … `_14.jpg` | [Unsplash](https://unsplash.com), under the [Unsplash License](https://unsplash.com/license) |
-| Space | 17 | `img_space_01.jpg` … `_17.jpg` | [NASA](https://www.nasa.gov/) |
+| Themes | Images | Source |
+|---|---|---|
+| All but Space | 201, from 7 (Dinosaurs) to 25 (Animals) | [Unsplash](https://unsplash.com), under the [Unsplash License](https://unsplash.com/license) |
+| Space | 17 | [NASA](https://www.nasa.gov/) |
 
-They live in `res/drawable-nodpi/` and are listed, in display order, by `CONSTRUCTION_IMAGES` and `SPACE_IMAGES` in `ThemeDef.kt`. The two counts differ on purpose — a theme carries however many good images it has — which is why `labelCount` is per theme. **Parent Settings → Attribution** carries a notice per source, each naming the category it covers, plus the Unsplash photographers' names.
+The counts differ on purpose — a theme carries however many good images it has — which is why `labelCount` is per theme. **Parent Settings → Attribution** carries a notice per source saying which categories it covers, plus the Unsplash photographers' names.
 
-The other twelve still show the placeholder: a short text label (e.g. "Red sports car, side view") on a themed striped card. Those labels are stand-in text for artwork that does not exist yet.
+That artwork is most of the download: the release APK is 38 MB with it and 1.4 MB with none of it. If that becomes a problem, the thing to reach for is an app bundle with the images in an install-time asset pack, or fewer pictures per theme — not lower quality, which is already at the knee of the curve.
 
-Nothing in the code or the tests names which themes are photographed. `ThemeResourcesTest` asserts only that at least one is, and the UI tests resolve their fixture with `THEME_DEFS.first { it.imageRes.isNotEmpty() }`, so photographing another theme is the four steps below and nothing else.
+Nothing in the code or the tests names which themes are photographed. `ThemeResourcesTest` asserts only that at least one is, and the UI tests resolve their fixture with `THEME_DEFS.first { it.imageRes.isNotEmpty() }`, so the roster is a content decision throughout.
 
-A photographed theme keeps its `labels_<id>` array, but nothing displays it. **A photograph is shown undescribed** — no caption over it, no `contentDescription` behind it. This app is for looking at pictures, its labels were written as artwork stand-ins rather than as prose worth reading aloud, and a screen reader announcing "Yellow digger with a big scooping bucket" adds nothing for the child holding the phone. The array survives as the roster of what the theme holds: one entry per image, in the order `ThemeDef` lists them, which is what `ThemeResourcesTest` counts `labelCount` against, and a note to the next maintainer about which photograph is which.
+No theme ships the placeholder, and `everyThemeShipsPhotographs` fails the build if one does — a child must never land on stand-in text, so a theme reaching the grid without its pictures is a shipping bug rather than a work-in-progress state. That is the assertion a new theme trips until it has been photographed; write the entry and drop the images in together.
+
+The machinery behind the placeholder is still there — `ThemeDef.imageRes` defaults to empty and the Viewer renders the striped card whenever `currentImage` is null — so a half-added theme renders sensibly, it just does not ship. `ViewerLayoutTest` exercises that path by calling `ViewerScreen` with a null image, since it is no longer reachable from Home.
+
+Every theme keeps its `labels_<id>` array, but nothing displays it. **A photograph is shown undescribed** — no caption over it, no `contentDescription` behind it. This app is for looking at pictures, its labels were written as artwork stand-ins rather than as prose worth reading aloud, and a screen reader announcing "Yellow digger with a big scooping bucket" adds nothing for the child holding the phone. The array survives as the roster of what the theme holds: one entry per image, in the order `ThemeDef` lists them, which is what `ThemeResourcesTest` counts `labelCount` against, and a note to the next maintainer about which photograph is which.
 
 The practical cost is that nothing in the semantics tree says *which* photograph is on screen. The image therefore carries a test tag naming the drawable it is drawing (`viewerImageTestTag(image)`), which is what the tests match on — what matters about this screen is that the expected image loaded, not what is pictured in it.
 
@@ -174,10 +178,11 @@ The practical cost is that nothing in the semantics tree says *which* photograph
    sips -s format jpeg -s formatOptions 55 --resampleHeightWidthMax 1280 in.jpg --out out.jpg
    ```
 
-   That lands each file around 30–300 KB. Construction's 14 come to 2.6 MB and Space's 17 to 1.9 MB; the release APK is 5.9 MB with both, against 1.4 MB with neither. Skip the resample when a source is already under 1280px — it would only upscale it.
+   That lands each file around 30–460 KB, and a theme's set at roughly 2–4 MB. Skip the resample when a source is already under 1280px — it would only upscale it.
 2. Drop them in `res/drawable-nodpi/` as `img_<id>_NN.jpg`, numbered from `01`. **`-nodpi` matters**: a drawable in a plain `drawable/` folder is treated as mdpi artwork and upscaled by the device's density, which decodes a 1280px JPEG into a bitmap several times that size for nothing. `everyPhotographIsDensityIndependent` fails if one lands anywhere else.
 3. List them in `ThemeDef.kt` and set the theme's `labelCount` from the list's size.
-4. Keep that theme's `labels_<id>` array one entry per image, in the same order. It stops being displayed the moment the theme has artwork, but `labelCount` is still checked against it, and it is the only written record of which photograph sits at which index. Translations of it can be dropped — nothing shows them.
+4. Keep that theme's `labels_<id>` array one entry per image, in the same order, and **look at each picture to write its entry** — the array is the only written record of which photograph sits at which index. It is not displayed while the theme has artwork, but `labelCount` is still checked against it. Translations of it can be dropped — nothing shows them.
+5. Add any new photographers to `attribution_photographers`. The list is derived from the Unsplash source filenames, which are ASCII-folded, so a name with a diacritic needs correcting by hand against the photographer's profile.
 
 ## Tech stack
 
@@ -251,7 +256,7 @@ Reports land in `app/build/reports/tests/testDebugUnitTest/index.html` and `app/
 |---|---|---|
 | `AppViewModelTest` | `test` (JVM) | The whole state machine: transitions, paging and wrap-around, unknown theme ids, gate question generation over 500 seeds, the lockout (driven by a hand-advanced clock rather than a 30-second wait), theme toggling, `visibleThemes` caching, and restore-from-process-death including out-of-range indices. `AppViewModel` takes its store, its `Random` and its clock as parameters, so none of this touches Android. |
 | `GateLockPersistenceTest` | `test` (JVM) | The gate's durability, which is the one thing protecting Settings: that the lockout **and** the failure count survive the app being closed and relaunched, that the lockout still expires on its own, that a correct answer clears it, that a backwards device clock cannot strand a parent, and that the question rotates on every wrong answer. A relaunch is modelled the way Android behaves — same store, fresh `SavedStateHandle`. |
-| `KidsExploreFlowTest` | `androidTest` | The end-to-end journey through the real screens: Home → Viewer (paging by button and by swipe, through both a placeholder theme's 8 labels and Construction's 14 photographs) → Home → gate (wrong answer, lockout, cancel, correct answer) → Settings (toggle a theme) → Home, asserting the grid updates. Photographs carry no description, so the paging walk matches each step against the drawable it should be showing, by the test tag naming it. |
+| `KidsExploreFlowTest` | `androidTest` | The end-to-end journey through the real screens: Home → Viewer (paging by button and by swipe, through a theme's whole set of photographs) → Home → gate (wrong answer, lockout, cancel, correct answer) → Settings (toggle a theme) → Home, asserting the grid updates. Photographs carry no description, so every paging assertion matches the drawable it should be showing, by the test tag naming it. |
 | `ViewerLayoutTest` | `androidTest` | The Viewer's layout at both sides of the 600dp breakpoint, using `DeviceConfigurationOverride(ForcedSize(...))` so a window wider than the test device still renders on screen. Asserts the buttons actually sit beside the image when wide and below it when narrow, rather than only that a branch was taken — and that both the button order and the swipe direction mirror under an RTL override. Covers both card kinds: that a photograph shows its label in no form at all, that it does not swallow the swipe, and that the wide layout holds for it too. |
 | `SettingsBehaviourTest` | `androidTest` | The language dropdown, the empty Home state, and the attribution notice at the foot of the settings list. |
 | `SharedPreferencesThemeStoreTest` | `androidTest` | The real store against real preferences: themes and the gate lock round-tripping through a *second* store instance, the two keys not treading on each other, ids for removed themes being pruned on read, and a lockout surviving a relaunch through actual SharedPreferences rather than a fake. |
@@ -267,7 +272,8 @@ There is no CI; run `./gradlew lint testDebugUnitTest assembleDebug` locally, an
 
 ## Known limitations
 
-- Twelve of the fourteen themes still show placeholder text labels rather than pictures; only Construction and Space have photography (see [On images](#on-images) above).
+- The artwork dominates the download: 38 MB of the release APK is bundled JPEGs (see [On images](#on-images) above). An install-time asset pack would be the fix if that starts to matter.
+- The photographer credits in `attribution_photographers` are derived from Unsplash filenames, which are ASCII-folded — names carrying diacritics are currently spelled without them.
 - The Viewer decodes each photograph with `painterResource`, which is fine for one full-screen image at a time but has no downsampling or preloading of its own. If more themes gain artwork — or the images get much larger than the 1280px they are now — an image loader would be the thing to reach for.
 - Nothing stops a child leaving the app for the launcher. The gate protects **Settings**, not the app's boundary; Android's screen pinning is what would deliver that, and it is not wired up.
 - No confirmation/undo when a parent disables a theme a child was mid-viewing — they're just returned to Home the next time they tap Home.
