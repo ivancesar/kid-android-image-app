@@ -2,101 +2,77 @@ package com.kidsexplore.app
 
 import com.kidsexplore.app.model.THEME_DEFS
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.io.File
 
 /**
- * The two facts about the roster that need no device, so that they gate a
- * plain `./gradlew build`.
+ * The facts about the roster that need no device, so that they gate a plain
+ * `./gradlew build`.
  *
  * Their siblings in `ThemeResourcesTest` genuinely need Android — they resolve
- * string arrays, inflate drawables and read resource entry names. These two
- * need no `Resources`, and living in `androidTest` meant they ran only under
+ * strings, inflate drawables and read resource entry names. These need no
+ * `Resources`, and living in `androidTest` would mean running only under
  * `connectedDebugAndroidTest`, which needs an emulator and is in neither the
- * README's recommended local command nor any CI (there is no CI). Images and
- * labels could drift apart and the default build would say nothing, which is
- * the opposite of what the assertion is for.
+ * README's recommended local command nor any CI (there is no CI). A theme
+ * could arrive with nothing to show and the default build would say nothing,
+ * which is the opposite of what the assertion is for.
  */
 class ThemeRosterTest {
 
     /**
-     * Some theme has artwork.
+     * Every theme ships at least one photograph.
      *
-     * Deliberately "some" and not "every". Every theme does ship photographs
-     * today, and asserting that outright was tried — it made adding a theme
-     * ahead of its pictures a build failure, which is a workflow this project
-     * wants to keep: an entry and an SVG can land first and the photographs
-     * follow. `ThemeDef.imageRes` defaults to empty and the Viewer draws the
-     * striped placeholder for a null image precisely so that half-finished
-     * state renders instead of crashing.
+     * The photographs are now a theme's entire content: the Viewer draws the
+     * picture and nothing else, `ThemeDef.imageRes` is what the ViewModel
+     * wraps the index around, and `MainActivity` indexes straight into it. A
+     * theme with an empty list has nothing to put on screen and would take the
+     * Viewer out of range the moment a child tapped it, so it is a build
+     * failure rather than a runtime one.
      *
-     * What is worth pinning is that the roster is not empty. The Viewer's
-     * photograph path, and every test that exercises it, resolves its fixture
-     * with `first { it.imageRes.isNotEmpty() }`, and all of it would go
-     * quietly vacuous if the last theme lost its images. Which themes are
-     * photographed, and how many each carries, is a content decision that
-     * [everyThemeShipsOnePhotographPerLabel] already polices for consistency.
+     * This is what replaced the old label-array check. Labels used to be the
+     * second half of the invariant — one `<item>` per photograph, asserted by
+     * parsing `strings.xml` off disk — but every theme ships pictures now, the
+     * placeholder card they backed is gone, and the arrays with it.
      */
     @Test
-    fun atLeastOneThemeShipsPhotographs() {
+    fun everyThemeShipsPhotographs() {
+        val bare = THEME_DEFS.filter { it.imageRes.isEmpty() }.map { it.id }
         assertTrue(
-            "no theme ships photographs - the Viewer's image path is untested",
-            THEME_DEFS.any { it.imageRes.isNotEmpty() },
+            "themes with no photographs, which the Viewer cannot render: $bare",
+            bare.isEmpty(),
         )
     }
 
-    /**
-     * A theme ships exactly as many photographs as its label array has entries.
-     *
-     * This is the leg of the invariant that can actually come apart. Every
-     * entry in `THEME_DEFS` derives `labelCount` from the same list it passes
-     * as `imageRes`, so comparing those two to each other only catches a
-     * copy-paste crossover — it cannot catch the case the roster exists to
-     * prevent, which is images and labels drifting out of step. That needs the
-     * string array, so this reads `strings.xml` off disk rather than through
-     * `Resources`, which is what keeps it on the JVM.
-     *
-     * The parsing is deliberately shallow: `labels_<id>` and `<item>` are both
-     * conventions `ThemeResourcesTest.everyThemeResourceIsNamedAfterItsId`
-     * already pins on a device, so a rename fails there rather than silently
-     * emptying this.
-     */
+    /** And the roster itself is not empty, which would make the above vacuous. */
     @Test
-    fun everyThemeShipsOnePhotographPerLabel() {
-        val xml = defaultStrings()
-        THEME_DEFS.filter { it.imageRes.isNotEmpty() }.forEach { theme ->
-            val array = Regex(
-                """<string-array name="labels_${theme.id}">(.*?)</string-array>""",
-                RegexOption.DOT_MATCHES_ALL,
-            ).find(xml)
-            assertNotNull("no labels_${theme.id} array in strings.xml", array)
-            val labels = Regex("<item>").findAll(array!!.groupValues[1]).count()
-            assertEquals(
-                "theme '${theme.id}' ships ${theme.imageRes.size} photographs " +
-                    "but its labels_${theme.id} array holds $labels",
-                labels,
-                theme.imageRes.size,
-            )
-        }
+    fun theRosterIsNotEmpty() {
+        assertTrue("THEME_DEFS is empty", THEME_DEFS.isNotEmpty())
     }
 
     /**
-     * `strings.xml` as text.
-     *
-     * Gradle runs unit tests with the module directory as the working
-     * directory; the walk up covers being run from the repo root instead.
+     * Ids are the persistence key, the grid key and the naming convention every
+     * one of a theme's resources follows. A blank one breaks all three, and a
+     * duplicate silently makes two themes share a parent's on/off choice.
      */
-    private fun defaultStrings(): String {
-        val relative = "src/main/res/values/strings.xml"
-        var dir: File? = File("").absoluteFile
-        while (dir != null) {
-            for (candidate in listOf(File(dir, relative), File(dir, "app/$relative"))) {
-                if (candidate.isFile) return candidate.readText()
-            }
-            dir = dir.parentFile
+    @Test
+    fun themeIdsAreNonBlankAndUnique() {
+        THEME_DEFS.forEach { theme ->
+            assertTrue("a theme has a blank id", theme.id.isNotBlank())
         }
-        throw AssertionError("could not locate $relative from ${File("").absolutePath}")
+        val ids = THEME_DEFS.map { it.id }
+        assertEquals(ids.toString(), ids.size, ids.toSet().size)
+    }
+
+    /**
+     * No photograph is listed twice, within a theme or across the roster.
+     *
+     * The drawable id is the Viewer's only handle on which picture is up — it
+     * is what the test tag is built from — so a copy-paste duplicate would
+     * show a child the same photograph twice while every count still agreed.
+     */
+    @Test
+    fun noPhotographIsListedTwice() {
+        val all = THEME_DEFS.flatMap { it.imageRes }
+        assertEquals("a drawable appears in more than one slot", all.size, all.toSet().size)
     }
 }

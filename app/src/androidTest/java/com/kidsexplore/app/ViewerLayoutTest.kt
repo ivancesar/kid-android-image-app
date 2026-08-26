@@ -1,13 +1,15 @@
 package com.kidsexplore.app
 
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.LayoutDirection as LayoutDirectionOverride
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.then
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -49,35 +51,20 @@ class ViewerLayoutTest {
     // Expected text is resolved from resources, never written out in English:
     // the suite is meant to exercise whichever language the app is set to.
     private fun str(id: Int) = resources.getString(id)
-    private fun themeNamed(id: String) =
-        resources.getString(THEME_DEFS.first { it.id == id }.nameRes)
-    /**
-     * A theme to hang the placeholder card off.
-     *
-     * Every theme ships photographs today, so no theme on Home reaches the
-     * placeholder — but the Viewer renders it whenever `currentImage` is null,
-     * which is what a theme added ahead of its artwork gets. These tests call
-     * `ViewerScreen` directly and pass no image, so the path stays covered
-     * without depending on an unphotographed theme existing. Which theme
-     * carries it is immaterial; its label array is borrowed as card text
-     * rather than read as the photo roster it also is.
-     */
-    private val cars = THEME_DEFS.first { it.id == "cars" }
-    private val carLabels by lazy { resources.getStringArray(cars.labelsRes).toList() }
 
     /**
-     * A theme that ships photographs, where the card is an image and not text.
+     * The theme these drive the Viewer with.
      *
-     * Resolved by having artwork rather than named, so these keep passing if
-     * the set of photographed themes changes underneath them.
-     * `ThemeRosterTest.atLeastOneThemeShipsPhotographs` is what makes an empty
-     * roster fail loudly rather than as a confusing `NoSuchElementException`
-     * in here.
+     * A photograph is the whole content of the screen, so the test tag naming
+     * the drawable is the only handle on it — nothing there is text. Which
+     * theme carries it is immaterial; Cars is named rather than resolved so
+     * the index used below is stable against a content change elsewhere.
      */
-    private val photoTheme = THEME_DEFS.first { it.imageRes.isNotEmpty() }
-    private val photoLabels by lazy {
-        resources.getStringArray(photoTheme.labelsRes).toList()
-    }
+    private val cars = THEME_DEFS.first { it.id == "cars" }
+
+    /** The node the picture is drawn into, for the theme and index on screen. */
+    private fun imageNode(theme: ThemeDef = cars, index: Int = 0) =
+        compose.onNodeWithTag(viewerImageTestTag(theme.imageRes[index]))
 
     /** Comfortably below the 600dp breakpoint — a phone held upright. */
     private val narrow = DpSize(400.dp, 800.dp)
@@ -92,8 +79,7 @@ class ViewerLayoutTest {
         onPrev: () -> Unit = {},
         onHome: () -> Unit = {},
         theme: ThemeDef = cars,
-        label: String = carLabels[0],
-        image: Int? = null,
+        index: Int = 0,
     ) {
         compose.setContent {
             KidsExploreTheme {
@@ -107,18 +93,15 @@ class ViewerLayoutTest {
                 ) {
                     ViewerScreen(
                         theme = theme,
-                        currentLabel = label,
                         onHome = onHome,
                         onNext = onNext,
                         onPrev = onPrev,
-                        currentImage = image,
+                        currentImage = theme.imageRes[index],
                     )
                 }
             }
         }
     }
-
-
 
     /**
      * The point of the wide layout: the buttons sit beside the image rather
@@ -130,7 +113,7 @@ class ViewerLayoutTest {
 
         val back = compose.onNodeWithText(str(R.string.viewer_back)).getUnclippedBoundsInRoot()
         val next = compose.onNodeWithText(str(R.string.viewer_next)).getUnclippedBoundsInRoot()
-        val image = compose.onNodeWithText(carLabels[0]).getUnclippedBoundsInRoot()
+        val image = imageNode().getUnclippedBoundsInRoot()
 
         assert(back.right <= image.left) { "Back ($back) overlaps the image ($image)" }
         assert(next.left >= image.right) { "Next ($next) overlaps the image ($image)" }
@@ -141,7 +124,7 @@ class ViewerLayoutTest {
         setViewer(narrow)
 
         val back = compose.onNodeWithText(str(R.string.viewer_back)).getUnclippedBoundsInRoot()
-        val image = compose.onNodeWithText(carLabels[0]).getUnclippedBoundsInRoot()
+        val image = imageNode().getUnclippedBoundsInRoot()
 
         assert(back.top >= image.bottom) { "Back ($back) is not below the image ($image)" }
     }
@@ -217,13 +200,13 @@ class ViewerLayoutTest {
         var prev = 0
         setViewer(narrow, direction = LayoutDirection.Rtl, onNext = { next++ }, onPrev = { prev++ })
 
-        compose.onNodeWithText(carLabels[0]).performTouchInput { swipeRight() }
+        imageNode().performTouchInput { swipeRight() }
         compose.runOnIdle {
             assertEquals("swiping right in RTL advances", 1, next)
             assertEquals(0, prev)
         }
 
-        compose.onNodeWithText(carLabels[0]).performTouchInput { swipeLeft() }
+        imageNode().performTouchInput { swipeLeft() }
         compose.runOnIdle {
             assertEquals("swiping left in RTL goes back", 1, prev)
             assertEquals(1, next)
@@ -237,7 +220,7 @@ class ViewerLayoutTest {
         var prev = 0
         setViewer(narrow, onNext = { next++ }, onPrev = { prev++ })
 
-        compose.onNodeWithText(carLabels[0]).performTouchInput { swipeLeft() }
+        imageNode().performTouchInput { swipeLeft() }
         compose.runOnIdle {
             assertEquals("swiping left in LTR advances", 1, next)
             assertEquals(0, prev)
@@ -246,28 +229,21 @@ class ViewerLayoutTest {
 
     // -------------------------------------------------------- photographs
 
-    private fun setPhotoTheme(size: DpSize, index: Int = 0, onNext: () -> Unit = {}) =
-        setViewer(
-            size,
-            onNext = onNext,
-            theme = photoTheme,
-            label = photoLabels[index],
-            image = photoTheme.imageRes[index],
-        )
-
     /**
-     * A theme with artwork shows the picture and nothing else: no caption
-     * drawn over it, and no description behind it. The label it was given in
-     * `strings.xml` is a maintainer's roster of which photograph is which, not
-     * something the app puts in front of anyone.
+     * The picture is shown and nothing else: no caption drawn over it, and no
+     * description behind it. This is an app for looking at pictures, and there
+     * is no wording anyone chose for a screen reader to read out — so the node
+     * must carry neither text nor a content description rather than carrying a
+     * placeholder one.
      */
     @Test
-    fun aPhotographShowsNoLabelInAnyForm() {
-        setPhotoTheme(narrow)
+    fun aPhotographIsShownWithNoTextAndNoDescription() {
+        setViewer(narrow)
 
-        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[0])).assertIsDisplayed()
-        compose.onNodeWithText(photoLabels[0]).assertDoesNotExist()
-        compose.onNodeWithContentDescription(photoLabels[0]).assertDoesNotExist()
+        imageNode()
+            .assertIsDisplayed()
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Text))
     }
 
     /**
@@ -278,25 +254,10 @@ class ViewerLayoutTest {
     @Test
     fun theViewerDrawsThePhotographItWasGiven() {
         val index = 6
-        setPhotoTheme(narrow, index = index)
+        setViewer(narrow, index = index)
 
-        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[index]))
-            .assertIsDisplayed()
-        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[0]))
-            .assertDoesNotExist()
-    }
-
-    /** The wide layout has to hold for a photograph exactly as it does for the card. */
-    @Test
-    fun wideWindowPutsTheButtonsBesideAPhotographToo() {
-        setPhotoTheme(wide)
-
-        val back = compose.onNodeWithText(str(R.string.viewer_back)).getUnclippedBoundsInRoot()
-        val next = compose.onNodeWithText(str(R.string.viewer_next)).getUnclippedBoundsInRoot()
-        val image = compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[0])).getUnclippedBoundsInRoot()
-
-        assert(back.right <= image.left) { "Back ($back) overlaps the photo ($image)" }
-        assert(next.left >= image.right) { "Next ($next) overlaps the photo ($image)" }
+        imageNode(index = index).assertIsDisplayed()
+        imageNode(index = 0).assertDoesNotExist()
     }
 
     /**
@@ -306,9 +267,9 @@ class ViewerLayoutTest {
     @Test
     fun swipingAPhotographStillPages() {
         var next = 0
-        setPhotoTheme(narrow, onNext = { next++ })
+        setViewer(narrow, onNext = { next++ })
 
-        compose.onNodeWithTag(viewerImageTestTag(photoTheme.imageRes[0])).performTouchInput { swipeLeft() }
+        imageNode().performTouchInput { swipeLeft() }
 
         compose.runOnIdle { assertEquals(1, next) }
     }

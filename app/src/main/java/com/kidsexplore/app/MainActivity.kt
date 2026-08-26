@@ -9,7 +9,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.res.stringArrayResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.ui.screens.GateScreen
@@ -73,27 +72,16 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
             // coerces a restored index. There is no valid Viewer to fall back
             // from, which is the point of the sealed state.
             val theme = THEME_DEFS.first { it.id == state.themeId }
-            // The ViewModel wraps the index against ThemeDef.labelCount, which
-            // it trusts to match both this array and the theme's photographs;
-            // ThemeResourcesTest holds all three together. Coerced anyway — a
-            // mismatch should not crash a child's screen, and the test is what
-            // makes the drift loud.
-            val labels = stringArrayResource(theme.labelsRes)
-            // One index behind both, deliberately. Clamping the label while
-            // reading the photograph at the raw index would pair a real photo
-            // with a different photo's caption — which TalkBack then reads out
-            // as fact. Whatever the two collections disagree about, the pair
-            // stays consistent.
-            val index = state.imageIndex.coerceIn(labels.indices)
+            // The ViewModel wraps the index against the same list this reads,
+            // so it is already in range; coerced anyway, because a Viewer that
+            // crashed on a child's screen would be a worse way to find out.
+            val index = state.imageIndex.coerceIn(theme.imageRes.indices)
             ViewerScreen(
                 theme = theme,
-                currentLabel = labels[index],
                 onHome = viewModel::goHome,
                 onNext = viewModel::next,
                 onPrev = viewModel::prev,
-                // getOrNull: a theme with fewer photographs than labels falls
-                // back to the placeholder card rather than crashing.
-                currentImage = theme.imageRes.getOrNull(index),
+                currentImage = theme.imageRes[index],
             )
         }
 

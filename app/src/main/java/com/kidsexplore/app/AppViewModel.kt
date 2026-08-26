@@ -129,7 +129,7 @@ class AppViewModel(
 
     private fun stepImage(delta: Int) {
         val state = uiState as? UiState.Viewer ?: return
-        val count = THEME_DEFS.find { it.id == state.themeId }?.labelCount ?: return
+        val count = THEME_DEFS.find { it.id == state.themeId }?.imageRes?.size ?: return
         // Modulo twice: Kotlin's % takes the sign of the dividend, so stepping
         // back from 0 gives -1 rather than the last index. Adding count before
         // the second % is what wraps it around.
@@ -244,7 +244,7 @@ class AppViewModel(
         if (savedState.get<String>(KEY_SCREEN) != SCREEN_VIEWER) return UiState.Home
         val themeId = savedState.get<String>(KEY_VIEWER_THEME) ?: return UiState.Home
         val theme = THEME_DEFS.find { it.id == themeId } ?: return UiState.Home
-        val index = (savedState.get<Int>(KEY_VIEWER_INDEX) ?: 0).coerceIn(0, theme.labelCount - 1)
+        val index = (savedState.get<Int>(KEY_VIEWER_INDEX) ?: 0).coerceIn(theme.imageRes.indices)
         return UiState.Viewer(themeId = themeId, imageIndex = index)
     }
 

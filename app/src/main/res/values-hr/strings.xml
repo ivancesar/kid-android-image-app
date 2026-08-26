@@ -2,9 +2,7 @@
 <!--
   Croatian. Keys absent here fall back to values/strings.xml on purpose:
   app_name and home_brand are the product name, gate_question is nothing but
-  placeholders, attribution_photographers is a list of names, and the image
-  labels never reach a Croatian user: every theme now ships photographs, and
-  a theme with photographs shows the picture and nothing else.
+  placeholders, and attribution_photographers is a list of names.
 
   home_settings_button, home_empty_title, home_empty_body and the attribution
   strings arrived on main after the translation pass and were translated here
@@ -45,6 +43,8 @@
     <string name="settings_categories">Kategorije</string>
     <string name="settings_subtitle">Odredite koje kategorije vaše dijete može vidjeti.</string>
     <string name="settings_done">Gotovo</string>
+    <string name="settings_privacy_policy">Pravila privatnosti</string>
+    <string name="settings_privacy_policy_unavailable">Nije moguće otvoriti preglednik. Pravila se nalaze na %1$s</string>
 
     <!-- Language picker -->
     <string name="settings_language">Jezik</string>

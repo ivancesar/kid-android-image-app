@@ -31,157 +31,31 @@
     <string name="settings_language">Language</string>
     <string name="settings_language_system">Same as phone settings</string>
     <string name="settings_done">Done</string>
+    <!--
+      The privacy policy link, and what is said instead when the tap has nowhere
+      to go. The second one carries the address so a parent on a device with no
+      browser can still read the policy somewhere else.
+    -->
+    <string name="settings_privacy_policy">Privacy policy</string>
+    <string name="settings_privacy_policy_unavailable">Couldn\'t open a browser. The policy is at %1$s</string>
 
     <!--
-      Theme names and the item labels behind them. These are the app's primary
-      content — the words a child actually sees — so they live here with
-      everything else translatable rather than as literals in ThemeDef.kt.
+      Theme names. These are the app's primary content — the words a child
+      actually sees on Home — so they live here with everything else
+      translatable rather than as literals in ThemeDef.kt.
 
-      Each array's length must match its theme's `labelCount` in ThemeDef.kt;
-      ThemeResourcesTest asserts that for every theme, because the ViewModel
-      wraps its index against labelCount without being able to see resources.
-
-      Every theme now ships photographs, so none of these labels currently
-      reaches a screen: the Viewer shows the picture alone and does not
-      describe it. They are the roster of what each theme holds - one entry
-      per image, in the order ThemeDef lists them, which is what
-      ThemeResourcesTest counts labelCount against. Treat them as a note to
-      the next maintainer about which photograph sits at which index, and
-      keep them in step when the pictures change.
+      Each name is `theme_<id>`, matching the theme's id in ThemeDef.kt; that
+      convention is what ThemeResourcesTest.everyThemeResourceIsNamedAfterItsId
+      pins, so a theme added without its text fails there rather than
+      rendering a blank card.
     -->
     <string name="theme_cars">Cars</string>
-    <string-array name="labels_cars">
-        <item>Yellow sports car parked under green trees</item>
-        <item>Red classic sports car on a sunny road</item>
-        <item>Green monster truck out on the white salt flats</item>
-        <item>Black muscle car, front view, on a leafy street</item>
-        <item>Orange camper van parked at the kerb</item>
-        <item>Silver coupe on a hilltop road at sunset</item>
-        <item>Grey sports car in front of a garage door</item>
-        <item>Black racing car waiting on the track</item>
-        <item>Red muscle car on a road above the hills</item>
-        <item>Blue sports car in the desert at sunset</item>
-        <item>Green sports car with white stripes, seen from above</item>
-        <item>Light blue beetle car on a grassy hill</item>
-        <item>White sports car with mountains behind it</item>
-        <item>Three old racing cars in a row: orange, cream and blue</item>
-    </string-array>
-
     <string name="theme_construction">Construction</string>
-    <string-array name="labels_construction">
-        <item>Yellow digger with a big scooping bucket</item>
-        <item>Yellow digger parked under a cloudy blue sky</item>
-        <item>Digger tipping dirt into a dump truck</item>
-        <item>Big dump truck waiting beside a digger</item>
-        <item>Yellow road roller squashing the gravel flat</item>
-        <item>Orange road roller and a yellow road grader</item>
-        <item>Red loader with tracks and a wide front bucket</item>
-        <item>Tall yellow tower crane above the rooftops</item>
-        <item>A digger and a bulldozer building a new road</item>
-        <item>Red digger scooping earth beside a big building</item>
-        <item>Yellow digger working next to the railway tracks</item>
-        <item>Diggers lined up in the muddy ground</item>
-        <item>Road roller and paving machine working at night</item>
-        <item>Orange digger on top of a hill at sunset</item>
-    </string-array>
-
     <string name="theme_animals">Animals</string>
-    <string-array name="labels_animals">
-        <item>Dolphin peeping out of bright blue water</item>
-        <item>A giraffe head on a long spotted neck</item>
-        <item>Little tabby kitten sitting very still</item>
-        <item>Lion with a big mane walking through the grass</item>
-        <item>A zebra\'s black and white stripes up close</item>
-        <item>Baby crocodile with a bright yellow eye</item>
-        <item>Tiger padding down a dusty track</item>
-        <item>Polar bear standing up on the snow</item>
-        <item>White horse galloping across a dark field</item>
-        <item>Monkey pulling a very surprised face</item>
-        <item>White tiger standing in the jungle</item>
-        <item>Rhino with a big horn out on the plain</item>
-        <item>Gorilla sitting by a rock, looking up</item>
-        <item>Deer with big antlers in the evening light</item>
-        <item>Elephants walking in a line across the plain</item>
-        <item>Dolphin leaping right out of the sea</item>
-        <item>Red squirrel nibbling on a branch</item>
-        <item>Red fox standing in the snow</item>
-        <item>Panda chewing a mouthful of bamboo</item>
-        <item>Bright green and orange tree frog</item>
-    </string-array>
-
     <string name="theme_dinosaurs">Dinosaurs</string>
-    <string-array name="labels_dinosaurs">
-        <item>Feathered raptor model against a blue sky</item>
-        <item>Raptor model roaring in the woods</item>
-        <item>T-Rex model striding through misty trees</item>
-        <item>T-Rex model with its mouth wide open</item>
-        <item>Two long-necked dinosaur models by a waterfall</item>
-        <item>A raptor model\'s head among dark leaves</item>
-        <item>Long-necked dinosaur model on a green lawn</item>
-    </string-array>
-
     <string name="theme_space">Space</string>
-    <string-array name="labels_space">
-        <item>Earth from space, blue oceans under white clouds</item>
-        <item>Earth rising over the Moon\'s grey craters</item>
-        <item>The Moon glowing red during an eclipse</item>
-        <item>An eclipse in stages above a field of sunflowers</item>
-        <item>Shooting stars raining over a forest at night</item>
-        <item>Mars, a rusty red planet with a huge canyon across it</item>
-        <item>Jupiter\'s swirling orange and white cloud bands</item>
-        <item>Saturn and its rings in black and white</item>
-        <item>Saturn\'s rings lit from behind by the Sun</item>
-        <item>The colourful remains of a star that exploded</item>
-        <item>The Pillars of Creation, towers of dust and gas</item>
-        <item>A blue and gold spire of dust in the Eagle Nebula</item>
-        <item>The Cone Nebula, a dark pillar in glowing red gas</item>
-        <item>Bright new stars above a glowing dust cloud</item>
-        <item>A huge red cloud of gas dotted with stars</item>
-        <item>A spiral galaxy with a bright glowing centre</item>
-        <item>Two spiral galaxies swirling past each other</item>
-    </string-array>
-
     <string name="theme_trains">Trains</string>
-    <string-array name="labels_trains">
-        <item>Yellow engine pulling a long line of freight wagons</item>
-        <item>Red passenger train rounding a bend in autumn</item>
-        <item>Freight train curving beside a turquoise river</item>
-        <item>Grey tanker train under a stormy sky</item>
-        <item>Old steam engine puffing through the trees</item>
-        <item>White high-speed train waiting at the platform</item>
-        <item>Green steam train in a leafy tunnel of trees</item>
-        <item>Bullet train pulling into a busy station</item>
-        <item>White monorail gliding over a flower garden</item>
-        <item>Steam train crossing a stone bridge in the hills</item>
-        <item>Red train on a snowy mountain viaduct</item>
-        <item>Red engine hauling freight cars over a bridge</item>
-        <item>Silver commuter train speeding past the city</item>
-        <item>Red engine and freight wagons under big clouds</item>
-        <item>Steam train and its smoke on a tall arched bridge</item>
-    </string-array>
-
     <string name="theme_ocean">Ocean</string>
-    <string-array name="labels_ocean">
-        <item>Killer whale sliding up to the water\'s edge</item>
-        <item>Red and white starfish on the wet sand</item>
-        <item>Crab with its claws up on the beach</item>
-        <item>Striped fish swimming over the reef</item>
-        <item>Yellow seahorse with a curled tail</item>
-        <item>Sawfish with a long toothed nose</item>
-        <item>Little orange fish all over a coral reef</item>
-        <item>Shark gliding through dark water</item>
-        <item>Orange jellyfish trailing long tentacles</item>
-        <item>Spiky lionfish beside the coral</item>
-        <item>A whole swarm of pale jellyfish</item>
-        <item>Clownfish hiding in a green anemone</item>
-        <item>Sea lion swimming just under the surface</item>
-        <item>Stingray flying through the blue water</item>
-        <item>A shoal of yellow-tailed fish</item>
-        <item>Humpback whale leaping out of the sea</item>
-        <item>Whales feeding with their mouths wide open</item>
-        <item>Sea turtle swimming in deep blue water</item>
-    </string-array>
-
     <string name="theme_farm">Farm</string>
     <string name="theme_bird">Birds</string>
     <string name="theme_insects">Insects</string>
@@ -189,138 +63,7 @@
     <string name="theme_forest">Forest</string>
     <string name="theme_fruit">Fruit</string>
     <string name="theme_vegetable">Vegetables</string>
-    <string-array name="labels_farm">
-        <item>Three brown and white calves in the barn</item>
-        <item>Rows of cabbages growing in the field</item>
-        <item>Brown hen with a red comb in the yard</item>
-        <item>Green tractor cutting hay under dark clouds</item>
-        <item>Round hay bales dotted over the hills</item>
-        <item>Tractor seen from above, dust trailing behind</item>
-        <item>Little pink piglet standing in the straw</item>
-        <item>Red barn beside the autumn trees</item>
-        <item>Four sheep looking up from the grass</item>
-        <item>Four horses leaning over the fence</item>
-        <item>Red and green tractors working at sunset</item>
-        <item>Carrots and leeks on the market stall</item>
-        <item>Rabbit and her bunny in the hay</item>
-        <item>Woolly sheep looking straight at you</item>
-        <item>Combine harvester cutting the golden wheat</item>
-        <item>Cows in the field at sunset</item>
-        <item>Farm track between the fences at sunrise</item>
-    </string-array>
 
-    <string-array name="labels_bird">
-        <item>Robin with an orange chest on an old gate</item>
-        <item>Green hummingbird hovering in the air</item>
-        <item>Owl with big orange eyes in the dark</item>
-        <item>Pink flamingo standing in still blue water</item>
-        <item>Blue and yellow macaw, close up</item>
-        <item>White egret flying low over the reeds</item>
-        <item>Five cranes flying through the clouds</item>
-        <item>Bird coming in to land with wings spread at sunset</item>
-        <item>Peacock perched on an old branch</item>
-        <item>Bald eagle soaring in a clear blue sky</item>
-        <item>Bright red cardinal on a snowy branch</item>
-        <item>Barred owl sitting quietly in a tree</item>
-        <item>Bald eagle coming down to its big stick nest</item>
-        <item>Owl gliding low over the snow</item>
-        <item>White swan on dark green water</item>
-        <item>Two red macaws snuggling on a branch</item>
-        <item>Three blue and yellow macaws in a row</item>
-        <item>Little green parrot on a mossy branch</item>
-        <item>Toucan with a rainbow beak in the rain</item>
-        <item>Orange and yellow parrot on a branch</item>
-        <item>Two penguins standing beside the blue sea</item>
-        <item>Two puffins among the wild flowers</item>
-    </string-array>
-
-    <string-array name="labels_insects">
-        <item>Yellow and pink moth resting on a wall</item>
-        <item>Honeybee gathering pollen from a flower</item>
-        <item>Stag beetle with big jaws on a leaf</item>
-        <item>Red ladybird tucked into a green leaf</item>
-        <item>Green grasshopper gripping a thin twig</item>
-        <item>Brown cricket on a wooden plank</item>
-        <item>Praying mantis with its front legs raised</item>
-        <item>Orange and black butterfly with its wings open</item>
-        <item>Stripy caterpillar climbing a stem</item>
-        <item>Fluffy white moth on a stone</item>
-        <item>Pale green luna moth with long tails</item>
-        <item>Mosquito on a plain white background</item>
-        <item>Jumping spider with big shiny eyes</item>
-        <item>Butterfly sipping from an orange flower</item>
-    </string-array>
-
-    <string-array name="labels_flowers">
-        <item>Pink cherry blossom against a blue sky</item>
-        <item>Lots of red roses seen from above</item>
-        <item>Tiny blue forget-me-nots among green leaves</item>
-        <item>Purple lavender waving in a meadow</item>
-        <item>Red poppies standing in a wheat field</item>
-        <item>Pale purple flowers glowing in the evening sun</item>
-        <item>Red tulips reaching up to a blue sky</item>
-        <item>Deep blue hydrangea blooms</item>
-        <item>A big bunch of bright yellow sunflowers</item>
-        <item>A wild meadow full of different flowers</item>
-        <item>Pink and purple lupins in front of a stone church</item>
-        <item>Golden poppies under a bright blue sky</item>
-        <item>Yellow flowers covering a whole hillside</item>
-        <item>Pink water lily floating on a pond</item>
-    </string-array>
-
-    <string-array name="labels_forest">
-        <item>A green clearing high above the forest</item>
-        <item>A leafy path between tall straight trees</item>
-        <item>Three red toadstools with white spots</item>
-        <item>A dim path through thick green woods</item>
-        <item>Little brown mushrooms on a mossy log</item>
-        <item>A meadow below a great grey cliff</item>
-        <item>A cluster of orange mushrooms in the moss</item>
-        <item>Sunlight down a track between the pines</item>
-        <item>Mist drifting over a green hillside forest</item>
-        <item>Tiny white mushrooms standing in the moss</item>
-        <item>Fog in the valley between wooded hills</item>
-        <item>Snow still lying under the mountain pines</item>
-        <item>Fir trees on a ridge below the mountains</item>
-        <item>A rocky stream running through a misty valley</item>
-        <item>Light breaking into a dark green wood</item>
-        <item>The sun going down behind the mountain trees</item>
-        <item>Sunbeams between the trunks of a pine wood</item>
-        <item>Branches arching over a still green river</item>
-        <item>A line of trees under big white clouds</item>
-    </string-array>
-
-    <string-array name="labels_fruit">
-        <item>A market stall piled high with fruit</item>
-        <item>Sliced fruit arranged around a wooden board</item>
-        <item>A whole crate of red strawberries</item>
-        <item>Small yellow plums on a sunny branch</item>
-        <item>Apples, pears and melons at the market</item>
-        <item>Grapes, mango, kiwi and pineapple in a basket</item>
-        <item>A basket of pineapple, mango and green grapes</item>
-        <item>Chopped fruit salad with berries and mint</item>
-        <item>Oranges ripening on the tree</item>
-        <item>A big pile of fruit on a dark table</item>
-        <item>A tray of fruit and vegetables from the market</item>
-        <item>Fruit juices in jugs beside the fresh fruit</item>
-    </string-array>
-
-    <string-array name="labels_vegetable">
-        <item>Peppers, broccoli and courgettes on a stall</item>
-        <item>Vegetables of every colour spread out</item>
-        <item>A bowl of peppers, corn and tomatoes held up</item>
-        <item>Baskets of broccoli, beans and tomatoes</item>
-        <item>A big market counter full of vegetables</item>
-        <item>Lettuces and onions growing in a garden bed</item>
-        <item>A heap of round green cabbages</item>
-        <item>Cauliflowers, cabbages and red tomatoes</item>
-        <item>Aubergines, carrots and peppers side by side</item>
-        <item>Vegetables laid out on a white background</item>
-        <item>A great pile of small potatoes</item>
-        <item>A crate of fresh green spinach leaves</item>
-        <item>A wooden box of vegetables out on the grass</item>
-        <item>Yellow and red peppers in a heap</item>
-    </string-array>
     <!--
       Attribution. One line per source, each naming the categories it covers —
       a single blanket line stopped being true the moment a second theme got

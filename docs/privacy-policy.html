@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<!--
+  The hosted copy of docs/privacy-policy.md. Same words, laid out for a browser.
+
+  Self-contained on purpose: no stylesheet, no font, no script, no image is
+  fetched from anywhere. A privacy policy that phones a CDN to render itself is
+  a bad joke, and it also means this file works from any static host, straight
+  out of the repository — GitHub Pages serves docs/ as-is.
+
+  Edit this together with privacy-policy.md. One placeholder must be replaced
+  before publishing: the URL this ends up at, which also goes in
+  PRIVACY_POLICY_URL in SettingsScreen.kt and in the Play Console listing.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Kids Explore</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1c1c20;
+    --muted: #5c5c66;
+    --rule: #e2e2e8;
+    --accent: #2f6fd0;
+    --note-bg: #f4f6fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16171a;
+      --fg: #e8e8ec;
+      --muted: #a2a2ad;
+      --rule: #303138;
+      --accent: #7fb0f5;
+      --note-bg: #1e2026;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 4rem;
+    max-width: 42rem;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+  h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 .35rem; }
+  h2 {
+    font-size: 1.15rem;
+    margin: 2.5rem 0 .75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+  }
+  p, ul { margin: 0 0 1rem; }
+  ul { padding-left: 1.25rem; }
+  li { margin-bottom: .5rem; }
+  a { color: var(--accent); }
+  .meta { color: var(--muted); font-size: .9rem; margin-bottom: 2rem; }
+  .meta strong { color: var(--fg); }
+  .lede {
+    background: var(--note-bg);
+    border-radius: .75rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .lede p:last-child { margin-bottom: 0; }
+  .placeholder {
+    color: var(--muted);
+    font-style: italic;
+    font-size: .9rem;
+  }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .875em;
+    /* Long permission names must not push the page sideways on a phone. */
+    overflow-wrap: anywhere;
+  }
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: .9rem;
+  }
+</style>
+</head>
+<body>
+
+<h1>Privacy Policy — Kids Explore</h1>
+<p class="meta">
+  Application: <strong>Kids Explore</strong> (<code>com.kidsexplore.app</code>)<br>
+  Last updated: <strong>26 August 2026</strong>
+</p>
+
+<div class="lede">
+  <p><strong>The short version.</strong> Kids Explore collects nothing. It has no
+  internet access, shows no advertisements, contains no analytics, and asks for no
+  personal information from anyone — child or adult. There is no account to create
+  and nothing to log in to.</p>
+</div>
+
+<h2>What the app collects</h2>
+<p>Nothing.</p>
+<p>Kids Explore does not collect, transmit, sell or share any personal
+information. It cannot: the app declares no <code>INTERNET</code> permission and
+contains no networking code of any kind, so there is nowhere for information to
+be sent, and no server of ours for it to be sent to. Every photograph the app
+shows is packaged inside the app itself and is displayed from the device.</p>
+<p>The only permission in the installed app is
+<code>android.permission.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION</code>. It is a
+signature-level Android permission contributed automatically by a standard
+Android support library, it grants no access to anything on the device, and it
+involves no data at all. The app requests no camera, microphone, location,
+contacts, storage, or advertising identifier.</p>
+
+<h2>What the app stores on your device</h2>
+<p>Two things, in the app's own private storage, readable only by the app:</p>
+<ul>
+  <li><strong>Which picture categories are switched on.</strong> Up to fourteen
+  short category identifiers, chosen by an adult in Parent Settings.</li>
+  <li><strong>The parental gate's state.</strong> A count of recent wrong answers
+  and the time the resulting short lockout ends. These exist only so that
+  repeatedly guessing at the gate is slowed down.</li>
+</ul>
+<p>The chosen language is stored the same way, by the standard Android component
+that handles per-app language settings.</p>
+<p>None of this is personal information, and none of it leaves the device except
+as described in the next section. Uninstalling the app deletes all of it.</p>
+
+<h2>Backup</h2>
+<p>Android's built-in Auto Backup may copy the app's settings file — the category
+identifiers and the two parental-gate numbers listed above — to the backup
+associated with your own Google account, if you have device backup enabled. This
+is a feature of the Android operating system, not of this app. That backup
+belongs to you, is governed by
+<a href="https://policies.google.com/privacy">Google's privacy policy</a>, and
+the developer of Kids Explore has no access to it and cannot read it. Turning
+device backup off in your Android settings stops it.</p>
+
+<h2>Advertising, analytics and third parties</h2>
+<ul>
+  <li><strong>No advertisements.</strong> The app shows none, of any kind.</li>
+  <li><strong>No analytics or crash reporting.</strong> No usage data, no events,
+  no identifiers, no crash reports are gathered or sent.</li>
+  <li><strong>No third-party SDKs that collect data.</strong> The app is built
+  only on Google's standard Android and Jetpack libraries, none of which are used
+  here to gather or transmit anything.</li>
+  <li><strong>No data sharing or sale.</strong> There is no data to share or
+  sell.</li>
+  <li><strong>No in-app purchases.</strong></li>
+</ul>
+
+<h2>Children's privacy</h2>
+<p>Kids Explore is designed for children and is part of Google Play's Families
+programme. Because the app collects no data whatsoever, it collects no data from
+children either.</p>
+<ul>
+  <li><strong>COPPA (United States).</strong> No personal information is
+  collected from anyone, including children under 13, so there is nothing for
+  which verifiable parental consent would be required and nothing held that a
+  parent could ask to review or delete. There is no way for a child to
+  communicate with anyone through this app, and nothing in it is transmitted
+  anywhere.</li>
+  <li><strong>GDPR and GDPR-K (EU/EEA and UK).</strong> No personal data as
+  defined by the GDPR is collected or processed, so there is no processing to
+  hold a lawful basis for, no profiling, and no data subject rights request that
+  could be answered with anything other than "we hold nothing about you". The app
+  does not track users across apps or websites.</li>
+  <li><strong>Outbound links.</strong> The single link out of the app — the one
+  that opened this document — is placed inside Parent Settings, behind a parental
+  gate that a child is not expected to pass.</li>
+</ul>
+
+<h2>Data deletion</h2>
+<p>There is no account to delete and no server-side data to erase, because none
+is ever created. Uninstalling Kids Explore removes everything it stored on the
+device. To remove the operating system's backup copy described above, turn off or
+clear device backup in your Android settings.</p>
+
+<h2>Changes to this policy</h2>
+<p>If the app ever changes in a way that affects this policy, this document will
+be updated and the "Last updated" date at the top changed. The current version is
+always available at the address linked from Parent Settings inside the app.</p>
+
+<h2>Contact</h2>
+<!-- An issue tracker rather than an email address: the repository is public, and
+     a question answered there stays answered for the next person who asks it. -->
+<p>Questions about this policy: open an issue at
+<a href="https://github.com/ivancesar/kid-android-image-app/issues">github.com/ivancesar/kid-android-image-app/issues</a>.</p>
+
+<footer>
+  Kids Explore · Privacy Policy · Last updated 26 August 2026
+</footer>
+
+</body>
+</html>

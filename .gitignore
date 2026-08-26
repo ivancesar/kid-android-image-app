@@ -24,9 +24,12 @@ misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
 
-# Keystore files
+# Keystore files, and the properties file that points app/build.gradle.kts at
+# one. Both hold upload-key secrets; neither belongs in a clone or a diff.
+# See docs/play-store-submission.md for how to create them.
 *.jks
 *.keystore
+keystore.properties
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json

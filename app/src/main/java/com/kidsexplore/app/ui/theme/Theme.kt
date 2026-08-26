@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.sp
 // file is bundled here (that would require downloading one); FontWeight.Black
 // / .ExtraBold on the default sans-serif approximates the same heavy, rounded
 // feel used throughout the design.
-val KidsFontFamily = FontFamily.SansSerif
+private val KidsFontFamily = FontFamily.SansSerif
 
 val HeavyTextStyle = TextStyle(fontFamily = KidsFontFamily, fontWeight = FontWeight.Black)
 

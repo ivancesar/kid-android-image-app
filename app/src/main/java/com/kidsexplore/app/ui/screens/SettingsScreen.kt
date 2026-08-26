@@ -1,5 +1,8 @@
 package com.kidsexplore.app.ui.screens
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -55,6 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import com.kidsexplore.app.AppLocales
 import com.kidsexplore.app.R
 import com.kidsexplore.app.ui.THEME_LIST_TEST_TAG
@@ -162,6 +167,13 @@ fun SettingsScreen(
                 }
             }
 
+            // Above Attribution because it is an action and Attribution is
+            // not, and below the categories because it is not the thing a
+            // parent came in here to do.
+            item(key = "privacy") {
+                PrivacyPolicyLink()
+            }
+
             item(key = "attribution") {
                 Attribution()
             }
@@ -180,6 +192,70 @@ fun SettingsScreen(
                 .padding(16.dp),
         )
     }
+}
+
+/**
+ * Where the hosted privacy policy lives.
+ *
+ * TODO: replace with the real public URL before uploading to Play. The same
+ * address goes in the Play Console listing, and the two have to agree — Play
+ * checks that the policy is reachable, and a child-directed app is expected to
+ * offer it from inside the app as well, which is what [PrivacyPolicyLink] is.
+ * The document itself is `docs/privacy-policy.html` in this repository, which
+ * GitHub Pages will serve as-is.
+ */
+private const val PRIVACY_POLICY_URL = "https://example.com/kids-explore/privacy-policy"
+
+/**
+ * A way out to the privacy policy, behind the parental gate.
+ *
+ * Behind the gate deliberately. Play's Families policy wants the policy
+ * reachable from within the app, and it equally does not want a child one tap
+ * away from a browser — Settings is the one screen that is already gated, so it
+ * is the only place an outbound link belongs.
+ *
+ * Set as a link rather than as a button: this leaves the app, and it should not
+ * look like the controls above it that do not.
+ */
+@Composable
+private fun PrivacyPolicyLink() {
+    val context = LocalContext.current
+    // Read here rather than inside the click: `stringResource` is a composable
+    // read, and it is also what makes the message follow a language change.
+    val unavailable = stringResource(R.string.settings_privacy_policy_unavailable, PRIVACY_POLICY_URL)
+    Text(
+        text = stringResource(R.string.settings_privacy_policy),
+        fontSize = 13.sp,
+        fontWeight = FontWeight.ExtraBold,
+        color = NeutralColors.subtitleText,
+        textDecoration = TextDecoration.Underline,
+        modifier = Modifier
+            .padding(top = 20.dp)
+            // Same order as PhotographerCredits' control and ViewerScreen's
+            // HomeButton: heightIn before clickable is what makes the clickable
+            // node itself 48dp tall rather than only the box drawn around it.
+            .heightIn(min = 48.dp)
+            .clickable(role = Role.Button) {
+                // A device with no browser is rare but real — a stripped kids'
+                // tablet, a locked-down enterprise profile — and an
+                // uncaught ActivityNotFoundException there would crash the app
+                // on a link that exists to satisfy a policy requirement. The
+                // address is read out instead, so the tap still leads somewhere.
+                //
+                // try/catch rather than checking `resolveActivity` first: from
+                // API 30 package visibility makes that return null even when a
+                // browser is installed, unless the manifest declares a
+                // <queries> element for it. Launching and catching needs no
+                // such declaration and is the check that cannot be wrong.
+                try {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, PRIVACY_POLICY_URL.toUri()))
+                } catch (_: ActivityNotFoundException) {
+                    Toast.makeText(context, unavailable, Toast.LENGTH_LONG).show()
+                }
+            }
+            .padding(horizontal = 4.dp)
+            .wrapContentHeight(),
+    )
 }
 
 /**

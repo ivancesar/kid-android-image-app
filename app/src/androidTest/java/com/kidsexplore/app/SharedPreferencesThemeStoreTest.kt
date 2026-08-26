@@ -7,7 +7,6 @@ import com.kidsexplore.app.data.GateLock
 import com.kidsexplore.app.data.PREFS_DISABLED_THEMES_KEY
 import com.kidsexplore.app.data.PREFS_NAME
 import com.kidsexplore.app.data.SharedPreferencesThemeStore
-import com.kidsexplore.app.model.THEME_DEFS
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
