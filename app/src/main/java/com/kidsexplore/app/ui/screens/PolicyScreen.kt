@@ -124,8 +124,9 @@ private fun PolicyBlockText(block: PolicyBlock) {
             text = block.spans.annotated(),
             fontSize = 14.sp,
             lineHeight = 20.sp,
-            // subtitleText, not cancelText: this is body copy at 14sp and
-            // cancelText does not clear WCAG AA at that size.
+            // subtitleText, not cancelText: both clear WCAG AA now, but this
+            // is a page of body copy rather than a line of small print, and
+            // subtitleText is the tone the rest of the app sets body copy in.
             color = NeutralColors.subtitleText,
         )
 

@@ -37,6 +37,18 @@
         <item quantity="few">Previše pokušaja. Pričekajte %d sekunde.</item>
         <item quantity="other">Previše pokušaja. Pričekajte %d sekundi.</item>
     </plurals>
+    <!--
+      The same three classes for minutes: 1 minutu, 2-4 minute, 5+ minuta.
+      "Pričekajte" governs the accusative, which is why the singular is
+      "minutu" and not the dictionary form "minuta" — exactly as the seconds
+      above read "sekundu" rather than "sekunda". Also written here rather than
+      by the translator.
+    -->
+    <plurals name="gate_locked_minutes">
+        <item quantity="one">Previše pokušaja. Pričekajte %d minutu.</item>
+        <item quantity="few">Previše pokušaja. Pričekajte %d minute.</item>
+        <item quantity="other">Previše pokušaja. Pričekajte %d minuta.</item>
+    </plurals>
 
     <!-- Parent settings -->
     <string name="settings_title">Postavke za roditelje</string>
