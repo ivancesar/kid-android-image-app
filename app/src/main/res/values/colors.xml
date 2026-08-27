@@ -1,5 +1,11 @@
 <resources>
-    <color name="ic_launcher_background">#F4A94A</color>
+    <!--
+      The launcher icon's two tones, sampled from icons-src/launcher.png. The
+      amber is the base; the light tone is the upper-left triangle. Both are
+      referenced by drawable/ic_launcher_background.xml.
+    -->
+    <color name="ic_launcher_background">#FACB45</color>
+    <color name="ic_launcher_background_light">#FEFFCE</color>
 
     <!--
       The sRGB value of NeutralColors.appBackground, i.e. oklch(0.96 0.01 90).
