@@ -71,8 +71,10 @@ data class ThemePalette(
      * White reads as the obvious choice on these saturated fills, but it only
      * reaches 2.2–2.7:1 against [cardBg] — under WCAG AA's 3:1 floor for large
      * text on all fourteen hues — and 2.7–3.4:1 against the lighter [stripe],
-     * which clears 3:1 on some hues but never the 4.5:1 the Viewer's
-     * body-sized item label actually needs. This
+     * which clears 3:1 on some hues but never the 4.5:1 the card name needs.
+     * 4.5 rather than 3 because the name is 17sp: WCAG's large-text allowance
+     * starts at 18.66sp for bold text, so Home's card name is normal-sized
+     * however heavy [HeavyTextStyle] makes it look. This
      * tone is derived from the same hue rather than picked by hand, and clears
      * 4.5:1 on both surfaces (worst case 4.73:1, against the stripe). It also
      * sits closer to the black line art in the icons.
@@ -110,5 +112,16 @@ object NeutralColors {
     val rowBgEnabled = oklch(0.94f, 0.02f, 90f)
     val rowBgDisabled = oklch(0.97f, 0.005f, 90f)
     val subtitleText = oklch(0.48f, 0.02f, 90f)
-    val cancelText = oklch(0.55f, 0.02f, 90f)
+
+    /**
+     * The lightest text tone in the app: the gate's Cancel link and Settings'
+     * small print.
+     *
+     * It was 0.55, which is 4.34:1 on [appBackground] — the only ground it is
+     * ever drawn on, and short of AA's 4.5:1. Every place it appears is 12–13sp,
+     * so there is no large-text allowance to fall back on. Darkened to 0.51,
+     * which reaches 5.12:1 there while staying visibly the quietest tone in the
+     * table. `NeutralContrastTest` is what now keeps it that way.
+     */
+    val cancelText = oklch(0.51f, 0.02f, 90f)
 }
