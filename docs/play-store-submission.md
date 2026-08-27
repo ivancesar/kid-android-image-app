@@ -174,31 +174,55 @@ testing builds included — needs it incremented.
 
 ---
 
-## 4. Store listing assets (cannot come from this repository)
+## 4. Store listing assets
 
-None of these exist as files here; all must be produced in a graphics editor and
-uploaded in the Console.
+`shots/` holds every asset in this section that is a file. Only the two
+descriptions and the category still have to be written in the Console.
 
-* **App icon — 512 × 512 PNG, 32-bit, under 1 MB.** The launcher icon in the app
-  is an adaptive vector (`mipmap-anydpi/ic_launcher.xml`: the
-  `ic_launcher_foreground` vector on the `#F4A94A` background from
-  `values/colors.xml`). Play needs a flattened raster, and it is *not* cropped
-  the way the device crops an adaptive icon — export the full square, foreground
-  composited over `#F4A94A`, no rounded corners and no transparency, and check
-  that the artwork does not sit in the adaptive icon's inner safe zone leaving
-  the store icon looking small and lost.
-* **Feature graphic — 1024 × 500 PNG or JPEG, no transparency.** Shown at the
-  top of the listing and required for a Families listing. No text near the
-  edges; it gets cropped on some surfaces.
-* **Phone screenshots — 2 to 8, 16:9 or 9:16, each side 320–3840 px.** Home with
-  the category grid, a Viewer photograph, and Parent Settings make an honest
-  three. Do not screenshot the parental gate's answer.
-* **Tablet screenshots — 7" and 10".** Only needed if the listing declares tablet
-  support; the app is orientation-free and works on tablets, so it is worth
-  doing.
-* **Short description** (80 characters) and **full description** (4000).
+* **App icon — 512 × 512 PNG, under 1 MB.** `shots/play-icon-512.png`, which is
+  `icons-src/launcher.png` flattened onto white. Play does *not* crop this the
+  way a device crops an adaptive icon, so unlike the launcher icon it keeps the
+  source art's full square and its frame — no safe-zone inset, no rounded
+  corners, no transparency. The launcher icon is a separate asset built from the
+  same source: `mipmap-anydpi/ic_launcher.xml`, a raster foreground matted out
+  of the digger over the two-tone `drawable/ic_launcher_background.xml`.
+* **Feature graphic — 1024 × 500 PNG or JPEG, no transparency.**
+  `shots/feature-graphic.png`, composited from six category cards lifted out of
+  `shots/tablet/01-home.png` at full resolution. Shown at the top of the listing
+  and required for a Families listing. No text near the edges; it gets cropped
+  on some surfaces.
+* **Phone screenshots — 2 to 8, 16:9 or 9:16, each side 320–3840 px.**
+  `shots/phone/`, six at 1080 × 1920: the category grid, two Viewer
+  photographs, the parental gate, Parent Settings and the privacy policy.
+* **Tablet screenshots — 7" and 10".** `shots/tablet/`, five at 2560 × 1440.
+  Both sides fall inside Play's 1080–7680 px tablet range, so the same five
+  serve both slots.
+* **Short description** (80 characters) and **full description** (4000). Not
+  files in this repository; written in the Console.
 * **App category:** Education, or Entertainment. **Tags:** pick from the
   Console's fixed list.
+
+### Recapturing the screenshots
+
+Play requires 16:9 or 9:16 and rejects anything else, which the emulator's own
+1080 × 2400 and 2560 × 1600 are not. Cropping afterwards only loses the ratio
+again, so set the device to the target geometry before capturing:
+
+```
+adb shell wm size 1080x1920 && adb shell wm density 440   # phone
+adb shell wm size 2560x1440 && adb shell wm density 320   # tablet
+adb shell wm size reset && adb shell wm density reset     # afterwards
+```
+
+At 440 dpi a 1080 × 1920 window is 393 dp wide, so the app takes the same layout
+branches it takes on a real phone rather than a scaled-down tablet's. Status
+bars are SystemUI demo mode, not the live clock and battery.
+
+The gate screenshots do show a question and its four options. That is safe
+rather than a leak: `AppViewModel` draws both operands at random and reshuffles
+the options on every open, so a published instance is not the answer to any
+future gate. What must not happen is presenting the gate as though its answer
+were fixed.
 
 ---
 
