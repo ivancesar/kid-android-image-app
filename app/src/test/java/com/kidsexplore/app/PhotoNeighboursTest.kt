@@ -1,5 +1,7 @@
 package com.kidsexplore.app
 
+import androidx.lifecycle.SavedStateHandle
+import com.kidsexplore.app.model.THEME_DEFS
 import com.kidsexplore.app.ui.images.PHOTO_CACHE_BYTES
 import com.kidsexplore.app.ui.images.neighboursOf
 import org.junit.Assert.assertEquals
@@ -17,6 +19,8 @@ import org.junit.Test
 class PhotoNeighboursTest {
 
     private val images = listOf(10, 11, 12, 13)
+
+    private fun viewModel() = AppViewModel(FakeThemeStore(), SavedStateHandle())
 
     @Test
     fun theNextImageComesFirst() {
@@ -57,6 +61,20 @@ class PhotoNeighboursTest {
     @Test
     fun anEmptyThemeWarmsNothing() {
         assertEquals(emptyList<Int>(), neighboursOf(emptyList(), 10))
+    }
+
+    @Test
+    fun theViewerReportsThePhotographItIsShowing() {
+        // What the cache is told to keep when the app stops.
+        val vm = viewModel()
+        val cars = THEME_DEFS.first { it.id == "cars" }
+        assertEquals(null, vm.currentPhotographOrNull())
+        vm.openTheme("cars")
+        assertEquals(cars.imageRes[0], vm.currentPhotographOrNull())
+        vm.next()
+        assertEquals(cars.imageRes[1], vm.currentPhotographOrNull())
+        vm.goHome()
+        assertEquals("Home has no photograph to keep", null, vm.currentPhotographOrNull())
     }
 
     /**

@@ -155,6 +155,10 @@ dependencies {
     // Used directly: AppViewModel takes a SavedStateHandle so screen state
     // survives process death, not just rotation.
     implementation(libs.lifecycle.viewmodel.savedstate)
+    // Used directly: MainActivity observes ON_STOP through LocalLifecycleOwner
+    // to trim the photograph cache. Declared for the same reason as coroutines
+    // below — it arrives transitively today, and that is not a guarantee.
+    implementation(libs.lifecycle.runtime.compose)
     implementation(libs.core.ktx)
     // Explicit rather than inherited from Compose and Lifecycle: the Viewer's
     // photograph prefetch is real background work, and what dispatcher it gets

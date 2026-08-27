@@ -97,13 +97,60 @@ class PhotoCacheTest {
     }
 
     @Test
-    fun trimmingKeepsAPhotographRatherThanEmptyingTheCache() {
-        // What happens when the app stops: the current image should survive so a
-        // return from the recents screen is not a decode.
+    fun trimmingKeepsTheNamedPhotographAndDropsTheRest() {
+        // What happens when the app stops. The photograph on screen has to be
+        // the survivor — and recency alone will not choose it, because the
+        // neighbours were decoded *after* it and are therefore more recently
+        // used. Three entries, so the trim has something to actually evict:
+        // the earlier version of this test put in one and proved nothing.
+        val cache = cache()
+        val onScreen = cars[0]
+        cache.getOrDecode(resources, onScreen)
+        cache.getOrDecode(resources, cars[1])
+        cache.getOrDecode(resources, cars[2])
+
+        cache.trimKeeping(onScreen)
+
+        assertTrue("the photograph on screen was evicted", cache.contains(onScreen))
+        assertFalse("a neighbour survived a trim to one photograph", cache.contains(cars[1]))
+        assertFalse("a neighbour survived a trim to one photograph", cache.contains(cars[2]))
+    }
+
+    @Test
+    fun probingTheCacheDoesNotCountAsUsingIt() {
+        // LruCache is access-ordered: get() promotes what it returns. The
+        // prefetch probes the cache to decide whether it can skip an image, and
+        // if that probe counted as a use, a neighbour would outrank the
+        // photograph on screen and be kept in preference to it.
+        //
+        // Pinned without naming anything to keep, so the only thing deciding
+        // the survivor is recency — which is exactly what a probe must not
+        // touch. Trimming keeps the most recently used; the first image must
+        // therefore be gone, however many times it was probed.
         val cache = cache()
         cache.getOrDecode(resources, cars[0])
-        cache.trimToOnePhoto()
-        assertTrue("trimming emptied the cache instead of trimming it", cache.contains(cars[0]))
+        cache.getOrDecode(resources, cars[1])
+        cache.getOrDecode(resources, cars[2])
+
+        repeat(3) { cache.contains(cars[0]) }
+
+        cache.trimKeeping(null)
+        assertFalse(
+            "probing an old entry promoted it, so the trim kept the wrong photograph",
+            cache.contains(cars[0]),
+        )
+        assertTrue("the most recent photograph was evicted", cache.contains(cars[2]))
+    }
+
+    @Test
+    fun trimmingWithNothingToKeepStillLeavesTheCacheUsable() {
+        val cache = cache()
+        cache.getOrDecode(resources, cars[0])
+        cache.trimKeeping(null)
+        // Nothing named, so nothing is protected; the point is only that this
+        // does not throw and the cache still works afterwards.
+        cache.getOrDecode(resources, cars[0])
+        assertTrue(cache.contains(cars[0]))
     }
 
     @Test

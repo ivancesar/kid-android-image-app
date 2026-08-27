@@ -41,7 +41,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -132,7 +132,7 @@ fun ViewerScreen(
     // so moving on cancels a prefetch that is no longer the right guess; see
     // PhotoCache.prefetch for why that cancellation has to be backed by
     // serialising the work rather than by cancellation alone.
-    val resources = LocalContext.current.resources
+    val resources = LocalResources.current
     LaunchedEffect(theme.id, currentImage, resources) {
         Photos.cache.prefetch(resources, neighboursOf(theme.imageRes, currentImage))
     }
@@ -238,7 +238,7 @@ private fun PhotoCard(palette: ThemePalette, @DrawableRes image: Int) {
     // to draw it. A miss decodes here and now, exactly as painterResource did,
     // so the card still sizes itself in the same composition and nothing about
     // the layout — or the tests that measure it — changes.
-    val resources = LocalContext.current.resources
+    val resources = LocalResources.current
     val painter = remember(image) { BitmapPainter(Photos.cache.getOrDecode(resources, image)) }
     val size = painter.intrinsicSize
     // A painter with no intrinsic size cannot be shaped to fit; fill the space

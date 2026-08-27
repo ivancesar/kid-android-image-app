@@ -20,8 +20,8 @@ import java.util.concurrent.Executors
  *
  * The working set is the three images a child can reach without waiting —
  * previous, current, next — plus one being decoded during a page turn. At the
- * largest shape the app ships (1280×1280, 6.25 MiB as `ARGB_8888`) that is 25
- * MiB; at the common one (1280×853, 4.17 MiB) the same budget holds nearly six.
+ * largest shape the app ships (1280×1280, 6.25 MiB as `ARGB_8888`) three of them
+ * are 18.75 MiB; at the common one (1280×853, 4.17 MiB) this budget holds five.
  *
  * `PhotoNeighboursTest.theCacheCanHoldThreeOfTheLargestPhotographs` pins this,
  * because
@@ -59,21 +59,35 @@ class PhotoCache(private val maxBytes: Int) {
 
     fun get(@DrawableRes id: Int): ImageBitmap? = entries.get(id)
 
-    fun contains(@DrawableRes id: Int): Boolean = entries.get(id) != null
+    /**
+     * Whether [id] is cached, **without** counting as a use of it.
+     *
+     * `LruCache` is built on an access-ordered `LinkedHashMap`, so `get()`
+     * promotes what it returns. Probing with `get()` would therefore make the
+     * neighbours look more recently used than the photograph actually on
+     * screen — and [trimKeeping] would then evict the one image worth keeping.
+     */
+    fun contains(@DrawableRes id: Int): Boolean = entries.snapshot().containsKey(id)
 
     fun evictAll() {
         entries.evictAll()
     }
 
     /**
-     * Drop everything but roughly one photograph.
+     * Drop everything but roughly one photograph, keeping [keep] if it is given.
      *
-     * Called when the app stops. Holding 24 MiB while backgrounded makes the app
-     * a better candidate for being killed, but evicting outright would cost a
-     * decode on the way back from the recents screen — so the current image
-     * stays and its neighbours go.
+     * Called when the app stops: holding 24 MiB while backgrounded only makes
+     * the process a better candidate for being killed, but evicting outright
+     * would cost a decode on the way back from the recents screen.
+     *
+     * [keep] is named rather than inferred from recency, because recency does
+     * not say what a reader expects here. A freshly decoded neighbour is
+     * inserted as the most recently used entry, so after a page turn the
+     * *current* photograph is the least recently used of the three — trimming
+     * on recency alone would evict precisely the one that has to survive.
      */
-    fun trimToOnePhoto() {
+    fun trimKeeping(@DrawableRes keep: Int?) {
+        if (keep != null) entries.get(keep) // promote it out of harm's way
         entries.trimToSize(maxBytes / 3)
     }
 
@@ -82,10 +96,12 @@ class PhotoCache(private val maxBytes: Int) {
      *
      * The decode is synchronous and on the caller's thread, which is the point:
      * this runs during composition, and the Viewer derives the card's aspect
-     * ratio from the bitmap's own dimensions. A cold read therefore costs
-     * exactly what the old `painterResource` call cost and lays out identically;
-     * a warm one costs a map lookup. Nothing here can be slower than what it
-     * replaced, and [prefetch] is what makes it usually warm.
+     * ratio from the bitmap's own dimensions. A cold read costs a decode and lays
+     * out identically to the `painterResource` call it replaced; a warm one
+     * costs a map lookup. What changes is *where* the work happens rather than
+     * how much of it there is — [prefetch] speculatively decodes neighbours, so
+     * a session does strictly more decoding in total, on a thread where it does
+     * not cost a frame.
      */
     fun getOrDecode(res: Resources, @DrawableRes id: Int): ImageBitmap =
         entries.get(id) ?: decodePhoto(res, id, "photo.decode.sync").also { entries.put(id, it) }
@@ -103,16 +119,26 @@ class PhotoCache(private val maxBytes: Int) {
      *
      * One decode at a time, on one thread, with a cancellation check before each.
      * A child mashing Next produces a job per tap, but every one of them except
-     * the last is cancelled while still queued — so at most one decode is ever in
-     * flight and at most one is ever wasted. Cancelling cannot interrupt a decode
-     * already inside `BitmapFactory`, which is exactly why the work is serialised
-     * rather than merely cancellable.
+     * the last is cancelled while still queued — so this thread never has more
+     * than one decode in flight and never wastes more than one. Cancelling
+     * cannot interrupt a decode already inside `BitmapFactory`, which is exactly
+     * why the work is serialised rather than merely cancellable.
+     *
+     * The main thread can still decode the same photograph concurrently, when a
+     * page turn arrives before the prefetch of that image has landed. Left as
+     * it is: it happens only in the case that was going to decode on the main
+     * thread anyway, one of the two results simply wins the map, and the
+     * alternative is a per-key monitor whose deadlock surface is not worth
+     * buying a duplicate decode back in a case that is already the slow one.
      */
-    suspend fun prefetch(res: Resources, @DrawableRes ids: List<Int>) {
+    suspend fun prefetch(res: Resources, ids: List<Int>) {
         withContext(prefetchDispatcher) {
             for (id in ids) {
                 ensureActive()
-                if (entries.get(id) != null) continue
+                // snapshot(), not get(): see contains(). A prefetch checking
+                // whether it can skip an image must not thereby mark that image
+                // as more recently used than the one being looked at.
+                if (entries.snapshot().containsKey(id)) continue
                 // Not put behind ensureActive(): a decode already paid for is
                 // worth keeping even if the child has moved on, because moving
                 // on is usually moving to it.
@@ -168,14 +194,19 @@ private val prefetchDispatcher by lazy {
 /**
  * Decode one photograph at its full size.
  *
- * `decodeResourceStream` with the resource's own `TypedValue` is what
- * `ImageBitmap.imageResource` calls internally, and it is the reason this does
- * not touch `inDensity`/`inTargetDensity`: for a `nodpi` resource the density is
- * `DENSITY_NONE`, so no scaling happens and the bitmap comes back at the file's
- * own pixel size. Reaching for `BitmapFactory.decodeResource`, or setting those
- * fields by hand, is how density upscaling gets quietly reintroduced —
+ * `decodeResourceStream` is given the resource's own `TypedValue` and nothing
+ * else: for a `nodpi` resource the density comes back as `DENSITY_NONE`, so no
+ * scaling happens and the bitmap is the file's own pixel size. Reaching for
+ * `BitmapFactory.decodeResource`, or setting `inDensity`/`inTargetDensity` by
+ * hand, is how density upscaling gets quietly reintroduced —
  * `ThemeResourcesTest.everyPhotographIsDensityIndependent` exists because that
- * matters.
+ * matters, and `PhotoCacheTest.aDecodedPhotographKeepsItsOwnPixelSize` pins it
+ * for this path.
+ *
+ * This is not the call `painterResource` made. That went through
+ * `Resources.getDrawable` and took the bitmap off the resulting
+ * `BitmapDrawable`; the pixels are equivalent, but the decoder is not the same
+ * one, so per-image timings are not directly comparable between the two.
  *
  * [traceLabel] separates the two callers in a trace, which is how you tell
  * whether a page turn actually decoded on the main thread or merely read the

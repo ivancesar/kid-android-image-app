@@ -7,6 +7,7 @@ import com.kidsexplore.app.ui.images.Photos
 import com.kidsexplore.app.ui.screens.ViewerScreen
 import com.kidsexplore.app.ui.theme.KidsExploreTheme
 import org.junit.Assert.assertTrue
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -27,6 +28,13 @@ class ViewerPrefetchTest {
     val compose = createComposeRule()
 
     private val cars = THEME_DEFS.first { it.id == "cars" }
+
+    @After
+    fun leaveNothingBehind() {
+        // A process singleton holding 24 MiB of photographs across the other
+        // eighty tests is a poor neighbour.
+        Photos.cache.evictAll()
+    }
 
     @Before
     fun startCold() {
