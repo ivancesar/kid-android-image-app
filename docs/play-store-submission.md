@@ -23,42 +23,40 @@ being true with it.
 
 ---
 
-## 1. Before anything else: host the policy
+## 1. The hosted privacy policy
 
-The app itself no longer needs this — `docs/privacy-policy.md` is bundled as an
-asset and Parent Settings renders it, so a parent can always read the policy
-offline. But the **Play Console listing** still requires a public URL, and Play
-checks that it resolves.
-
-`docs/privacy-policy.html` is the copy to host. Two steps make it live, both in
-the repository's settings on github.com, and both are the repository owner's
-decision rather than something a build can do:
-
-1. **Make the repository public.** It is private today.
-2. **Enable GitHub Pages**, serving `/docs` from the `main` branch. The file is
-   deliberately self-contained — no external stylesheet, font or script — so
-   Pages serves it as-is with no build step.
-
-It then lands at:
+**Done.** The repository is public, GitHub Pages serves `/docs` from `main`, and
+the policy is live at:
 
     https://ivancesar.github.io/kid-android-image-app/privacy-policy.html
 
-Open it in a browser, confirm it renders, and paste that into the listing. Keep
-it in step with `docs/privacy-policy.md`, which is the source of truth and is
-what the app renders.
+That URL goes in two places in the Console, and they must match: the store
+listing, and the Target Audience and Content section (see section 5, where a
+policy URL is separately mandatory for a child-directed app).
+
+The app does not depend on this. `docs/privacy-policy.md` is bundled as an asset
+and Parent Settings renders it, so a parent can read the policy offline. The
+hosted copy exists because Play requires a public URL and checks that it
+resolves.
+
+`docs/privacy-policy.md` is the source of truth — it is what the app renders.
+`docs/privacy-policy.html` is the hosted copy. **Change one and change the
+other**, or the two versions of the same promise start to disagree.
 
 Policy questions go to the repository's issue tracker rather than an email
 address. Play separately requires a developer contact email on the Console
 account itself; that is an account setting and has nothing to do with these
 documents.
 
-**Hosting the policy.** `docs/privacy-policy.html` is deliberately
-self-contained — no external stylesheet, font, script or image — so any static
-host serves it correctly. With GitHub Pages: repository *Settings → Pages →
-Source: Deploy from a branch*, branch `main`, folder `/docs`. The policy is then
-at `https://<user>.github.io/<repo>/privacy-policy.html`, which is the URL for
-both the constant and the Console. Load it once in a browser before submitting;
-Play checks that it resolves.
+### If the policy ever needs rehosting
+
+`docs/privacy-policy.html` is deliberately self-contained — no external
+stylesheet, font, script or image — so any static host serves it as-is with no
+build step. To reproduce the current setup from scratch: make the repository
+public, then *Settings → Pages → Source: Deploy from a branch*, branch `main`,
+folder `/docs`. The policy then sits at
+`https://<user>.github.io/<repo>/privacy-policy.html`. Load it in a browser
+before submitting; Play checks that it resolves.
 
 ---
 
@@ -168,6 +166,53 @@ grep -i permission app/build/outputs/logs/manifest-merger-release-report.txt
 ```
 
 Expect exactly one: `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`.
+
+### The native debug symbols warning
+
+Uploading the bundle produces a Console warning:
+
+> This App Bundle contains native code, and you've not uploaded debug symbols.
+
+**Ignore it.** It is a warning, not an error, and it does not block the upload,
+the review or the release. Acting on it is impossible rather than merely
+optional, for a reason worth writing down once:
+
+* This project has no native code. There is no `externalNativeBuild`, no
+  `CMakeLists.txt`, no `jniLibs` — nothing in `app/build.gradle.kts` builds a
+  `.so`.
+* The bundle nevertheless carries exactly one native library, about 10 KB per
+  ABI, pulled in transitively by AndroidX:
+
+      base/lib/{arm64-v8a,armeabi-v7a,x86,x86_64}/libandroidx.graphics.path.so
+
+* That library arrives **already stripped**. `file` reports `stripped` and `nm`
+  reports `no symbols`, so there is no symbol table in it to extract:
+
+  ```bash
+  unzip -o -j app/build/outputs/bundle/release/app-release.aab \
+    "base/lib/arm64-v8a/libandroidx.graphics.path.so" -d /tmp
+  file /tmp/libandroidx.graphics.path.so   # ... stripped
+  nm   /tmp/libandroidx.graphics.path.so   # no symbols
+  ```
+
+The usual remedy — `ndk { debugSymbolLevel = "FULL" }` in the release build type
+— tells AGP to package symbols it finds in the merged native libraries. Here it
+would find none, produce no symbol file, and leave the warning exactly where it
+is. Adding it would be cargo cult, so it is deliberately absent.
+
+If this app ever gains native code of its own, that changes: add
+
+```kotlin
+buildTypes {
+    release {
+        ndk { debugSymbolLevel = "FULL" }
+    }
+}
+```
+
+and the warning becomes worth clearing, because then the crash reports it
+affects would be ones you can actually act on.
+
 
 `versionCode` is `1` in `app/build.gradle.kts`. Every subsequent upload — closed
 testing builds included — needs it incremented.
