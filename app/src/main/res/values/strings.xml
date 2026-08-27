@@ -18,9 +18,20 @@
     <string name="gate_prompt">Solve this to continue</string>
     <string name="gate_question" tools:ignore="MissingTranslation">%1$d + %2$d = ?</string>
     <string name="gate_wrong">Not quite, try again!</string>
+    <!--
+      Two forms because the lockout escalates: each round of wrong answers
+      costs twice the last, up to eight minutes. Under a minute the countdown
+      ticks in seconds; at or above one it reads in whole minutes, because
+      "Wait 480 seconds" is a number a parent has to do arithmetic on before it
+      means anything. `GateScreen.countdownFor` picks between them.
+    -->
     <plurals name="gate_locked">
         <item quantity="one">Too many tries. Wait %d second.</item>
         <item quantity="other">Too many tries. Wait %d seconds.</item>
+    </plurals>
+    <plurals name="gate_locked_minutes">
+        <item quantity="one">Too many tries. Wait %d minute.</item>
+        <item quantity="other">Too many tries. Wait %d minutes.</item>
     </plurals>
     <string name="gate_cancel">Cancel</string>
 

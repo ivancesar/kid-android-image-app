@@ -155,11 +155,13 @@ fun GateScreen(
             // enough to cut off whatever is already being spoken.
             when {
                 locked -> {
-                    val countdown = pluralStringResource(
-                        R.plurals.gate_locked,
-                        remainingSeconds,
-                        remainingSeconds,
-                    )
+                    val countdown = when (val left = countdownFor(remainingSeconds)) {
+                        is Countdown.Seconds ->
+                            pluralStringResource(R.plurals.gate_locked, left.value, left.value)
+
+                        is Countdown.Minutes ->
+                            pluralStringResource(R.plurals.gate_locked_minutes, left.value, left.value)
+                    }
                     // The visible text reticks every second. If that drove the
                     // live region TalkBack would read a fresh countdown thirty
                     // times over, so the node is described once from the
@@ -207,8 +209,8 @@ fun GateScreen(
  * also how the ViewModel encodes "no lockout".
  *
  * Wall-clock to match the deadline the ViewModel persists; it already caps that
- * deadline at one lockout from now, so a backwards clock change cannot make
- * this count down from something absurd.
+ * deadline at the current lockout level's length, so a backwards clock change
+ * cannot make this count down from something absurd.
  *
  * [nowWallMs] defaults to the real clock but is a parameter so the round-up —
  * a stated requirement, "shows 1, never 0" — can be tested without waiting.
@@ -219,3 +221,36 @@ internal fun secondsUntil(deadlineWallMs: Long, nowWallMs: Long = System.current
     if (remaining <= 0L) return 0
     return ((remaining + 999L) / 1000L).toInt()
 }
+
+private const val SECONDS_PER_MINUTE = 60
+
+/**
+ * Which unit the lockout message counts in, and how many of it are left.
+ *
+ * The lockout escalates to eight minutes, and a seconds-only countdown would
+ * read "Wait 480 seconds" — a number a parent has to do arithmetic on before it
+ * tells them anything. Two units mean two `plurals`, and which one to use is
+ * part of the answer rather than something the caller works out afterwards; a
+ * sealed type is what makes the screen unable to pair one unit's count with the
+ * other's string.
+ */
+internal sealed interface Countdown {
+    data class Seconds(val value: Int) : Countdown
+
+    data class Minutes(val value: Int) : Countdown
+}
+
+/**
+ * Seconds below a minute, whole minutes at or above one.
+ *
+ * Minutes round up for the same reason [secondsUntil] does: the message must
+ * never claim less time is left than actually is. So 61 seconds reads as two
+ * minutes, and the last tick before the switch is a flat "1 minute" rather than
+ * a minute that has already partly gone.
+ */
+internal fun countdownFor(remainingSeconds: Int): Countdown =
+    if (remainingSeconds < SECONDS_PER_MINUTE) {
+        Countdown.Seconds(remainingSeconds)
+    } else {
+        Countdown.Minutes((remainingSeconds + SECONDS_PER_MINUTE - 1) / SECONDS_PER_MINUTE)
+    }

@@ -52,9 +52,48 @@ sealed interface UiState {
     data object Policy : UiState
 }
 
-/** Wrong answers allowed before the gate stops accepting taps for a while. */
+/** Wrong answers per round, after which the gate stops accepting taps for a while. */
 internal const val MAX_GATE_FAILURES = 3
+
+/** How long the first lockout lasts. Every one after it is twice the last. */
 internal const val GATE_LOCKOUT_MS = 30_000L
+
+/**
+ * Where the doubling stops: 30s, 1m, 2m, 4m, 8m, 8m, 8m…
+ *
+ * A ceiling rather than unbounded growth, because the person a very long
+ * lockout actually punishes is the parent who mistyped — and eight minutes is
+ * already long enough that grinding the gate stops being a game. Four buttons
+ * means a round of three wrong answers clears by luck about 58% of the time,
+ * so what has to be expensive is *repeating* rounds, not any one of them.
+ */
+internal const val MAX_GATE_LOCKOUT_MS = 8 * 60 * 1000L
+
+/**
+ * How long the lockout lasts for a gate that has accumulated [failures].
+ *
+ * Derived from the failure count rather than stored beside it, so the persisted
+ * [GateLock] schema is unchanged and an install that already has failures on
+ * disk carries them straight over.
+ *
+ * A count below one full round only happens on an install written by the
+ * version that reset the count when the lockout armed; it is read as the first
+ * level, which is exactly what that version's stored deadline meant.
+ */
+internal fun gateLockoutMs(failures: Int): Long {
+    val level = (failures / MAX_GATE_FAILURES).coerceAtLeast(1)
+    var duration = GATE_LOCKOUT_MS
+    // Doubled in a loop rather than shifted by (level - 1): nothing bounds
+    // `failures`, and a wide enough shift turns 30 seconds into a *negative*
+    // duration, which activeLockDeadline() would read as "not locked" — the
+    // very bypass this escalation exists to close. The loop cannot run past
+    // the cap, so its length is bounded by the cap rather than by the count.
+    repeat(level - 1) {
+        duration *= 2
+        if (duration >= MAX_GATE_LOCKOUT_MS) return MAX_GATE_LOCKOUT_MS
+    }
+    return duration
+}
 
 /**
  * Distractor distances from the correct sum. Deliberately never ±1: keeping
@@ -101,9 +140,15 @@ class AppViewModel(
         // a device clock moved backwards can leave one stored arbitrarily far
         // in the future. Pull it back to one lockout from now — once, here, on
         // load, and write the correction back. Clamping on every read instead
-        // would recompute "now + 30s" forever and never let the parent in.
+        // would recompute "now + one lockout" forever and never let the parent
+        // in.
+        //
+        // The ceiling is *this level's* lockout, not GATE_LOCKOUT_MS. Using the
+        // constant would clamp an escalated eight-minute lockout back to thirty
+        // seconds on the next launch, and force-stopping the app is a two-tap
+        // gesture — which would hand back the bypass the escalation removes.
         val now = wallClock()
-        val ceiling = now + GATE_LOCKOUT_MS
+        val ceiling = now + gateLockoutMs(gateFailures)
         gateLockedUntil = lock.lockedUntilWallMs
         if (gateLockedUntil > ceiling) {
             gateLockedUntil = ceiling
@@ -171,9 +216,16 @@ class AppViewModel(
         }
 
         gateFailures++
-        if (gateFailures >= MAX_GATE_FAILURES) {
-            gateLockedUntil = wallClock() + GATE_LOCKOUT_MS
-            gateFailures = 0
+        // The count is not reset when the lockout arms, which it used to be.
+        // That made every round of three wrong guesses cost the same thirty
+        // seconds — and with four buttons a round clears by luck about 58% of
+        // the time, so a child reached Parent Settings inside a minute and
+        // could keep doing it. Letting the count climb is what makes the next
+        // round twice as expensive as the last; only a correct answer clears
+        // it. So the lockout arms on every whole round rather than on "at
+        // least three", which after the first round is always true.
+        if (gateFailures % MAX_GATE_FAILURES == 0) {
+            gateLockedUntil = wallClock() + gateLockoutMs(gateFailures)
         }
         persistGateLock()
 

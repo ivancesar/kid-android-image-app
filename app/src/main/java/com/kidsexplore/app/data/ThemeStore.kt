@@ -12,6 +12,12 @@ private const val PREFS_GATE_LOCKED_UNTIL_KEY = "gate_locked_until_wall_ms"
 /**
  * The parental gate's failure count and lockout deadline.
  *
+ * [failures] counts every wrong answer since the last correct one, across
+ * lockouts rather than being zeroed by each — it is what
+ * [com.kidsexplore.app.gateLockoutMs] derives the escalation from, so an
+ * install that already has a count on disk carries its level straight over
+ * without any change to what is stored.
+ *
  * [lockedUntilWallMs] is wall-clock (`System.currentTimeMillis`), not
  * `SystemClock.elapsedRealtime`: this outlives the process, and an
  * elapsed-realtime deadline is measured from boot, so a reboot would make a

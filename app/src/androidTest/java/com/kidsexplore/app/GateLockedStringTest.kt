@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.res.Configuration
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.kidsexplore.app.ui.screens.Countdown
+import com.kidsexplore.app.ui.screens.countdownFor
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,8 +18,12 @@ import java.util.Locale
  * requires, and the app throws at exactly the second that quantity becomes
  * reachable — inside the parental gate, where a parent is already stuck.
  *
- * Cheap to rule out: format every second of a lockout in every shipped
- * language.
+ * Cheap to rule out: format every second of the longest lockout the escalation
+ * can produce, in every shipped language. Driven through [countdownFor] rather
+ * than against `gate_locked` directly, so the unit it picks and the string it
+ * picks are exercised as one thing — pairing a minute count with the seconds
+ * plural would read "Wait 8 seconds" for an eight-minute lockout, which no
+ * assertion about either string alone would catch.
  */
 @RunWith(AndroidJUnit4::class)
 class GateLockedStringTest {
@@ -31,16 +37,20 @@ class GateLockedStringTest {
         ).resources
 
     @Test
-    fun everySecondOfALockoutFormatsInEveryLanguage() {
-        val longestLockoutSeconds = (GATE_LOCKOUT_MS / 1000).toInt()
+    fun everySecondOfTheLongestLockoutFormatsInEveryLanguage() {
+        val longestLockoutSeconds = (MAX_GATE_LOCKOUT_MS / 1000).toInt()
         AppLocales.SUPPORTED.forEach { tag ->
             val res = localized(tag)
             for (n in 1..longestLockoutSeconds) {
-                val text = res.getQuantityString(R.plurals.gate_locked, n, n)
-                assertTrue("[$tag] n=$n produced blank text", text.isNotBlank())
+                val (plural, quantity) = when (val left = countdownFor(n)) {
+                    is Countdown.Seconds -> R.plurals.gate_locked to left.value
+                    is Countdown.Minutes -> R.plurals.gate_locked_minutes to left.value
+                }
+                val text = res.getQuantityString(plural, quantity, quantity)
+                assertTrue("[$tag] ${n}s left produced blank text", text.isNotBlank())
                 assertTrue(
-                    "[$tag] n=$n did not interpolate the count: '$text'",
-                    text.contains(n.toString()),
+                    "[$tag] ${n}s left did not interpolate the count $quantity: '$text'",
+                    text.contains(quantity.toString()),
                 )
             }
         }
