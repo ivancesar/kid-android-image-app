@@ -34,7 +34,11 @@ val BoldTextStyle = TextStyle(
  * let the system setting pull half the app into colors nobody chose, the
  * scheme is pinned here and `MainActivity` matches the system bar icons to it.
  */
-private val KidsColorScheme = lightColorScheme(
+// internal rather than private: NeutralContrastTest measures text drawn on the
+// Material surfaces this scheme resolves — the language menu is the one place
+// the app does not paint its own ground — and it must read the real scheme
+// rather than a copy of these four overrides that could drift from them.
+internal val KidsColorScheme = lightColorScheme(
     background = NeutralColors.appBackground,
     surface = NeutralColors.screenBackground,
     onBackground = NeutralColors.labelDark,

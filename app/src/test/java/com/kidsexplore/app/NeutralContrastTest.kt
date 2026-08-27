@@ -1,6 +1,7 @@
 package com.kidsexplore.app
 
 import androidx.compose.ui.graphics.Color
+import com.kidsexplore.app.ui.theme.KidsColorScheme
 import com.kidsexplore.app.ui.theme.NeutralColors
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -35,6 +36,10 @@ class NeutralContrastTest {
      * The policy is the one screen that paints [NeutralColors.screenBackground]
      * itself. The Viewer's dark ground carries no text at all — every label
      * there is on a white or accent-filled button.
+     *
+     * The one exception is the language menu: `DropdownMenu` paints Material's
+     * own `surfaceContainer`, which this app does not override, so its two rows
+     * are measured against the scheme rather than against a neutral.
      */
     private val pairings = listOf(
         // ------------------------------------------------------------- Home
@@ -61,6 +66,8 @@ class NeutralContrastTest {
         Drawn("a switched-off category row's name, 16sp", n.labelDark, n.rowBgDisabled),
         Drawn("the language row's current choice, 16sp", n.labelDark, n.rowBgEnabled),
         Drawn("the language row's chevron, 16sp", n.subtitleText, n.rowBgEnabled),
+        Drawn("a language menu row, 16sp", n.labelDark, KidsColorScheme.surfaceContainer),
+        Drawn("the language menu's tick, 16sp", n.doneButtonBg, KidsColorScheme.surfaceContainer),
 
         // ----------------------------------------------------------- Policy
         Drawn("the policy's title and headings, 22sp and 15sp", n.labelDark, n.screenBackground),
@@ -107,11 +114,17 @@ class NeutralContrastTest {
             "labelMuted", "labelDark", "labelDarker", "subtitleText", "cancelText", "errorText",
             // Grounds that carry neutral text, all present in the table above.
             "appBackground", "screenBackground", "rowBgEnabled", "rowBgDisabled", "gearButtonBg",
-            // Filled buttons. The text on these is Color.White, not a neutral
-            // tone, so they are outside what this test measures — but noting it
-            // rather than leaving them unexplained: white on gateOptionLockedBg
-            // is 2.46:1, under AA's 3:1 even counting the 26sp answers as large
-            // text, so the locked buttons want a look at.
+            // Button fills. As grounds these carry Color.White rather than a
+            // neutral tone, so the text on them is outside what this measures.
+            // Two notes rather than leaving that unexplained:
+            //
+            // doneButtonBg is also used as a *text* colour — the tick in the
+            // language menu — and is measured as one in the table above.
+            //
+            // White on gateOptionLockedBg is 2.47:1, under AA's 3:1 even
+            // counting the 26sp answers as large text. WCAG exempts disabled
+            // controls and those buttons are exactly that, so it is defensible
+            // — but the locked state is very faint and wants a look at.
             "doneButtonBg", "gateOptionBg", "gateOptionLockedBg",
             // The Viewer's ground. No text is drawn directly on it.
             "viewerBackground",
