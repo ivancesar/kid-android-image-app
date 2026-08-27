@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!--
+  The landing page for the hosted docs, and nothing more.
+
+  GitHub Pages serves docs/ as the site root, so without this file
+  https://ivancesar.github.io/kid-android-image-app/ is a 404 and the site looks
+  broken to anyone who trims the URL back — even though the policy beside it has
+  been served correctly all along. Its only job is to point at that policy.
+
+  Self-contained for the same reason privacy-policy.html is: no stylesheet, no
+  font, no script, no image is fetched from anywhere. Styles are copied from
+  privacy-policy.html so the two pages look like one site; if you restyle that
+  file, restyle this one with it.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kids Explore</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1c1c20;
+    --muted: #5c5c66;
+    --rule: #e2e2e8;
+    --accent: #2f6fd0;
+    --note-bg: #f4f6fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16171a;
+      --fg: #e8e8ec;
+      --muted: #a2a2ad;
+      --rule: #303138;
+      --accent: #7fb0f5;
+      --note-bg: #1e2026;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 4rem;
+    max-width: 42rem;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+  h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 .35rem; }
+  p, ul { margin: 0 0 1rem; }
+  ul { padding-left: 1.25rem; }
+  li { margin-bottom: .5rem; }
+  a { color: var(--accent); }
+  .meta { color: var(--muted); font-size: .9rem; margin-bottom: 2rem; }
+  .meta strong { color: var(--fg); }
+  .lede {
+    background: var(--note-bg);
+    border-radius: .75rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+  }
+  .lede p:last-child { margin-bottom: 0; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .875em;
+    overflow-wrap: anywhere;
+  }
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: .9rem;
+  }
+</style>
+</head>
+<body>
+
+<h1>Kids Explore</h1>
+<p class="meta">
+  Android application <strong>com.kidsexplore.app</strong>
+</p>
+
+<div class="lede">
+  <p>An offline picture browser for young children. No internet access, no
+  advertisements, no analytics, no accounts — every photograph it shows is
+  packaged inside the app.</p>
+</div>
+
+<ul>
+  <li><a href="privacy-policy.html">Privacy Policy</a> — the published copy, and
+  the URL given to the Google Play Console listing.</li>
+  <li><a href="https://github.com/ivancesar/kid-android-image-app">Source code on
+  GitHub</a></li>
+  <li><a href="https://github.com/ivancesar/kid-android-image-app/issues">Questions
+  and issues</a></li>
+</ul>
+
+<footer>
+  Kids Explore · <a href="privacy-policy.html">Privacy Policy</a>
+</footer>
+
+</body>
+</html>
