@@ -245,9 +245,10 @@ res/drawable-nodpi/              # bundled photographs, img_<theme>_NN.jpg
 res/values/strings.xml           # all user-visible text (English)
 res/values-hr/strings.xml        # Croatian overrides; missing keys fall back
 res/xml/locales_config.xml       # languages the app ships
-icons-src/                       # source SVGs, one per theme id
+icons-src/                       # source SVGs, one per theme id, plus launcher.png
 tools/svg2vd.py                  # icons-src/*.svg -> res/drawable/ic_theme_*.xml
 docs/                            # privacy policy (md + html) and the Play submission checklist
+shots/                           # Play listing assets: screenshots, feature graphic, store icon
 ```
 
 ## Building & running
