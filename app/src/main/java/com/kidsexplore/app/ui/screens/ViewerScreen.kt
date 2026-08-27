@@ -25,6 +25,8 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
@@ -38,9 +40,10 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -52,6 +55,8 @@ import com.kidsexplore.app.R
 import com.kidsexplore.app.model.ThemeDef
 import com.kidsexplore.app.ui.viewerImageTestTag
 import com.kidsexplore.app.ui.theme.NeutralColors
+import com.kidsexplore.app.ui.images.Photos
+import com.kidsexplore.app.ui.images.neighboursOf
 import com.kidsexplore.app.ui.theme.ThemePalette
 import com.kidsexplore.app.ui.theme.palette
 import kotlin.math.hypot
@@ -121,6 +126,15 @@ fun ViewerScreen(
             change.consume()
             dragTotal += dragAmount
         }
+    }
+
+    // Warm the neighbours while the child looks at this one. Keyed on the image
+    // so moving on cancels a prefetch that is no longer the right guess; see
+    // PhotoCache.prefetch for why that cancellation has to be backed by
+    // serialising the work rather than by cancellation alone.
+    val resources = LocalContext.current.resources
+    LaunchedEffect(theme.id, currentImage, resources) {
+        Photos.cache.prefetch(resources, neighboursOf(theme.imageRes, currentImage))
     }
 
     BoxWithConstraints(
@@ -218,7 +232,14 @@ fun ViewerScreen(
  */
 @Composable
 private fun PhotoCard(palette: ThemePalette, @DrawableRes image: Int) {
-    val painter = painterResource(image)
+    // Through the cache rather than painterResource: on a page turn the
+    // photograph has usually been decoded already by the prefetch below, and
+    // this is a map lookup instead of a megapixel of JPEG on the frame that has
+    // to draw it. A miss decodes here and now, exactly as painterResource did,
+    // so the card still sizes itself in the same composition and nothing about
+    // the layout — or the tests that measure it — changes.
+    val resources = LocalContext.current.resources
+    val painter = remember(image) { BitmapPainter(Photos.cache.getOrDecode(resources, image)) }
     val size = painter.intrinsicSize
     // A painter with no intrinsic size cannot be shaped to fit; fill the space
     // instead of dividing by an unspecified height.

@@ -156,6 +156,10 @@ dependencies {
     // survives process death, not just rotation.
     implementation(libs.lifecycle.viewmodel.savedstate)
     implementation(libs.core.ktx)
+    // Explicit rather than inherited from Compose and Lifecycle: the Viewer's
+    // photograph prefetch is real background work, and what dispatcher it gets
+    // should not depend on a transitive resolution that a BOM bump can change.
+    implementation(libs.kotlinx.coroutines.android)
     // Per-app language: AppCompatDelegate.setApplicationLocales() persists the
     // choice and backports it below Android 13, which minSdk 26 still has to serve.
     implementation(libs.appcompat)
