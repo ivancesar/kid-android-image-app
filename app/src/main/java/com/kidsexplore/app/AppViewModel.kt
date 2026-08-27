@@ -166,6 +166,20 @@ class AppViewModel(
         THEME_DEFS.filter { it.id !in disabledThemeIds }
     }
 
+    /**
+     * The photograph on screen, or null when the child is not in the Viewer.
+     *
+     * Here rather than in `MainActivity` so it is reachable from a JVM test:
+     * it is what the photograph cache is told to keep when the app stops, and
+     * getting it wrong costs a decode on the way back in — a mistake nothing
+     * would fail on.
+     */
+    fun currentPhotographOrNull(): Int? {
+        val state = uiState as? UiState.Viewer ?: return null
+        val theme = THEME_DEFS.find { it.id == state.themeId } ?: return null
+        return theme.imageRes.getOrNull(state.imageIndex.coerceIn(theme.imageRes.indices))
+    }
+
     fun goHome() {
         transitionTo(UiState.Home)
     }

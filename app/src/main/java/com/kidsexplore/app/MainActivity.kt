@@ -9,8 +9,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kidsexplore.app.model.THEME_DEFS
+import com.kidsexplore.app.ui.images.Photos
 import com.kidsexplore.app.ui.screens.GateScreen
 import com.kidsexplore.app.ui.screens.HomeScreen
 import com.kidsexplore.app.ui.screens.PolicyScreen
@@ -42,6 +46,27 @@ class MainActivity : AppCompatActivity() {
                 }
                 enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
                 onDispose {}
+            }
+
+            // 24 MiB of decoded photographs is worth holding while a child is
+            // paging, and not worth holding while the app is in the background —
+            // it only makes the process a better candidate for being killed.
+            // Trimmed rather than emptied, so coming back from the recents
+            // screen does not cost a decode. Via the lifecycle rather than
+            // Activity.onTrimMemory, which is deprecated as of API 34.
+            //
+            // The photograph to keep is worked out when the event fires rather
+            // than when this composes, so it is whatever is on screen at the
+            // moment the app stops.
+            val lifecycleOwner = LocalLifecycleOwner.current
+            DisposableEffect(lifecycleOwner, appViewModel) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_STOP) {
+                        Photos.cache.trimKeeping(appViewModel.currentPhotographOrNull())
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
             }
 
             KidsExploreTheme {
