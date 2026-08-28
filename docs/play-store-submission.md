@@ -97,6 +97,35 @@ file and export `KIDS_EXPLORE_STORE_FILE`, `KIDS_EXPLORE_STORE_PASSWORD`,
 `KIDS_EXPLORE_KEY_ALIAS` and `KIDS_EXPLORE_KEY_PASSWORD` instead, with the
 keystore itself materialised from an encrypted secret at build time.
 
+### The four secrets the release workflow needs
+
+`.github/workflows/release.yml` is exactly the CI case described above: it
+materialises the keystore into the runner's temp directory, points
+`KIDS_EXPLORE_STORE_FILE` at it, and deletes it when the job ends. It needs four
+repository secrets, set once under *Settings → Secrets and variables → Actions →
+New repository secret*:
+
+| Secret | Value |
+|---|---|
+| `KIDS_EXPLORE_STORE_BASE64` | the `.jks` file itself, base64-encoded |
+| `KIDS_EXPLORE_STORE_PASSWORD` | the store password |
+| `KIDS_EXPLORE_KEY_ALIAS` | the key alias, e.g. `kids-explore-upload` |
+| `KIDS_EXPLORE_KEY_PASSWORD` | the key password |
+
+The keystore is binary, and a secret is text, so it goes in base64-encoded:
+
+```bash
+base64 -i ~/keystores/kids-explore-upload.jks | pbcopy
+```
+
+Three of the four names match the environment variables `app/build.gradle.kts`
+already reads, because the workflow passes them straight through. The fourth is
+the keystore in place of a path to one, since a runner has no path to give.
+
+Without them the workflow stops before it builds anything and names the missing
+secrets, rather than spending ten minutes to arrive at the `bundleRelease`
+signing check.
+
 Enrol in **Play App Signing** when creating the app in the Console (it is the
 default). Play then holds the app signing key and this keystore is only the
 *upload* key — which means that if it is ever lost, Google can reset it, whereas

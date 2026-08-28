@@ -258,7 +258,7 @@ Two long-lived branches, and the distinction matters before you push:
 | Branch | Holds | You |
 |---|---|---|
 | `develop` | integration; the GitHub default and the base for every PR | branch from it, open PRs against it |
-| `main` | the release branch — whatever is currently live on Play | merge into it on a release, never work on it |
+| `main` | the release branch — whatever is currently live on Play | merge into it on a release, never work on it; the merge tags and publishes the release |
 
 Feature work branches off `develop` and returns to it by PR. `main` moves only when a release is cut, so at any moment it answers "what is on a child's device right now?" — which is also why `docs/` is served to GitHub Pages from `main`: the hosted privacy policy should match the shipped app, not the next one.
 
@@ -313,13 +313,23 @@ To run a single instrumented class:
 ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.kidsexplore.app.KidsExploreFlowTest
 ```
 
-There is no CI; run `./gradlew lint testDebugUnitTest assembleDebug` locally, and the instrumented suite against a device or emulator, before releasing.
+Two GitHub Actions workflows run `./gradlew build` — unit tests, lint, and the icon-sync task. `.github/workflows/ci.yml` runs it on every PR into `develop` or `main` and on pushes to `develop`; `.github/workflows/release.yml` runs it again when `main` moves, before it publishes anything. Deliberately the same command in both, so a green PR has already cleared almost everything the release build will check. Two things it has not: `ci.yml` is given no keystore and no secrets at all — which is what makes it safe to run on a PR from a fork, and means the release APK it produces is unsigned — and it never runs `bundleRelease`, so a failure specific to the bundle path is still first seen at release time.
+
+**The instrumented suite never runs on CI**, because the runner has no device. `./gradlew connectedDebugAndroidTest` against a device or emulator stays a local step before you open a PR.
 
 **One instrumented test is currently red:** `AppLocalesTest.everyOfferedChoiceSurvivesTheRoundTrip`, which sets each offered locale through `AppCompatDelegate` and reads it back. It has failed on the emulator for a while and has been treated as an emulator quirk, but nobody has confirmed that on real hardware or found the cause — so treat it as an open question about the app's own per-app-language handling, not as a settled property of the test rig. The rest of the suite passes.
 
 ## Releasing
 
-Play wants an app bundle, and it rejects an unsigned one at upload:
+Merging `develop` into `main` cuts the release. `.github/workflows/release.yml` picks it up from there: it reads `versionName` out of `app/build.gradle.kts`, refuses to go on if `v<versionName>` is already tagged, runs `./gradlew build bundleRelease` with the signing secrets in the environment, and publishes a GitHub Release at `v<versionName>` with the signed `.aab`, the `.apk` and the R8 mapping file attached and a changelog generated from the commits since the previous one. The `.aab` is then what you upload to the Play Console — the pipeline stops at GitHub and does not talk to Play.
+
+**So bumping the version is part of cutting a release, not an afterthought.** `versionName` and `versionCode` are edited on `develop` like any other change; if you forget, the workflow fails in seconds on the duplicate tag rather than publishing over a shipped version. The check compares versions, not tag strings, so `1.0` is recognised as already released under `v1.0.0` — the two are the same version written two ways, and a plain string compare would sail straight past it.
+
+`v1.0.0` shipped as `versionCode 1`; `develop` carries `1.0.1` / `versionCode 2` for the next one.
+
+The four signing secrets the release workflow needs are in [`docs/play-store-submission.md`](docs/play-store-submission.md) section 2. It also attaches `mapping-<version>.txt`: the build is minified, so that file is the only way to read a crash report from this release, and it exists nowhere but the runner that produced these bytes.
+
+By hand — which is still what you do to test a release build before merging — Play wants an app bundle, and it rejects an unsigned one at upload:
 
 ```bash
 ./gradlew bundleRelease   # app/build/outputs/bundle/release/app-release.aab
