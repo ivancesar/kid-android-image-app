@@ -1,0 +1,237 @@
+name: Release
+
+# Fires when `main` moves — which, per the branching model in README.md, only
+# happens when a release is merged out of `develop`. A direct push to `main`
+# would fire it too; that is intentional, since such a push is by definition a
+# release of whatever it contains.
+on:
+  push:
+    branches: [main]
+  # Lets a failed release be re-run from the Actions tab without an empty
+  # commit. The job-level `if` below keeps it to `main`: dispatch has no branch
+  # filter of its own, and without the guard this would happily cut a signed
+  # release from a feature branch.
+  workflow_dispatch:
+
+permissions:
+  # Needed to create the tag and the GitHub Release. Nothing else is granted.
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  # Never cancel a release mid-flight: a half-finished run can leave a tag
+  # behind with no release attached to it.
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Full history: `--generate-notes` needs the commits since the
+          # previous release.
+          fetch-depth: 0
+
+      # First, and deliberately so. Everything after this is minutes of Gradle;
+      # a forgotten version bump should cost seconds instead.
+      - name: Read the version and refuse to release it twice
+        id: version
+        run: |
+          set -euo pipefail
+
+          # `[^"]*` rather than `.*`, which is greedy and would swallow a
+          # trailing comment containing another quote. First match only, taken
+          # with a parameter expansion rather than a pipe to `head`, which
+          # under `pipefail` can fail the step by killing `sed` with SIGPIPE.
+          version_name=$(sed -n 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' app/build.gradle.kts)
+          version_name=${version_name%%$'\n'*}
+          version_code=$(sed -n 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*\([0-9][0-9]*\).*/\1/p' app/build.gradle.kts)
+          version_code=${version_code%%$'\n'*}
+
+          if [ -z "$version_name" ] || [ -z "$version_code" ]; then
+            echo "::error::Could not read versionName/versionCode out of app/build.gradle.kts."
+            echo "::error::The workflow parses the defaultConfig block textually; if that block was"
+            echo "::error::restructured, update the sed expressions in .github/workflows/release.yml."
+            exit 1
+          fi
+
+          # "1.0" and "1.0.0" are the same version written two ways, and this
+          # repository already has a `v1.0.0` tag — so a plain string compare of
+          # `v$version_name` against the tag list would miss the collision it
+          # exists to catch. Purely numeric versions are padded to three
+          # components before comparing; anything else compares verbatim.
+          normalise() {
+            case "$1" in
+              ''|*[!0-9.]*) printf '%s' "$1"; return ;;
+            esac
+            local a b c
+            IFS=. read -r a b c _ <<< "$1"
+            printf '%s.%s.%s' "${a:-0}" "${b:-0}" "${c:-0}"
+          }
+
+          want=$(normalise "$version_name")
+          # `^{}` strips the peeled entry an annotated tag adds to ls-remote.
+          git ls-remote --tags origin \
+            | sed -n 's#.*refs/tags/##p' | sed 's/\^{}$//' | sort -u > "$RUNNER_TEMP/tags"
+
+          while read -r existing; do
+            [ -n "$existing" ] || continue
+            case "$existing" in v*) candidate=${existing#v} ;; *) continue ;; esac
+            if [ "$(normalise "$candidate")" = "$want" ]; then
+              echo "::error::Tag $existing already exists and is version $want, so this commit would"
+              echo "::error::re-release a version that has already shipped."
+              echo "::error::Bump versionName (and versionCode, which Play requires to be unique per"
+              echo "::error::upload) in app/build.gradle.kts on develop, then merge to main again."
+              exit 1
+            fi
+          done < "$RUNNER_TEMP/tags"
+
+          {
+            echo "name=$version_name"
+            echo "code=$version_code"
+            echo "tag=v$version_name"
+          } >> "$GITHUB_OUTPUT"
+          echo "Releasing v$version_name (versionCode $version_code)."
+
+      # Second cheapest failure. Without the keystore the build would run to
+      # completion and only then trip the `bundleRelease` guard in
+      # app/build.gradle.kts — same outcome, ten minutes later.
+      - name: Check the signing secrets are configured
+        env:
+          STORE_BASE64: ${{ secrets.KIDS_EXPLORE_STORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.KIDS_EXPLORE_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KIDS_EXPLORE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KIDS_EXPLORE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -n "$STORE_BASE64" ]   || missing="$missing KIDS_EXPLORE_STORE_BASE64"
+          [ -n "$STORE_PASSWORD" ] || missing="$missing KIDS_EXPLORE_STORE_PASSWORD"
+          [ -n "$KEY_ALIAS" ]      || missing="$missing KIDS_EXPLORE_KEY_ALIAS"
+          [ -n "$KEY_PASSWORD" ]   || missing="$missing KIDS_EXPLORE_KEY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing"
+            echo "::error::Play rejects an unsigned bundle, so a release cannot be built without them."
+            echo "::error::See docs/play-store-submission.md, section 2, 'The four secrets the"
+            echo "::error::release workflow needs', for how to set them."
+            exit 1
+          fi
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          # AGP 9.3 requires JDK 17 and defaults to it — this is about the JDK
+          # Gradle and AGP themselves run on, which is a separate thing from
+          # `compileOptions` in app/build.gradle.kts (the bytecode level of the
+          # app's own classes). Do not derive one from the other.
+          java-version: '17'
+
+      # Puts cmdline-tools on PATH and accepts the SDK licences, without which
+      # AGP will not download a missing platform.
+      - uses: android-actions/setup-android@v4
+
+      - name: Install the compileSdk platform
+        run: bash .github/scripts/install-compile-sdk.sh
+
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          # This job holds the keystore. It reads the dependency cache that CI
+          # runs on `develop` populate, but must never write back into it.
+          cache-read-only: true
+
+      - name: Materialise the upload keystore
+        env:
+          STORE_BASE64: ${{ secrets.KIDS_EXPLORE_STORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          # Written under RUNNER_TEMP, which is a sibling of the workspace and
+          # not inside it — so it cannot be committed, and cannot be swept up by
+          # the workspace-relative artifact upload below. Deleted at the end of
+          # the job regardless of outcome; the runner VM is destroyed with it.
+          printf '%s' "$STORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          chmod 600 "$RUNNER_TEMP/upload.jks"
+
+      # `build` is the gate documented in README.md — unit tests, lint, and the
+      # icon-sync task — and it also assembles the signed release APK.
+      # `bundleRelease` then produces the AAB Play wants. One invocation, so the
+      # two share a daemon and a configuration phase.
+      - name: Build and verify
+        env:
+          # app/build.gradle.kts prefers keystore.properties and falls back to
+          # these; the file does not exist on CI, so the environment is used.
+          KIDS_EXPLORE_STORE_FILE: ${{ runner.temp }}/upload.jks
+          KIDS_EXPLORE_STORE_PASSWORD: ${{ secrets.KIDS_EXPLORE_STORE_PASSWORD }}
+          KIDS_EXPLORE_KEY_ALIAS: ${{ secrets.KIDS_EXPLORE_KEY_ALIAS }}
+          KIDS_EXPLORE_KEY_PASSWORD: ${{ secrets.KIDS_EXPLORE_KEY_PASSWORD }}
+        run: ./gradlew build bundleRelease
+
+      - name: Collect the release artefacts
+        # Values reach the script through the environment rather than through
+        # `${{ }}` inside it: an expression is pasted in as literal script text,
+        # so a version string containing shell metacharacters would execute.
+        env:
+          VERSION: ${{ steps.version.outputs.name }}
+        run: |
+          set -euo pipefail
+          mkdir -p release-artefacts
+          cp app/build/outputs/bundle/release/app-release.aab "release-artefacts/kids-explore-$VERSION.aab"
+          cp app/build/outputs/apk/release/app-release.apk "release-artefacts/kids-explore-$VERSION.apk"
+          # `isMinifyEnabled = true`, so a crash report from Play is unreadable
+          # without this file — and it exists only on the runner that built
+          # these exact bytes. Attaching it is the only copy that survives.
+          cp app/build/outputs/mapping/release/mapping.txt "release-artefacts/mapping-$VERSION.txt"
+          ls -l release-artefacts
+
+      # Keep the test and lint reports even when the build above fails — that is
+      # exactly when they are worth reading. The path is workspace-relative and
+      # holds only lint results and JUnit output; the keystore lives outside it.
+      - name: Upload test and lint reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            app/build/reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.name }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
+        run: |
+          set -euo pipefail
+          # Quoted heredoc delimiter, so nothing in the body is expanded by the
+          # shell. The two values are substituted afterwards, from the environment.
+          cat > notes.md <<'EOF'
+          versionName `__VERSION__` · versionCode `__VERSION_CODE__`
+
+          `kids-explore-__VERSION__.aab` is the artefact to upload to the Play Console.
+          The `.apk` is the same build, for sideloading onto a test device.
+          `mapping-__VERSION__.txt` deobfuscates crash reports from this build — keep it.
+          EOF
+          # Substituted with a Perl one-liner reading the values out of the
+          # environment: no shell expansion of the file's contents at any point.
+          perl -pi -e 's/__VERSION_CODE__/$ENV{VERSION_CODE}/g; s/__VERSION__/$ENV{VERSION}/g' notes.md
+
+          # `gh release create` creates the tag itself, pointed at this commit,
+          # so there is no separate tag push that could get out of step with it.
+          # `--generate-notes` appends the commits since the previous release
+          # underneath the notes above.
+          gh release create "$TAG" \
+            --target "$GITHUB_SHA" \
+            --title "$TAG" \
+            --notes-file notes.md \
+            --generate-notes \
+            release-artefacts/*
+
+      - name: Remove the keystore
+        if: always()
+        run: |
+          set -euo pipefail
+          rm -f "$RUNNER_TEMP/upload.jks"
