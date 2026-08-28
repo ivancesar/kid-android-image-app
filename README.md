@@ -251,6 +251,19 @@ docs/                            # privacy policy (md + html) and the Play submi
 shots/                           # Play listing assets: screenshots, feature graphic, store icon
 ```
 
+## Branches
+
+Two long-lived branches, and the distinction matters before you push:
+
+| Branch | Holds | You |
+|---|---|---|
+| `develop` | integration; the GitHub default and the base for every PR | branch from it, open PRs against it |
+| `main` | the release branch — whatever is currently live on Play | merge into it on a release, never work on it |
+
+Feature work branches off `develop` and returns to it by PR. `main` moves only when a release is cut, so at any moment it answers "what is on a child's device right now?" — which is also why `docs/` is served to GitHub Pages from `main`: the hosted privacy policy should match the shipped app, not the next one.
+
+The two were identical until the first tester-reported bug, so a clone that predates the split may still have `main` as its default. `git remote set-head origin -a` repoints it.
+
 ## Building & running
 
 Requires JDK 17+ and the Android SDK (compileSdk/targetSdk 37).
