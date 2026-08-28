@@ -99,7 +99,7 @@ Fourteen fixed themes, each with a hue, an icon, a set of photographs, and — i
 | Dinosaurs | `dinosaurs` | 285 | 7 | photographs (Unsplash) |
 | Flowers | `flowers` | 296 | 14 | photographs (Unsplash) |
 | Forest | `forest` | 150 | 19 | photographs (Unsplash) |
-| Fruit | `fruit` | 100 | 12 | photographs (Unsplash) |
+| Fruit | `fruit` | 100 | 11 | photographs (Unsplash) |
 | Vegetables | `vegetable` | 125 | 14 | photographs (Unsplash) |
 | Space | `space` | 250 | 17 | photographs (NASA) |
 
@@ -166,16 +166,16 @@ Card names wrap to two lines and ellipsize only past that, so a long name costs 
 
 ### On images
 
-Photographs are a theme's entire content. All fourteen ship them — 217 pictures in total, `img_<id>_01.jpg` upward in `res/drawable-nodpi/`, listed in display order by that theme's `<ID>_IMAGES` list in `ThemeDef.kt`:
+Photographs are a theme's entire content. All fourteen ship them — 216 pictures in total, `img_<id>_01.jpg` upward in `res/drawable-nodpi/`, listed in display order by that theme's `<ID>_IMAGES` list in `ThemeDef.kt`:
 
 | Themes | Images | Source |
 |---|---|---|
-| All but Space | 200, from 7 (Dinosaurs) to 22 (Birds) | [Unsplash](https://unsplash.com), under the [Unsplash License](https://unsplash.com/license) |
+| All but Space | 199, from 7 (Dinosaurs) to 22 (Birds) | [Unsplash](https://unsplash.com), under the [Unsplash License](https://unsplash.com/license) |
 | Space | 17 | [NASA](https://www.nasa.gov/) |
 
 The counts differ on purpose — a theme carries however many good images it has — which is why the ViewModel wraps on `imageRes.size` rather than on any shared number. **Parent Settings → Attribution** carries a notice per source saying which categories it covers, plus the Unsplash photographers' names.
 
-That artwork is most of the download. Measured on the current tree: the release APK is 39.9 MB, of which 38.4 MB is the 217 JPEGs; everything else — code, icons, strings, AppCompat — is 1.5 MB. The release bundle is 41.5 MB.
+That artwork is most of the download. Measured on the current tree: the release APK is 39.9 MB, of which 38.3 MB is the 216 JPEGs; everything else — code, icons, strings, AppCompat — is 1.6 MB. The release bundle is 41.5 MB.
 
 An install-time asset pack is *not* the lever it looks like: install-time packs are delivered with the app at install, so they do not reduce the download at all, and an asset pack carries `assets/` rather than `res/` — moving the images into one means giving up `R.drawable` and `painterResource` for `AssetManager`, which changes `ThemeDef.imageRes`'s type and makes `everyPhotographIsDensityIndependent` meaningless. Fast-follow or on-demand packs would shrink the initial download, at the same cost.
 
