@@ -1,0 +1,77 @@
+name: CI
+
+# Every PR, against either long-lived branch. `develop` is where feature work
+# lands and so is where this earns its keep; `main` is covered too so that a
+# release PR is checked before the merge that publishes it, rather than by
+# release.yml afterwards.
+on:
+  pull_request:
+    branches: [develop, main]
+  # Also on direct pushes to develop, which the branching model allows for
+  # trivia even though feature work goes through a PR.
+  push:
+    branches: [develop]
+
+permissions:
+  # Read-only. This workflow publishes nothing and touches no secret; the
+  # release job is the only one that needs more.
+  contents: read
+
+concurrency:
+  # Superseded pushes to a PR are worth cancelling — unlike a release, nothing
+  # here is half-done if it stops.
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # This workflow never uses git after checkout, so the job token has no
+          # business sitting in .git/config while repo-authored Gradle code runs.
+          persist-credentials: false
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          # AGP 9.3 requires JDK 17 and defaults to it — the JDK Gradle and AGP
+          # run on, which is a separate thing from `compileOptions` in
+          # app/build.gradle.kts. Do not derive one from the other.
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v4
+
+      # Shared with release.yml, so the two cannot install different platforms.
+      - name: Install the compileSdk platform
+        run: bash .github/scripts/install-compile-sdk.sh
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      # The same command release.yml runs, on purpose: unit tests, lint and the
+      # icon-sync task. Release.yml additionally runs `bundleRelease`, so the
+      # bundle path is the one thing a green PR here does not pre-clear.
+      #
+      # No keystore is configured and none is wanted. `./gradlew build` degrades
+      # to an unsigned release APK — a supported state, documented at the top of
+      # app/build.gradle.kts — which keeps this workflow free of secrets, and so
+      # safe to run on a pull request from a fork.
+      - name: Build and verify
+        run: ./gradlew build
+
+      # Worth reading precisely when the step above failed.
+      - name: Upload test and lint reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            app/build/reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      # The instrumented suite (connectedDebugAndroidTest) is not run here: it
+      # needs a device or emulator, which this runner has none of. It stays a
+      # local step before opening a PR — see README.md, "Tests".
