@@ -281,7 +281,6 @@ private val FRUIT_IMAGES = listOf(
     R.drawable.img_fruit_09,
     R.drawable.img_fruit_10,
     R.drawable.img_fruit_11,
-    R.drawable.img_fruit_12,
 )
 
 private val VEGETABLE_IMAGES = listOf(
