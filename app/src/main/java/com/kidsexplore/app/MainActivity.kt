@@ -115,7 +115,11 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
     // any change and let Home start from the top.
     //
     // Watched here rather than hung off the Settings toggle, so it holds for
-    // every route that can change the roster. Compared against the last set
+    // every route that changes the roster while Home is off screen — which is
+    // all of them today, Parent Settings being the only place a theme can be
+    // toggled. Were the roster ever to change with Home composed, dropping the
+    // slot would not move the grid already on screen; the empty-list guard in
+    // HomeScreen is what carries that case. Compared against the last set
     // rather than keyed on an effect, so neither the first composition nor a
     // restore after process death is mistaken for a change — both of those are
     // exactly when the retained position is still the right one.
