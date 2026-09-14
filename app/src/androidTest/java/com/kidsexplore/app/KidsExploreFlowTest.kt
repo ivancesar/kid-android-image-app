@@ -250,6 +250,30 @@ class KidsExploreFlowTest {
         compose.onNodeWithText(str(R.string.gate_prompt)).assertIsDisplayed()
     }
 
+    /**
+     * Home is taken out of composition while a theme is open, which used to
+     * throw away the grid's scroll position with it: a child who scrolled down
+     * to a theme, looked at it and came back landed at the top of the menu
+     * again, with their theme somewhere off screen.
+     *
+     * Asserted through the header rather than the grid state, because the
+     * header is the thing a child actually sees: it is shown only at the very
+     * top, so its absence is the screen saying "still scrolled". The theme
+     * itself is then asserted displayed *without* scrolling to it first.
+     */
+    @Test
+    fun comingBackFromAThemeKeepsWhereTheMenuWasScrolledTo() {
+        val last = THEME_DEFS.last()
+        scrollTo(last.displayName())
+        compose.onNodeWithText(str(R.string.home_title)).assertDoesNotExist()
+
+        compose.onNodeWithText(last.displayName()).performClick()
+        compose.onNodeWithText(str(R.string.viewer_home)).performClick()
+
+        compose.onNodeWithText(str(R.string.home_title)).assertDoesNotExist()
+        compose.onNodeWithText(last.displayName()).assertIsDisplayed()
+    }
+
     @Test
     fun cancellingTheGateReturnsHome() {
         openGate()

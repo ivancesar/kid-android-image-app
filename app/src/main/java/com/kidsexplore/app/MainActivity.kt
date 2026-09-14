@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -90,12 +91,24 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
         if (state is UiState.Policy) viewModel.closePolicy() else viewModel.goHome()
     }
 
+    // Home is the only screen a user leaves and comes straight back to, and
+    // the `when` below takes it out of composition while they are away — which
+    // discarded its grid position, so every trip into a theme dropped the menu
+    // back to the top. This holds the `rememberSaveable` state of the Home
+    // branch (the grid's scroll position, and the measured header height that
+    // sets the grid's top padding) while that branch is gone, and hands it back
+    // when it returns. The holder is itself saveable, so the position also
+    // survives a rotation and process death.
+    val screenState = rememberSaveableStateHolder()
+
     when (state) {
-        UiState.Home -> HomeScreen(
-            themes = viewModel.visibleThemes,
-            onOpenTheme = viewModel::openTheme,
-            onOpenGate = viewModel::openGate,
-        )
+        UiState.Home -> screenState.SaveableStateProvider(HOME_STATE_KEY) {
+            HomeScreen(
+                themes = viewModel.visibleThemes,
+                onOpenTheme = viewModel::openTheme,
+                onOpenGate = viewModel::openGate,
+            )
+        }
 
         is UiState.Viewer -> {
             // Both invariants are enforced on the way in: openTheme() rejects
@@ -139,3 +152,6 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
         UiState.Policy -> PolicyScreen(onBack = viewModel::closePolicy)
     }
 }
+
+/** Key for Home's slot in the app's [rememberSaveableStateHolder]; only one screen uses it. */
+private const val HOME_STATE_KEY = "home"
