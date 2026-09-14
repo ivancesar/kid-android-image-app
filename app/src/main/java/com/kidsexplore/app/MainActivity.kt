@@ -9,7 +9,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -100,6 +105,28 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
     // when it returns. The holder is itself saveable, so the position also
     // survives a rotation and process death.
     val screenState = rememberSaveableStateHolder()
+
+    // That slot is only meaningful for the menu it was scrolled in. Enabling or
+    // disabling a theme changes what the grid holds, so a restored index lands
+    // on a different card than the one left behind — and with every theme off
+    // it points into a grid that has no rows to clamp it, which leaves the grid
+    // reporting a position that is not the top, the header never composing, and
+    // the empty screen with no title and no explanation on it. Drop the slot on
+    // any change and let Home start from the top.
+    //
+    // Watched here rather than hung off the Settings toggle, so it holds for
+    // every route that can change the roster. Compared against the last set
+    // rather than keyed on an effect, so neither the first composition nor a
+    // restore after process death is mistaken for a change — both of those are
+    // exactly when the retained position is still the right one.
+    val disabledThemeIds = viewModel.disabledThemeIds
+    var lastDisabledThemeIds by remember { mutableStateOf(disabledThemeIds) }
+    SideEffect {
+        if (lastDisabledThemeIds != disabledThemeIds) {
+            lastDisabledThemeIds = disabledThemeIds
+            screenState.removeState(HOME_STATE_KEY)
+        }
+    }
 
     when (state) {
         UiState.Home -> screenState.SaveableStateProvider(HOME_STATE_KEY) {

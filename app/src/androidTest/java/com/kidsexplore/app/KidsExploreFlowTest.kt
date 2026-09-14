@@ -274,6 +274,44 @@ class KidsExploreFlowTest {
         compose.onNodeWithText(last.displayName()).assertIsDisplayed()
     }
 
+    /**
+     * Retaining Home's scroll position must not outlive the menu it was taken
+     * in. A parent who turns every theme off leaves Home with nothing to
+     * scroll, and a retained index pointing into a grid that no longer has
+     * rows would keep the header — the app's title, and the whole explanation
+     * of the now-empty screen — composed out of existence.
+     */
+    @Test
+    fun turningEveryThemeOffStillShowsTheHomeHeader() {
+        scrollTo(THEME_DEFS.last().displayName())
+        enterSettings()
+        THEME_DEFS.forEach { theme ->
+            scrollTo(theme.displayName())
+            compose.onNodeWithText(theme.displayName()).performClick() // untick it
+        }
+        compose.onNodeWithText(str(R.string.settings_done)).performClick()
+
+        compose.onNodeWithText(str(R.string.home_empty_title)).assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.home_title)).assertIsDisplayed()
+    }
+
+    /**
+     * A retained position is keyed to the menu it was scrolled in. Toggling a
+     * theme changes what that grid holds, so the saved index would land on a
+     * different card than the one left behind; Home starts from the top again
+     * instead.
+     */
+    @Test
+    fun togglingAThemeStartsHomeFromTheTopAgain() {
+        scrollTo(THEME_DEFS.last().displayName())
+        enterSettings()
+        scrollTo(themeNamed("ocean"))
+        compose.onNodeWithText(themeNamed("ocean")).performClick() // untick it
+        compose.onNodeWithText(str(R.string.settings_done)).performClick()
+
+        compose.onNodeWithText(str(R.string.home_title)).assertIsDisplayed()
+    }
+
     @Test
     fun cancellingTheGateReturnsHome() {
         openGate()
