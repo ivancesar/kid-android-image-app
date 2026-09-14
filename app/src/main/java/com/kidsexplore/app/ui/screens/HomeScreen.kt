@@ -71,8 +71,14 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
 ) {
     val gridState = rememberLazyGridState()
-    val isAtTop by remember {
-        derivedStateOf { gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0 }
+    // An empty grid counts as at the top whatever the state says: with no rows
+    // there is nothing to clamp a position against, so a stale index would
+    // otherwise hide the header over a screen that is nothing but header.
+    val isAtTop by remember(themes) {
+        derivedStateOf {
+            themes.isEmpty() ||
+                (gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0)
+        }
     }
 
     // The header floats over the grid instead of sharing a Column with it —

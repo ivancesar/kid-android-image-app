@@ -250,6 +250,68 @@ class KidsExploreFlowTest {
         compose.onNodeWithText(str(R.string.gate_prompt)).assertIsDisplayed()
     }
 
+    /**
+     * Home is taken out of composition while a theme is open, which used to
+     * throw away the grid's scroll position with it: a child who scrolled down
+     * to a theme, looked at it and came back landed at the top of the menu
+     * again, with their theme somewhere off screen.
+     *
+     * Asserted through the header rather than the grid state, because the
+     * header is the thing a child actually sees: it is shown only at the very
+     * top, so its absence is the screen saying "still scrolled". The theme
+     * itself is then asserted displayed *without* scrolling to it first.
+     */
+    @Test
+    fun comingBackFromAThemeKeepsWhereTheMenuWasScrolledTo() {
+        val last = THEME_DEFS.last()
+        scrollTo(last.displayName())
+        compose.onNodeWithText(str(R.string.home_title)).assertDoesNotExist()
+
+        compose.onNodeWithText(last.displayName()).performClick()
+        compose.onNodeWithText(str(R.string.viewer_home)).performClick()
+
+        compose.onNodeWithText(str(R.string.home_title)).assertDoesNotExist()
+        compose.onNodeWithText(last.displayName()).assertIsDisplayed()
+    }
+
+    /**
+     * Retaining Home's scroll position must not outlive the menu it was taken
+     * in. A parent who turns every theme off leaves Home with nothing to
+     * scroll, and a retained index pointing into a grid that no longer has
+     * rows would keep the header — the app's title, and the whole explanation
+     * of the now-empty screen — composed out of existence.
+     */
+    @Test
+    fun turningEveryThemeOffStillShowsTheHomeHeader() {
+        scrollTo(THEME_DEFS.last().displayName())
+        enterSettings()
+        THEME_DEFS.forEach { theme ->
+            scrollTo(theme.displayName())
+            compose.onNodeWithText(theme.displayName()).performClick() // untick it
+        }
+        compose.onNodeWithText(str(R.string.settings_done)).performClick()
+
+        compose.onNodeWithText(str(R.string.home_empty_title)).assertIsDisplayed()
+        compose.onNodeWithText(str(R.string.home_title)).assertIsDisplayed()
+    }
+
+    /**
+     * A retained position is keyed to the menu it was scrolled in. Toggling a
+     * theme changes what that grid holds, so the saved index would land on a
+     * different card than the one left behind; Home starts from the top again
+     * instead.
+     */
+    @Test
+    fun togglingAThemeStartsHomeFromTheTopAgain() {
+        scrollTo(THEME_DEFS.last().displayName())
+        enterSettings()
+        scrollTo(themeNamed("ocean"))
+        compose.onNodeWithText(themeNamed("ocean")).performClick() // untick it
+        compose.onNodeWithText(str(R.string.settings_done)).performClick()
+
+        compose.onNodeWithText(str(R.string.home_title)).assertIsDisplayed()
+    }
+
     @Test
     fun cancellingTheGateReturnsHome() {
         openGate()

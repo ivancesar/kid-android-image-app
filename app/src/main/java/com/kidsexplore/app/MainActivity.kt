@@ -9,6 +9,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -90,12 +96,50 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
         if (state is UiState.Policy) viewModel.closePolicy() else viewModel.goHome()
     }
 
+    // Home is the only screen a user leaves and comes straight back to, and
+    // the `when` below takes it out of composition while they are away — which
+    // discarded its grid position, so every trip into a theme dropped the menu
+    // back to the top. This holds the `rememberSaveable` state of the Home
+    // branch (the grid's scroll position, and the measured header height that
+    // sets the grid's top padding) while that branch is gone, and hands it back
+    // when it returns. The holder is itself saveable, so the position also
+    // survives a rotation and process death.
+    val screenState = rememberSaveableStateHolder()
+
+    // That slot is only meaningful for the menu it was scrolled in. Enabling or
+    // disabling a theme changes what the grid holds, so a restored index lands
+    // on a different card than the one left behind — and with every theme off
+    // it points into a grid that has no rows to clamp it, which leaves the grid
+    // reporting a position that is not the top, the header never composing, and
+    // the empty screen with no title and no explanation on it. Drop the slot on
+    // any change and let Home start from the top.
+    //
+    // Watched here rather than hung off the Settings toggle, so it holds for
+    // every route that changes the roster while Home is off screen — which is
+    // all of them today, Parent Settings being the only place a theme can be
+    // toggled. Were the roster ever to change with Home composed, dropping the
+    // slot would not move the grid already on screen; the empty-list guard in
+    // HomeScreen is what carries that case. Compared against the last set
+    // rather than keyed on an effect, so neither the first composition nor a
+    // restore after process death is mistaken for a change — both of those are
+    // exactly when the retained position is still the right one.
+    val disabledThemeIds = viewModel.disabledThemeIds
+    var lastDisabledThemeIds by remember { mutableStateOf(disabledThemeIds) }
+    SideEffect {
+        if (lastDisabledThemeIds != disabledThemeIds) {
+            lastDisabledThemeIds = disabledThemeIds
+            screenState.removeState(HOME_STATE_KEY)
+        }
+    }
+
     when (state) {
-        UiState.Home -> HomeScreen(
-            themes = viewModel.visibleThemes,
-            onOpenTheme = viewModel::openTheme,
-            onOpenGate = viewModel::openGate,
-        )
+        UiState.Home -> screenState.SaveableStateProvider(HOME_STATE_KEY) {
+            HomeScreen(
+                themes = viewModel.visibleThemes,
+                onOpenTheme = viewModel::openTheme,
+                onOpenGate = viewModel::openGate,
+            )
+        }
 
         is UiState.Viewer -> {
             // Both invariants are enforced on the way in: openTheme() rejects
@@ -139,3 +183,6 @@ internal fun KidsExploreApp(viewModel: AppViewModel = viewModel(factory = AppVie
         UiState.Policy -> PolicyScreen(onBack = viewModel::closePolicy)
     }
 }
+
+/** Key for Home's slot in the app's [rememberSaveableStateHolder]; only one screen uses it. */
+private const val HOME_STATE_KEY = "home"
